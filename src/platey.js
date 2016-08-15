@@ -12,16 +12,43 @@ class Platey {
     if (wellsContainDuplicateIds)
       throw "Platey: Duplicate Ids found in the supplied plate";
 
+    this._element = document.createElement("canvas");
+    this._element.classList.add("plate");
+    this._element.width = 1000;
+    this._element.height = 1000;
+
+    this._element.setAttribute("resize", null);
+    paper.setup(this._element);
+
+    this._gridHeight = 7;
+    this._gridWidth = 14;
+    this._wellDiameter = 12;
+
+    this._wells = {};
+
     wells.forEach(well => {
       Platey._testWellCoordinate(well.x);
       Platey._testWellCoordinate(well.y);
 
       if (well.id  === undefined)
         well.id = Platey._generateGuid();
+
+      const wellUiElement = this._createWellUiElement(well);
+
+      this._wells[well.id] = new _Well(wellUiElement);
     });
 
-    this._element = document.createElement("canvas");
-    this._wells = wells;
+    let selectionBox = new paper.Shape.Rectangle(new paper.Point(0,0), new paper.Point(100, 100));
+    {
+      selectionBox.fillColor = "black";
+
+      paper.view.attach("mousedown", function(e) {
+        paper.view.autoUpdate = false;
+
+        selectionBox.bounds = new paper.Shape.Rectangle(e.point, e.point.add(new paper.Point(100, 100)));
+        paper.view.update();
+      });
+    }
   }
 
   get htmlElement() {
@@ -61,18 +88,50 @@ class Platey {
   }
 
   selectWell(wellId) {
+    const well = this._wells[wellId];
+
+    if (well === undefined)
+      throw "Cannot select ${wellId}, does not exist in the plate";
+    else well.select();
   }
 
   selectWells(wellIds) {
+    wellIds.forEach(this.selectWell);
   }
 
   deSelectWell(wellId) {
+    const well = this._wells[wellId];
+
+    if (well === undefined)
+      throw "Cannot select ${wellId}, does not exist in the plate.";
+    else well.deSelect();
   }
 
   deSelectWells(wellIds) {
+    wellIds.forEach(this.deselectWell);
   }
 
   clearSelection() {
+    for (var id in this._wells)
+      this.deSelectWell(id);
+  }
+
+  _gridCoordinateToViewCoordinate({ x: x, y: y }) {
+    const scaledX = (x / this._gridWidth) * this._element.width;
+    const scaledY = (y / this._gridWidth) * this._element.height;
+
+    return { x: scaledX, y: scaledY };
+  }
+
+  _createWellUiElement(well) {
+    const coord = this._gridCoordinateToViewCoordinate(well);
+
+    var circle = new paper.Path.Circle(new paper.Point(coord.x, coord.y), this._wellDiameter);
+    circle.strokeColor = "black";
+
+    circle.fillColor = "white";
+
+    return circle;
   }
 
   serialize() {
@@ -114,17 +173,54 @@ class Platey {
   }
 }
 
-const Shapes = {
-    CIRCLE: 1
-};
+class _Well {
+  constructor(uiElement) {
+    this._uiElement = uiElement;
+    this._isSelected = false;
+    this._isHoveredOver = false;
 
-class Well {
-  constructor(x, y, id, shape = Shapes.CIRCLE, diameter = 1) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.shape = shape;
-    this.diameter = diameter;
-    this.isSelected = false;
+    // Hovering over it
+    uiElement.attach("mouseenter", this.mouseOver.bind(this));
+    uiElement.attach("mouseleave", this.mouseLeave.bind(this));
+
+    uiElement.attach("click", this.select.bind(this));
+  }
+
+  get isSelected() {
+    return this._isSelected;
+  }
+
+  get isHoveredOver() {
+    return this._isHoveredOver;
+  }
+
+  get viewX() {
+    return this._uiElement.x;
+  }
+
+  get viewY() {
+    return this._uiElement.y;
+  }
+
+  select(e = null) {
+    if (e != null)
+      e.stopPropagation();
+
+    this._uiElement.fillColor = "blue";
+  }
+
+  deSelect(e = null) {
+    if (e != null)
+      e.stopPropagation();
+
+    this._uiElement.fillColor = "white";
+  }
+
+  mouseOver() {
+    this._uiElement.scale(1.5);
+  }
+
+  mouseLeave() {
+    this._uiElement.scale(0.666);
   }
 }

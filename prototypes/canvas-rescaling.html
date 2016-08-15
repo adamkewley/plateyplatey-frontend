@@ -1,0 +1,24 @@
+<html>
+	<!-- Looking into how canvas rasters behave when resized -->
+	<head>
+		<style>
+		#some-element { width: 200px; height: 200px; background-color: #ccc; }
+		</style>
+	</head>
+
+	<body>
+		<canvas id="some-element"></canvas>
+
+		<script>
+		const canvas = document.getElementById("some-element");
+		const ctx = canvas.getContext("2d");
+
+		ctx.fillStyle = "green";
+		ctx.fillRect(10, 10, 50, 25);
+
+		canvas.style.width = "100%";
+		canvas.style.height = "100%";
+		</script>
+	</body>
+
+</html>
