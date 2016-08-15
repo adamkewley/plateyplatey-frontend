@@ -38,15 +38,45 @@ class Platey {
       this._wells[well.id] = new _Well(wellUiElement);
     });
 
-    let selectionBox = new paper.Shape.Rectangle(new paper.Point(0,0), new paper.Point(100, 100));
+    let startPoint, endPoint, selectionBox;
     {
-      selectionBox.fillColor = "black";
-
       paper.view.attach("mousedown", function(e) {
-        paper.view.autoUpdate = false;
+        startPoint = e.point;
+        endPoint = e.point;
 
-        selectionBox.bounds = new paper.Shape.Rectangle(e.point, e.point.add(new paper.Point(100, 100)));
+        selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
+        selectionBox.strokeColor = "black";
+
         paper.view.update();
+      });
+
+      paper.view.attach("mousedrag", function(e) {
+        if (startPoint != null && selectionBox != null)
+        {
+          endPoint = e.point;
+
+          selectionBox.remove();
+
+          selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
+          selectionBox.strokeColor = "black";
+        }
+      });
+
+      paper.view.attach("mouseup", (e) => {
+        if (startPoint != null && selectionBox != null)
+        {
+          endPoint = e.point;
+          selectionBox.remove();
+          selectionBox = null;
+
+          const selectionArea = new paper.Rectangle(startPoint, endPoint);
+
+          Object
+          .keys(this._wells)
+          .map(key => { return this._wells[key]; })
+          .filter(well => { return well.isUnder(selectionArea); })
+          .forEach(well => { well.select(); });
+        }
       });
     }
   }
@@ -183,7 +213,7 @@ class _Well {
     uiElement.attach("mouseenter", this.mouseOver.bind(this));
     uiElement.attach("mouseleave", this.mouseLeave.bind(this));
 
-    uiElement.attach("click", this.select.bind(this));
+    uiElement.attach("mousedown", this.select.bind(this));
   }
 
   get isSelected() {
@@ -222,5 +252,9 @@ class _Well {
 
   mouseLeave() {
     this._uiElement.scale(0.666);
+  }
+
+  isUnder(rect) {
+    return this._uiElement.isInside(rect);
   }
 }
