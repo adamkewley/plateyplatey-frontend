@@ -219,7 +219,7 @@ describe('Platey', function() {
            // Sanity check
            expect(plate.wellIds.length).toBe(1);
 
-           expect(plate.wellIds[0]).toBe(id);
+           expect(plate.wellIds.includes(id)).toBe(true);
          });
 
       it('returns an array containing the supplied well id even if other wells did not provide an id',
@@ -327,103 +327,6 @@ describe('Platey', function() {
 
         expect(plate.wellIds.indexOf(id)).not.toBe(-1);
       });
-    });
-
-    describe('wellPositions getter', function() {
-      it('does not throw', function() {
-        expect(() => { this.plate.wellPositions; }).not.toThrow();
-      });
-
-      it('returns an array', function() {
-        expect(this.plate.wellPositions instanceof Array).toBe(true);
-      });
-
-      describe('each element of the returned array', function() {
-        // Make sure the plate has at least a few elements
-        beforeEach(function() {
-          this.plate = new Platey([
-            generateValidWellDefinition(),
-            generateValidWellDefinition(),
-            generateValidWellDefinition(),
-          ]);
-        });
-
-        it('is an object', function() {
-          function testIfObject(obj) { expect(typeof obj).toBe('object'); }
-
-          this.plate.wellPositions.forEach(testIfObject);
-        });
-
-        describe('x property', function() {
-          it('exists', function() {
-            function testHasXProperty(obj) { expect(obj.x).toBeDefined(); }
-
-            this.plate.wellPositions.forEach(testHasXProperty);
-          });
-
-          it('is a number', function() {
-            function testIsNumeric(n) {
-              // From:
-              // http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric#1830844
-              expect(!isNaN(parseFloat(n)) && isFinite(n)).toBe(true);
-            }
-
-            this.plate.wellPositions.map(wellPos => wellPos.x).forEach(testIsNumeric);
-          });
-
-          it('is between 0 and 100', function() {
-            function testIsBetween0and100(n) {
-              expect(n <= 100).toBe(true);
-              expect(n >= 0).toBe(true);
-            }
-
-            this.plate.wellPositions.map(wellPos => wellPos.x).forEach(testIsBetween0and100);
-          });
-        });
-
-        describe('y property', function() {
-          it('exists', function() {
-            function testHasYProperty(obj) { expect(obj.y).toBeDefined(); }
-
-            this.plate.wellPositions.forEach(testHasYProperty);
-          });
-
-          it('is a number', function() {
-            function testIsNumeric(n) {
-              // From:
-              // http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric#1830844
-              expect(!isNaN(parseFloat(n)) && isFinite(n)).toBe(true);
-            }
-
-            this.plate.wellPositions.map(wellPos => wellPos.y).forEach(testIsNumeric);
-          });
-
-          it('is between 0 and 100', function() {
-            function testIsBetween0and100(n) {
-              expect(n <= 100).toBe(true);
-              expect(n >= 0).toBe(true);
-            }
-
-            this.plate.wellPositions.map(wellPos => wellPos.y).forEach(testIsBetween0and100);
-          });
-        });
-
-        describe('id property', function() {
-          it('exists', function() {
-            function testHasIdProperty(obj) { expect(obj.id).toBeDefined(); }
-
-            this.plate.wellPositions.forEach(testHasIdProperty);
-          });
-        });
-      });
-    });
-
-    it('has a isInFocus getter', function() {
-      expect(this.plate.isInFocus).toBeDefined();
-    });
-
-    it('has a focusedWellId getter', function() {
-      expect(this.plate.focusedWellId).toBeDefined();
     });
 
     it('has a selectedWellIds getter', function() {

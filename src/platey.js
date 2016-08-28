@@ -1,9 +1,9 @@
 class Platey {
   constructor(wells, options = {}) {
-    if(wells === undefined)
+    if (wells === undefined)
       throw "Platey: No wells provided to constructor. An array containing well definitions must be provided";
 
-    if(!wells instanceof Array)
+    if (!wells instanceof Array)
       throw "Platey: Invalid wells type provided to Platey constructor. Must be an Array containing well definitions";
 
     const wellsContainDuplicateIds =
@@ -14,15 +14,16 @@ class Platey {
 
     this._element = document.createElement("canvas");
     this._element.classList.add("plate");
-    this._element.width = 1000;
-    this._element.height = 1000;
+
+    this._gridHeight = options.gridHeight || 8;
+    this._gridWidth = options.gridWidth || 14;
+    this._element.width = this._gridWidth * 40;
+    this._element.height = this._gridHeight * 40;
 
     this._element.setAttribute("resize", null);
     paper.setup(this._element);
-
-    this._gridHeight = 7;
-    this._gridWidth = 14;
     this._wellDiameter = 12;
+    const selectionBoxExpansionAmount = 4 * this._wellDiameter;
 
     this._wells = {};
 
@@ -38,6 +39,7 @@ class Platey {
       this._wells[well.id] = new _Well(wellUiElement);
     });
 
+    // Selection box logic
     let startPoint, endPoint, selectionBox;
     {
       paper.view.attach("mousedown", function(e) {
@@ -69,7 +71,9 @@ class Platey {
           selectionBox.remove();
           selectionBox = null;
 
-          const selectionArea = new paper.Rectangle(startPoint, endPoint);
+          const selectionArea =
+              new paper.Rectangle(startPoint, endPoint)
+              .expand(selectionBoxExpansionAmount, selectionBoxExpansionAmount);
 
           Object
           .keys(this._wells)
@@ -86,35 +90,23 @@ class Platey {
   }
 
   get hasWells() {
-    return this._wells.length > 0;
+    return Object.keys(this._wells).length > 0;
   }
 
   get numberOfWells() {
-    return this._wells.length;
+    return Object.keys(this._wells).length;
   }
 
   get wellIds() {
-    return this._wells.map(well => well.id).filter(id => id !== undefined);
-  }
-
-  get wellPositions() {
-    return this._wells.map(well => { return { x: well.x, y: well.y, id: well.id }});
-  }
-
-  get isInFocus() {
-    throw "Not implemented";
-  }
-
-  get focusedWellId() {
-    throw "Not implemented";
+    return Object.keys(this._wells);
   }
 
   get selectedWellIds() {
-    throw "Not implemented";
+    return Object.keys(this._wells).filter(key => this._wells[key].isSelected);
   }
 
   get notSelectedWellIds() {
-    throw "Not implemented";
+    return Object.keys(this._wells).filter(key => !this._wells[key].isSelected);
   }
 
   selectWell(wellId) {
@@ -148,7 +140,7 @@ class Platey {
 
   _gridCoordinateToViewCoordinate({ x: x, y: y }) {
     const scaledX = (x / this._gridWidth) * this._element.width;
-    const scaledY = (y / this._gridWidth) * this._element.height;
+    const scaledY = (y / this._gridHeight) * this._element.height;
 
     return { x: scaledX, y: scaledY };
   }
@@ -165,9 +157,11 @@ class Platey {
   }
 
   serialize() {
+    throw "Not yet implemented";
   }
 
   static deserialize(json) {
+    throw "Not yet implemented";
   }
 
   static _testWellCoordinate(coordinate) {
@@ -233,25 +227,19 @@ class _Well {
   }
 
   select(e = null) {
-    if (e != null)
-      e.stopPropagation();
-
     this._uiElement.fillColor = "blue";
   }
 
   deSelect(e = null) {
-    if (e != null)
-      e.stopPropagation();
-
     this._uiElement.fillColor = "white";
   }
 
   mouseOver() {
-    this._uiElement.scale(1.5);
+    this._uiElement.strokeColor = "grey";
   }
 
   mouseLeave() {
-    this._uiElement.scale(0.666);
+    this._uiElement.strokeColor = "black";
   }
 
   isUnder(rect) {
