@@ -79,6 +79,8 @@ class PlateyTable {
 
       this._data[rowId] = data;
     });
+
+    this._selectedColumnIds = [];
   }
 
   // VIEW
@@ -177,6 +179,7 @@ class PlateyTable {
    * @return {Array.<ColumnHeader>}
    */
   get columnHeaders() {
+    return this._columnDefinitions.map(columnDefinition => columnDefinition.header);
   }
 
   // TABLE DATA: CELLS
@@ -186,6 +189,7 @@ class PlateyTable {
    * @return {number}
    */
   get numberOfCells() {
+    return Object.keys(this._data).length * this._columnDefinitions.length;
   }
 
   /**
@@ -193,6 +197,12 @@ class PlateyTable {
    * @return {Array.<CellId>}
    */
   get cellIds() {
+    return PlateyTable._flatten(
+      Object
+      .keys(this._data)
+      .map(rowId => {
+        return this.columnIds.map(columnId => { return { rowId: rowId, columnId: columnId }; });
+      }));
   }
 
   /**
@@ -207,6 +217,19 @@ class PlateyTable {
    * @return {Array.<CellData>}
    */
   get cellData() {
+    return PlateyTable._flatten(
+      Object
+      .keys(this._data)
+      .map(rowId => {
+        const data = this._data[rowId];
+
+        return Object.keys(data).map(columnId => {
+          return {
+            id: { rowId: rowId, columnId: columnId },
+            data: data[columnId]
+          };
+        });
+      }));
   }
 
   // SELECTION LOGIC
@@ -218,6 +241,8 @@ class PlateyTable {
    * @param {ColumnId} id The ID of the column to select.
    */
   selectColumnById(id) {
+    if (this.columnIds.indexOf(id) !== -1 && this._selectedColumnIds.indexOf(id) === -1)
+      this._selectedColumnIds.push(id);
   }
 
   /**
@@ -225,6 +250,7 @@ class PlateyTable {
    * @param {Array.<ColumnId>} ids The IDs of the columns to select.
    */
   selectColumnsById(ids) {
+    ids.forEach(id => this.selectColumnById(id));
   }
 
   /**
@@ -271,6 +297,7 @@ class PlateyTable {
    * @return {Array.<ColumnId>} The IDs of selected columns.
    */
   get selectedColumnIds() {
+    return this._selectedColumnIds;
   }
 
   /**
@@ -344,85 +371,6 @@ class PlateyTable {
   get selectedRowsData() {
   }
 
-  // SELECTION LOGIC: CELLS
-
-  /**
-   * Select a cell by its cell ID.
-   * @param {CellId} id The ID of the cell to select.
-   */
-  selectCellById(id) {
-  }
-
-  /**
-   * Select multiple cells by their cell IDs.
-   * @param {Array.<CellId>} ids An array of cells IDs to select.
-   */
-  selectCellsById(ids) {
-  }
-
-  /**
-   * Deselect a cell by ID.
-   * @param {CellId} id The ID of the cell to deselect
-   */
-  deSelectCellById(id) {
-  }
-
-  /**
-   * Deselect multiple cells by their cell IDs.
-   * @param {Array.<CellId>} ids The ID of the cells to deselect.
-   */
-  deSelectCells(ids) {
-  }
-
-  /**
-   * Clear the current cell selection. (Alias for .clearSelection)
-   */
-  clearCellSelection() {
-  }
-
-  /**
-   * Get the IDs of currently selected cells.
-   * @return {Array.<CellId>} IDs of the currently selected cells.
-   */
-  get selectedCellIds() {
-  }
-
-  /**
-   * The data of a cell in the PlateyTable.
-   * @typedef {CellData}
-   * @property {CellId} id The ID of the cell.
-   * @property {Data} The data of the cell.
-   */
-
-  /**
-   * Get the data within the currently selected cells. (Alias for get
-   * selectionData)
-   * @return {Array.<CellData>} The data in the currently selected cells
-   */
-  get selectedCellData() {
-  }
-
-  /**
-   * Set the data value of currently selected cells.
-   * @param {string} value Value of the data to set within the currently selected cells.
-   */
-  set selectedCellsDataValue(value) {
-  }
-
-  /**
-   * A cell selection change.
-   * @typedef {Object} CellSelectionChange
-   * @property {SelectionChangeType} type The type of selection change.
-   * @property {CellId} id The ID of the cell undergoing the change.
-   */
-
-  /**
-   * Get an observable sequence of cell selection changes.
-   * @return {Observable.<CellSelectionChange>}
-   */
-  get cellSelectionChanges() {
-  }
-
   // SELECTION LOGIC: GENERAL
 
   /**
@@ -437,8 +385,6 @@ class PlateyTable {
    */
   get selectionChanges() {
   }
-
-
 
   /**
    * Get the data within the currently selected cells of the table.
@@ -517,5 +463,16 @@ class PlateyTable {
     return array.some(function(element, i) {
              return array.indexOf(element) != i;
            });
+  }
+
+  /**
+   * Flattens an array of arrays into a flat one-dimensional
+   * array.
+   * @param {Array.<Array.<object>>} arrayOfArrays
+   * @return {Array.<object>}
+   */
+  static _flatten(arrayOfArrays) {
+    // From: http://stackoverflow.com/questions/10865025/merge-flatten-an-array-of-arrays-in-javascript
+    return [].concat.apply([], arrayOfArrays);
   }
 }
