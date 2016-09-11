@@ -349,10 +349,88 @@ describe('Platey', function() {
       expect(typeof this.plate.selectWells).toBe('function');
     });
 
-    it('has a deSelectWell method', function() {
-      expect(this.plate.deSelectWell).toBeDefined();
+    describe('deSelectWell', function() {
+      it("exists", function() {
+        expect(this.plate.deSelectWell).toBeDefined();
+      });
 
-      expect(typeof this.plate.deSelectWell).toBe('function');
+      it("takes a wellId as an argument", function() {
+        const wellIdToDeSelect = this.plate.wellIds[0];
+
+        expect(() => this.plate.deSelectWell(wellIdToDeSelect)).not.toThrow();
+      });
+
+      it("does not change the selection if the well wasn't initially selected", function() {
+        const selectionBefore = this.plate.selectedWellIds;
+
+        const wellIdToDeSelect = this.plate.wellIds[0];
+
+        this.plate.deSelectWell(wellIdToDeSelect);
+
+        const selectionAfter = this.plate.selectedWellIds;
+
+        expect(JSON.stringify(selectionAfter)).toBe(JSON.stringify(selectionBefore));
+      });
+
+      it("deselects a selected well", function() {
+        const wellId = this.plate.wellIds[0];
+
+        this.plate.selectWell(wellId);
+
+        // Sanity
+        expect(this.plate.selectedWellIds.indexOf(wellId)).not.toBe(-1);
+
+        this.plate.deSelectWell(wellId);
+
+        expect(this.plate.selectedWellIds.indexOf(wellId)).toBe(-1);
+      });
+
+      it("triggers onSelectionChanged if it deselected a well", function() {
+        const wellId = this.plate.wellIds[0];
+
+        let callbackWasTriggered = false;
+
+        const callback = function(arg) { callbackWasTriggered = true; };
+
+        this.plate.selectWell(wellId);
+
+        this.plate.onSelectionChanged.add(callback);
+
+        this.plate.deSelectWell(wellId);
+
+        expect(callbackWasTriggered).toBe(true);
+      });
+
+      it("does not trigger an onSelectionChanged if it did not deSelect a well", function() {
+        const wellId = this.plate.wellIds[0];
+
+        let callbackWasTriggered = false;
+
+        const callback = function() { callbackWasTriggered = true; };
+
+        // Sanity
+        expect(this.plate.selectedWellIds.length).toBe(0);
+
+        this.plate.onSelectionChanged.add(callback);
+
+        this.plate.deSelectWell(wellId);
+
+        expect(callbackWasTriggered).toBe(false);
+      });
+    });
+
+    describe("deSelectWells", function() {
+      it("exists", function() {
+        expect(this.plate.deSelectWells).toBeDefined();
+      });
+
+      it("is a function", function() {
+        expect(typeof this.plate.deSelectWells).toBe("function");
+      });
+
+      it("accepts an array", function() {
+        expect(() => this.plate.deSelectWells([])).not.toThrow();
+      });
     });
 
     it('has a deSelectWells method', function() {
@@ -371,6 +449,237 @@ describe('Platey', function() {
       expect(this.plate.serialize).toBeDefined();
 
       expect(typeof this.plate.serialize).toBe('function');
+    });
+
+    describe("selectWellsWithinRectangle", function() {
+      it("exists", function() {
+        expect(this.plate.selectWellsWithinRectangle).toBeDefined();
+      });
+
+      it("is a function", function() {
+        expect(typeof this.plate.selectWellsWithinRectangle).toBe("function");
+      });
+
+      it("takes a paperjs rectangle as an argument", function() {
+        const selectionArea = new paper.Rectangle(0, 0, 1000, 1000);
+
+        expect(() => this.plate.selectWellsWithinRectangle).not.toThrow();
+      });
+
+      it("selects wells within the provided rectangle", function() {
+        const selectionArea = new paper.Rectangle(0, 0, 2000, 2000);
+
+        // Sanity
+        expect(this.plate.selectedWellIds.length).toBe(0);
+
+        this.plate.selectWellsWithinRectangle(selectionArea);
+
+        expect(this.plate.selectedWellIds.length).not.toBe(0);
+      });
+
+      it("triggers the onSelectionChanged event", function() {
+        let callbackTriggered = false;
+
+        function callback() { callbackTriggered = true; }
+
+        this.plate.onSelectionChanged.add(callback);
+
+        const selectionArea = new paper.Rectangle(0, 0, 2000, 2000);
+
+        this.plate.selectWellsWithinRectangle(selectionArea);
+
+        expect(callbackTriggered).toBe(true);
+      });
+
+      it("only triggers the onSelectionChanged event once", function() {
+        let numTimesCallbackTriggered = 0;
+
+        function callback() { numTimesCallbackTriggered++; }
+
+        this.plate.onSelectionChanged.add(callback);
+
+        const selectionArea = new paper.Rectangle(0, 0, 2000, 2000);
+
+        this.plate.selectWellsWithinRectangle(selectionArea);
+
+        expect(numTimesCallbackTriggered).toBe(1);
+      });
+    });
+
+    describe("onSelectionChanged getter", function() {
+      it("exists", function() {
+        expect(this.plate.onSelectionChanged).toBeDefined();
+      });
+
+      it("is an object", function() {
+        expect(this.plate.onSelectionChanged instanceof Object).toBe(true);
+      });
+
+      describe("add method", function() {
+        it("exists", function() {
+          expect(this.plate.onSelectionChanged.add).toBeDefined();
+        });
+
+        it("is a function", function() {
+          expect(typeof this.plate.onSelectionChanged.add).toBe("function");
+        });
+
+        it("accepts a callback function", function() {
+          function blankCallback() {}
+
+          expect(() => this.plate.onSelectionChanged.add(blankCallback)).not.toThrow();
+        });
+
+        it("the callback function is triggered whenever a well is selected", function() {
+          let callbackTriggered = false;
+
+          function callback() {
+            callbackTriggered = true;
+          }
+
+          this.plate.onSelectionChanged.add(callback);
+
+          // Select the first well in the plate
+          this.plate.selectWell(this.plate.wellIds[0]);
+
+          expect(callbackTriggered).toBe(true);
+        });
+
+        it("the callback function is triggered whenever multiple wells are selected", function() {
+          let callbackTriggered = false;
+
+          function callback() {
+            callbackTriggered = true;
+          }
+
+          this.plate.onSelectionChanged.add(callback);
+
+          // Select all wells in the plate
+          this.plate.selectWells(this.plate.wellIds);
+
+          expect(callbackTriggered).toBe(true);
+        });
+
+        describe("the callback recieves", function() {
+          it("an object", function () {
+            function callback(arg) {
+              expect(arg instanceof Object).toBe(true);
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select all wells in the plate
+            this.plate.selectWells(this.plate.wellIds);
+          });
+
+          it("the object has a newItems property", function() {
+            function callback(arg) {
+              expect(arg.newItems).toBeDefined();
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select all well in the plate
+            this.plate.selectWells(this.plate.wellIds);
+          });
+
+          it("the newItems property is an array", function() {
+            function callback(arg) {
+              expect(arg.newItems instanceof Array).toBe(true);
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select all wells in the plate
+            this.plate.selectWells(this.plate.wellIds);
+          });
+
+          it("the newItems property is an array even if selecting only one well", function() {
+            function callback(arg) {
+              expect(arg.newItems instanceof Array).toBe(true);
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select the first well in the plate
+            this.plate.selectWell(this.plate.wellIds[0]);
+          });
+
+          it("the newItems array contains the well IDs of the newly selected items", function() {
+            const wellIdToSelect = this.plate.wellIds[0];
+
+            const callback = function(arg) {
+                               expect(arg.newItems.length).toBe(1);
+                               expect(arg.newItems[0]).toBe(wellIdToSelect);
+                             };
+
+            this.plate.onSelectionChanged.add(callback);
+
+            this.plate.selectWell(wellIdToSelect);
+          });
+
+          it("the object has a deSelectedItems property", function() {
+            function callback(arg) {
+              expect(arg.deSelectedItems).toBeDefined();
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select all wells in the plate (to trigger the event)
+            this.plate.selectWells(this.plate.wellIds);
+          });
+
+          it("the deSelectedItems property is an array", function() {
+            function callback(arg) {
+              expect(arg.deSelectedItems instanceof Array).toBe(true);
+            }
+
+            this.plate.onSelectionChanged.add(callback);
+
+            // Select all wells in the plate (to trigger the event)
+            this.plate.selectWells(this.plate.wellIds);
+          });
+
+          it("the deSelectedItems property contains the wellIds of deSelected wells", function() {
+            const wellIdToDeselect = this.plate.wellIds[0];
+
+            let callbackTriggered = false;
+            const callback = function(arg) {
+                               expect(arg.deSelectedItems.length).toBe(1);
+                               expect(arg.deSelectedItems[0]).toBe(wellIdToDeselect);
+                               callbackTriggered = true;
+                             };
+
+             // Initially select the well
+             this.plate.selectWell(wellIdToDeselect);
+
+             this.plate.onSelectionChanged.add(callback);
+
+             // Should trigger the event + assertions
+             this.plate.deSelectWell(wellIdToDeselect);
+
+            expect(callbackTriggered).toBe(true);
+          });
+        });
+      });
+
+      it("does not trigger if the selection did not change; for example, if selecting a well that was already selected", function() {
+        const wellIdToSelect = this.plate.wellIds[0];
+        let numTimesCallbackWasCalled = 0;
+
+        const callback = function() { numTimesCallbackWasCalled++; };
+
+        this.plate.onSelectionChanged.add(callback);
+
+        // Should trigger it - the well wasn't initially selected
+        this.plate.selectWell(wellIdToSelect);
+
+        // Shouldn't trigger it - the well is already selected (no
+        // change in selection)
+        this.plate.selectWell(wellIdToSelect);
+
+        expect(numTimesCallbackWasCalled).toBe(1);
+      });
     });
   });
 });

@@ -1,30 +1,44 @@
 class Platey {
   constructor(wells, options = {}) {
+    // Perform input checks
     if (wells === undefined)
       throw "Platey: No wells provided to constructor. An array containing well definitions must be provided";
 
     if (!wells instanceof Array)
       throw "Platey: Invalid wells type provided to Platey constructor. Must be an Array containing well definitions";
 
-    const wellsContainDuplicateIds =
-      Platey._containsDuplicates(wells.map(well => well.id).filter(id => id !== undefined));
+    const suppliedWellIds = wells.map(well => well.id).filter(id => id !== undefined);
 
-    if (wellsContainDuplicateIds)
+    if (Platey._containsDuplicates(suppliedWellIds))
       throw "Platey: Duplicate Ids found in the supplied plate";
 
+    // Setup internal variables
+    let defaultOptions = {
+      gridHeight: 8,
+      gridWidth: 14,
+      width: 14 * 40,
+      height: 8 * 40,
+      element: null,
+    };
+
+    this._options = Platey._extend(defaultOptions, options);
+
+    this._gridHeight = this._options.gridHeight;
+    this._gridWidth = this._options.gridWidth;
+    this._wellDiameter = 12;
+
+    // Setup plate <canvas> element
     this._element = document.createElement("canvas");
+    this._element.width = this._options.width;
+    this._element.height = this._options.height;
     this._element.classList.add("plate");
-
-    this._gridHeight = options.gridHeight || 8;
-    this._gridWidth = options.gridWidth || 14;
-    this._element.width = this._gridWidth * 40;
-    this._element.height = this._gridHeight * 40;
-
     this._element.setAttribute("resize", null);
     paper.setup(this._element);
-    this._wellDiameter = 12;
-    const selectionBoxExpansionAmount = 4 * this._wellDiameter;
 
+    if (this._options.element !== null)
+      this._options.element.appendChild(this._element);
+
+    // Setup wells
     this._wells = {};
 
     wells.forEach(well => {
@@ -38,6 +52,10 @@ class Platey {
 
       this._wells[well.id] = new _Well(wellUiElement);
     });
+
+    // Setup selection logic
+    this._selectionChangedEvent = new Event();
+    const selectionBoxExpansionAmount = 4 * this._wellDiameter;
 
     // Selection box logic
     let startPoint, endPoint, selectionBox;
@@ -75,11 +93,7 @@ class Platey {
               new paper.Rectangle(startPoint, endPoint)
               .expand(selectionBoxExpansionAmount, selectionBoxExpansionAmount);
 
-          Object
-          .keys(this._wells)
-          .map(key => { return this._wells[key]; })
-          .filter(well => { return well.isUnder(selectionArea); })
-          .forEach(well => { well.select(); });
+          this.selectWellsWithinRectangle(selectionArea);
         }
       });
     }
@@ -109,7 +123,56 @@ class Platey {
     return Object.keys(this._wells).filter(key => !this._wells[key].isSelected);
   }
 
+  get onSelectionChanged() {
+    return this._selectionChangedEvent;
+  }
+
+  /**
+   * Select wells that fall within rect. Rect must use the same
+   * coordinate system as the plate (0,0 top-left origin from
+   * this.htmlElement).
+   */
+  selectWellsWithinRectangle(rect) {
+    const wellsToSelect = this._getIdsOfWellsUnderRect(rect);
+
+    this.selectWells(wellsToSelect);
+  }
+
   selectWell(wellId) {
+    if (this.selectedWellIds.indexOf(wellId) === -1) {
+      this._selectWell(wellId);
+
+      this.onSelectionChanged.trigger({
+        newItems: [wellId],
+        deSelectedItems: [],
+      });
+    }
+    // else: the well was already selected, do nothing.
+  }
+
+  selectWells(wellIds) {
+    const previouslySelectedWells = this.selectedWellIds;
+
+    const wellIdsToSelect =
+      wellIds.filter((id) => previouslySelectedWells.indexOf(id) === -1);
+
+    if (wellIdsToSelect.length > 0) {
+      wellIdsToSelect.forEach((id) => this._selectWell(id));
+
+      this.onSelectionChanged.trigger({
+        newItems: wellIdsToSelect,
+        deSelectedItems: [],
+      });
+    }
+    // else: do nothing, because there wasn't anything to select.
+  }
+
+  /**
+   * Internal well selection function. Does not trigger an
+   * .onSelectionChanged callback.
+   * @param {String} wellId ID of the well to select.
+   */
+  _selectWell(wellId) {
     const well = this._wells[wellId];
 
     if (well === undefined)
@@ -117,20 +180,32 @@ class Platey {
     else well.select();
   }
 
-  selectWells(wellIds) {
-    wellIds.forEach(this.selectWell);
-  }
-
   deSelectWell(wellId) {
-    const well = this._wells[wellId];
-
-    if (well === undefined)
-      throw "Cannot select ${wellId}, does not exist in the plate.";
-    else well.deSelect();
+    if (this.selectedWellIds.indexOf(wellId) !== -1) {
+      this._deSelectWell(wellId);
+      this.onSelectionChanged.trigger({
+        newItems: [],
+        deSelectedItems: [wellId],
+      });
+    }
+    // else: do nothing. The well wasn't selected.
   }
 
   deSelectWells(wellIds) {
     wellIds.forEach(this.deselectWell);
+  }
+
+  /**
+   * Internal well deSelection function. Does not trigger an
+   * .onSelectionChanged callback.
+   * @param {String} wellId The ID of the well to deSelect.
+   */
+  _deSelectWell(wellId) {
+    const well = this._wells[wellId];
+
+    if (well === undefined)
+      throw "Cannot deSelect ${wellId}, does not exist in the plate";
+    else well.deSelect();
   }
 
   clearSelection() {
@@ -154,6 +229,13 @@ class Platey {
     circle.fillColor = "white";
 
     return circle;
+  }
+
+  _getIdsOfWellsUnderRect(rect) {
+    return Object.keys(this._wells)
+                 .map(wellId => { return { id: wellId, well: this._wells[wellId] }})
+                 .filter(tuple => tuple.well.isUnder(rect))
+                 .map(tuple => tuple.id);
   }
 
   serialize() {
@@ -195,6 +277,13 @@ class Platey {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
       s4() + '-' + s4() + s4() + s4();
   }
+
+  static _extend(a, b) {
+    for(var key in b)
+      if(b.hasOwnProperty(key))
+        a[key] = b[key];
+    return a;
+  }
 }
 
 class _Well {
@@ -228,10 +317,12 @@ class _Well {
 
   select(e = null) {
     this._uiElement.fillColor = "blue";
+    this._isSelected = true;
   }
 
   deSelect(e = null) {
     this._uiElement.fillColor = "white";
+    this._isSelected = false;
   }
 
   mouseOver() {
@@ -246,3 +337,30 @@ class _Well {
     return this._uiElement.isInside(rect);
   }
 }
+
+// Simple event type, used internally to publish and hold
+// the subscribers of events
+var Event = function(beforeTrigger) {
+  if(beforeTrigger === undefined)
+    beforeTrigger = () => {};
+
+  var subscribers = [];
+
+  return {
+    add: function(callback) {
+      subscribers.push(callback);
+    },
+    remove: function(callback) {
+      var idx = subscribers.indexOf(callback);
+      if(idx > -1)
+        subscribers.splice(idx, 1);
+    },
+    trigger: function(args) {
+      beforeTrigger.call(self, args);
+
+      subscribers.forEach(function(subscriber) {
+        subscriber.call(self, args);
+      });
+    }
+  };
+};
