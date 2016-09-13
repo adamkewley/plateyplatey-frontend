@@ -429,7 +429,42 @@ describe('Platey', function() {
       });
 
       it("accepts an array", function() {
-        expect(() => this.plate.deSelectWells([])).not.toThrow();
+        expect(() => { this.plate.deSelectWells([]); }).not.toThrow();
+      });
+
+      it("deselects each selected wellId in the array", function() {
+        // Select everything in the plate
+        const wellIds = this.plate.wellIds;
+
+        // Sanity
+        expect(this.plate.selectedWellIds.length).toBe(0);
+
+        this.plate.selectWells(wellIds);
+
+        // Another sanity
+        expect(this.plate.selectedWellIds.length).toBe(wellIds.length);
+
+        this.plate.deSelectWells(wellIds);
+
+        expect(this.plate.selectedWellIds.length).toBe(0);
+      });
+
+      it("triggers onSelectionChanged", function() {
+        let callbackWasTriggered = false;
+
+        const callback = function() { callbackWasTriggered = true; };
+
+        // Select everything in the plate
+        const wellIds = this.plate.wellIds;
+
+        this.plate.selectWells(wellIds);
+
+        this.plate.onSelectionChanged.add(callback);
+
+        // Should trigger the callback
+        this.plate.deSelectWells(wellIds);
+
+        expect(callbackWasTriggered).toBe(true);
       });
     });
 

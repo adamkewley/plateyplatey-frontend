@@ -1,18 +1,118 @@
 <html ng-app="plateyModule">
-	<head>
-		<link rel="stylesheet" type="text/css" href="../bower_components/slickgrid/slick.grid.js" />
-	</head>
-	<body ng-controller="plateyController">
-		<div platey-plate></div>
-		<input type="text" ng-model="currentValue">
+  <head>
+    <link rel="stylesheet" type="text/css" href="../bower_components/slickgrid/slick.grid.js" />
+    <link rel="stylesheet" type="text/css" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+    <style>
+    .top-bar {
+	    position: relative;
+	    height: 5%;
+	    overflow:hidden;
+    }
 
-		<div ng-repeat="wellId in selectedWellIds">
-			{{ wellId }}
-		</div>
+    .top-bar * {
+	    display: inline;
+    }
 
-		<script src="../bower_components/paper/dist/paper-full.js"></script>
-		<script src="../src/platey.js"></script>
-		<script src="../bower_components/angular/angular.js"></script>
-		<script src="angular-implementation.js"></script>
-	</body>
+    main {
+	    position: relative;
+	    height: 95%;
+	    width: 100%;
+    }
+
+    .left-panel, .right-panel {
+	    position: absolute;
+	    top: 0;
+	    bottom: 0;
+	    overflow: auto;
+    }
+
+    .left-panel {
+	    width: 30%;
+	    left: 0;
+    }
+    
+    .right-panel {
+	    width: 70%;
+	    right: 0;
+    }
+
+    .selected-row, .selected-cell {
+            background-color: #e6ffe6;
+    }
+
+    .selected-row td.selected-cell {
+            background-color: #b3ffb3;
+    }
+
+    td {
+	    min-width: 200px;
+    }
+    </style>
+  </head>
+  <body ng-controller="plateyController">
+    <div class="top-bar">
+      <h1>Platey</h1>
+      <button class="btn btn-default" ng-click="clearPlate();">
+	New
+      </button>
+
+      <input type="text"
+              ng-model="currentValue"
+              ng-click="$event.stopPropagation();"
+              ng-keyup="setSelectedToCurrentValue(); $event.stopPropagation();"
+	      ng-disabled="noWellsSelected() || noActiveColumnSelected()"
+              placeholder="Set the value of the selected wells">
+    </div>
+
+    <main>
+      <div class="left-panel">      
+	<div platey-plate></div>
+      </div>
+      
+      <div class="right-panel">
+	<table class="table">
+	  
+          <thead>
+	    <th>Well ID</th>
+	    
+	    <th ng-repeat="n in [] | range:numberOfColumns" 
+		    ng-class="{'selected-cell': $parent.currentColumnIdx === n}">
+              {{ n }} 
+	      <button ng-show="$parent.currentColumnIdx !== n" 
+		      class="btn btn-default" 
+		      ng-click="$parent.selectColumn(n); $event.stopPropagation();">
+		select
+	      </button>
+	    </th>
+	    
+	    <th>
+	      <button class="btn btn-success" 
+		      ng-click="addColumn(); $event.stopPropagation();">
+		+
+	      </button>
+	    </th>
+          </thead>
+	  
+	  <tbody>
+	    
+	    <tr ng-repeat="well in wells" 
+		    ng-class="{'selected-row': well.selected}">
+	      <td>{{ well.id }}</td>
+	      <td ng-repeat="column in well.columns track by $index" 
+		      ng-class="{'selected-cell': $parent.currentColumnIdx === $index}">
+		{{ column }}
+	      </td>
+	    </tr>
+	    
+	  </tbody>
+	  
+	</table>
+      </div>
+    </main>
+
+    <script src="../bower_components/paper/dist/paper-full.js"></script>
+    <script src="../src/platey.js"></script>
+    <script src="../bower_components/angular/angular.js"></script>
+    <script src="angular-implementation.js"></script>
+  </body>
 </html>

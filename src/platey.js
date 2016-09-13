@@ -45,7 +45,7 @@ class Platey {
       Platey._testWellCoordinate(well.x);
       Platey._testWellCoordinate(well.y);
 
-      if (well.id  === undefined)
+      if (well.id === undefined)
         well.id = Platey._generateGuid();
 
       const wellUiElement = this._createWellUiElement(well);
@@ -55,6 +55,9 @@ class Platey {
 
     // Setup selection logic
     this._selectionChangedEvent = new Event();
+
+    // Drag and drop selection logic - will select even if it's
+    // essentially just a click
     const selectionBoxExpansionAmount = 4 * this._wellDiameter;
 
     // Selection box logic
@@ -92,6 +95,9 @@ class Platey {
           const selectionArea =
               new paper.Rectangle(startPoint, endPoint)
               .expand(selectionBoxExpansionAmount, selectionBoxExpansionAmount);
+
+          if (!e.event.shiftKey)
+            this.clearSelection();
 
           this.selectWellsWithinRectangle(selectionArea);
         }
@@ -180,6 +186,10 @@ class Platey {
     else well.select();
   }
 
+  /**
+   * Deselect a well
+   * @param {String} wellId
+   */
   deSelectWell(wellId) {
     if (this.selectedWellIds.indexOf(wellId) !== -1) {
       this._deSelectWell(wellId);
@@ -191,8 +201,21 @@ class Platey {
     // else: do nothing. The well wasn't selected.
   }
 
+  /**
+   * Deselect the provided wellIds.
+   * @param {Array.<String>} wellIds Array containing the well IDs to deselect.
+   */
   deSelectWells(wellIds) {
-    wellIds.forEach(this.deselectWell);
+    const currentlySelectedWells = this.selectedWellIds;
+    const wellsToDeselect =
+      wellIds.filter(wellId => currentlySelectedWells.indexOf(wellId) !== -1);
+
+    wellsToDeselect.forEach(wellId => this.deSelectWell(wellId));
+
+    this.onSelectionChanged.trigger({
+      newItems: [],
+      deSelectedItems: wellsToDeselect
+    });
   }
 
   /**
@@ -295,8 +318,6 @@ class _Well {
     // Hovering over it
     uiElement.attach("mouseenter", this.mouseOver.bind(this));
     uiElement.attach("mouseleave", this.mouseLeave.bind(this));
-
-    uiElement.attach("mousedown", this.select.bind(this));
   }
 
   get isSelected() {
@@ -327,10 +348,12 @@ class _Well {
 
   mouseOver() {
     this._uiElement.strokeColor = "grey";
+    this._isHoveredOver = true;
   }
 
   mouseLeave() {
     this._uiElement.strokeColor = "black";
+    this._isHoveredOver = false;
   }
 
   isUnder(rect) {
