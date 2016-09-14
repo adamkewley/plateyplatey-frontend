@@ -16,6 +16,8 @@
     "tests"
   ],
   "dependencies": {
-    "paper": "~0.10.2"
+    "paper": "~0.10.2",
+    "angular": "~1.5.8",
+    "bootstrap": "~3.3.7"
   }
 }
