@@ -1,0 +1,21 @@
+{
+  "name": "platey",
+  "version": "0.0.0",
+  "authors": [
+    "Adam Kewley <adamk117@gmail.com>"
+  ],
+  "description": "Reformat plate arrangements of data into a standard table layout",
+  "main": "src/platey.js",
+  "license": "MIT",
+  "homepage": "http://adamkewley.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "paper": "~0.10.2"
+  }
+}
