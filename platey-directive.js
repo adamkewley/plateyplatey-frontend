@@ -8,6 +8,10 @@ angular.module("plateyPlate", []).directive(
        let plate = null;
        let disableSelectionChanged = false;
 
+       element[0].addEventListener("click", function(e) {
+         e.stopPropagation();
+       });
+
        /**
         * Fires whenever the selection changes in the plate canvas.
         */

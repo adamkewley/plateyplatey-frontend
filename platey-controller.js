@@ -17,6 +17,7 @@ angular.module("plateyController", []).controller(
      $scope.selectedColumn = null;
      $scope.wells = [];
      $scope.currentValue = "";
+     $scope.clickedWell = null;
 
      // Load a plate layout
      $http.get("96-well-plate.json")
@@ -30,12 +31,12 @@ angular.module("plateyController", []).controller(
       */
      function generateGuid() {
        function s4() {
-         return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
+	 return Math.floor((1 + Math.random()) * 0x10000)
+		.toString(16)
+		.substring(1);
        }
        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-         s4() + '-' + s4() + s4() + s4();
+	 s4() + '-' + s4() + s4() + s4();
      }
 
      /**
@@ -45,10 +46,10 @@ angular.module("plateyController", []).controller(
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-         $scope
-         .wells
-         .filter(well => well.selected)
-         .forEach(well => well[selectedColumn.id] = $scope.currentValue);
+	 $scope
+	 .wells
+	 .filter(well => well.selected)
+	 .forEach(well => well[selectedColumn.id] = $scope.currentValue);
        }
 
        $scope.$broadcast("values-updated");
@@ -69,9 +70,10 @@ angular.module("plateyController", []).controller(
       * @returns {Column} The new column.
       */
      $scope.addColumn = function() {
+
        const newColumn = {
-         header: generateGuid(),
-         id: generateGuid()
+	 header: "Column " + ($scope.columns.length + 1),
+	 id: generateGuid()
        };
 
        $scope.columns.push(newColumn);
@@ -79,12 +81,30 @@ angular.module("plateyController", []).controller(
        // Populate the wells with null values
        // for this new column
        $scope.wells.forEach(well => {
-         well[newColumn.id] = null;
+	 well[newColumn.id] = null;
        });
 
        $scope.$broadcast("column-added", newColumn);
 
        return newColumn;
+     };
+
+     /**
+      * Remove a column from the table.
+      * @param {Column} column The column to remove.
+      */
+     $scope.removeColumn = function(column) {
+       const columnIdx = $scope.columns.indexOf(column);
+       const columnId = column.id;
+
+       // Shouldn't happen, but for sanity's sake...
+       if (columnIdx === -1) return;
+
+       $scope.columns.splice(columnIdx, 1);
+
+       $scope.wells.forEach(well => {
+         delete well[columnId]
+       });
      };
 
      /**
@@ -94,12 +114,23 @@ angular.module("plateyController", []).controller(
        const columnIds = $scope.columns.map(column => column.id);
 
        $scope.wells.forEach(well => {
-         columnIds.forEach(id => {
-           well[id] = null;
-         });
+	 columnIds.forEach(id => {
+	   well[id] = null;
+	 });
        });
 
        $scope.$broadcast("plate-cleared");
+     };
+
+     /**
+      * Create an entirely new plate, whiping the data and
+      * columns from the current plate.
+      */
+     $scope.newPlate = function() {
+       $scope.columns = [];
+       $scope.selectedColumn = null;
+       $scope.currentValue = "";
+       $scope.clickedWell = null;
      };
 
      /**
@@ -109,10 +140,20 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectWell = function($event, wellToSelect) {
        if (!$event.shiftKey) {
-         $scope.wells.forEach(well => well.selected = false);
+	 $scope.wells.forEach(well => well.selected = false);
        }
 
        wellToSelect.selected = true;
+     };
+
+     /**
+      * Click a well in the plate. A clicked well is a kind of a
+      * "higher ranked" selected well. In effect, all arrow-based
+      * selection logic goes relative to the clicked well.
+      */
+     $scope.clickWell = function($event, wellToClick) {
+       $scope.clickedWell = wellToClick;
+       $scope.selectWell($event, wellToClick);
      };
 
      /**
@@ -122,13 +163,18 @@ angular.module("plateyController", []).controller(
      $scope.exportTableToCSV = function() {
        const columnIds = $scope.columns.map(column => column.id);
 
-       const data = $scope.wells.map(well => {
-         const rowData = columnIds.map(columnId => well[columnId]);
+       const headers =
+	 ["Well ID"].concat($scope.columns.map(column => column.header));
 
-         return [well.id].concat(rowData);
+       const data = $scope.wells.map(well => {
+	 const rowData = columnIds.map(columnId => well[columnId]);
+
+	 return [well.id].concat(rowData);
        });
 
-       const csv = Papa.unparse(data);
+       const table = [headers].concat(data);
+
+       const csv = Papa.unparse(table);
 
        const csvBlob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
        const urlToBlob = URL.createObjectURL(csvBlob);
@@ -165,8 +211,91 @@ angular.module("plateyController", []).controller(
      /**
       * Selects all wells in the plate.
       */
-     $scope.selectAll = function () {
+     $scope.selectAll = function() {
        $scope.wells.forEach(well => well.selected = true);
+     };
+
+     /**
+      * Moves the column selection (if any) left.
+      */
+     $scope.moveColumnSelectionLeft = () => {
+       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
+
+       // -1 is an indexOf sanity check.
+       if (selectedColumnIdx !== 0 && selectedColumnIdx !== -1) {
+	 const newIdx = selectedColumnIdx - 1;
+	 const columnToSelect = $scope.columns[newIdx];
+
+	 $scope.selectColumn(columnToSelect);
+       }
+     };
+
+     /**
+      * Moves the column selection (if any) right.
+      */
+     $scope.moveColumnSelectionRight = () => {
+       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
+       const idxOfLastColumn = $scope.columns.length - 1;
+
+       if (selectedColumnIdx !== idxOfLastColumn && selectedColumnIdx !== -1) {
+         const newIdx = selectedColumnIdx + 1;
+         const columnToSelect = $scope.columns[newIdx];
+
+         $scope.selectColumn(columnToSelect);
+       }
+     };
+
+     /**
+      * Moves the well selection down relative to the last
+      * user-clicked well. Does nothing if the user hasn't
+      * specifically clicked a well to move from.
+      */
+     $scope.moveWellSelectionDown = () => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const lastWellIdx = $scope.wells.length - 1;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
+           // Move, don't grow.
+           $scope.clearSelection();
+           const newIdx = clickedWellIdx + 1;
+           $scope.wells[newIdx].selected = true; // TODO: Put through func.
+         }
+       }
+     };
+
+     /**
+      * Moves the well selection up relative to the last user-clicked
+      * well. Does nothing if the user hasn't specifically clicked a
+      * well to move relative to.
+      */
+     $scope.moveWellSelectionUp = () => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const firstWellIdx = 0;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== firstWellIdx) {
+           // Move, don't grow
+           $scope.clearSelection();
+           const newIdx = clickedWellIdx - 1;
+           $scope.wells[newIdx].selected = true; // TODO: Put through func.
+         }
+       }
+     };
+
+     /**
+      * Clears the values assigned to the currently selected
+      * wells.
+      */
+     $scope.clearValuesInCurrentSelection = () => {
+       if ($scope.selectedColumn !== null) {
+         const currentColumnId = $scope.selectedColumn.id;
+
+         $scope
+         .wells
+         .filter(well => well.selected)
+         .forEach(well => well[currentColumnId] = null);
+       }
      };
 
      // Extra Behaviors
@@ -174,17 +303,45 @@ angular.module("plateyController", []).controller(
        $scope.selectColumn(newColumn);
      });
 
+     // Keybindings
+     const keybinds = {
+       "Escape": $scope.clearSelection,
+       "C-a": $scope.selectAll,
+       "C-n": $scope.newPlate,
+       "ArrowLeft": $scope.moveColumnSelectionLeft,
+       "ArrowRight": $scope.moveColumnSelectionRight,
+       "ArrowDown": $scope.moveWellSelectionDown,
+       "ArrowUp": $scope.moveWellSelectionUp,
+       "Delete": $scope.clearValuesInCurrentSelection,
+       "C-i": $scope.addColumn,
+     };
+
+     /**
+      * Transforms a jQueryLite keyboard event into the
+      * key syntax used internally.
+      */
+     function eventToKeybindKey($event) {
+       let returnValue = "";
+       // Emacs style for modifier keys
+       if ($event.ctrlKey) {
+	 returnValue += "C-";
+       }
+
+       returnValue += $event.key;
+
+       return returnValue;
+     }
+
      /**
       * Handles keypresses that have be bubbled all the way
       * upto the body.
       */
-     $scope.bodyKeypressHandler = function($event) {
-       if ($event.key === "Escape") {
-         $scope.clearSelection();
-         $event.preventDefault();
-       } else if ($event.key === "a" && $event.ctrlKey) {
-         $scope.selectAll();
-         $event.preventDefault();
+     $scope.bodyKeypressHandler = ($event) => {
+       const key = eventToKeybindKey($event);
+
+       if (keybinds[key] !== undefined) {
+	 keybinds[key].call(this);
+	 $event.preventDefault();
        }
      };
 
@@ -192,5 +349,6 @@ angular.module("plateyController", []).controller(
       * Handles clicks that have bubbled all the way upto the body.
       */
      $scope.bodyClickEventHandler = function($event) {
+       $scope.clearSelection();
      };
    }]);

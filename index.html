@@ -12,6 +12,9 @@
 
     <main>
       <div class="left-panel">
+	<button class="btn btn-default" ng-click="newPlate();">
+	  New Plate
+	</button>
 	<button class="btn btn-default" ng-click="clearPlate();">
 	  Clear Plate
 	</button>
@@ -52,9 +55,13 @@
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
 		    ng-click="$parent.selectColumn(column); $event.stopPropagation();">
-	      <input type="text"
-		     ng-model="column.header"
-	             class="form-control" />
+
+		<input type="text"
+		       ng-model="column.header"
+		       class="form-control"
+		       style="width: 80%; display: inline" />
+		<button ng-click="removeColumn(column);"
+			class="btn btn-danger">X</button>
 	    </th>
 
 	    <th>
@@ -70,7 +77,7 @@
 
 	    <tr ng-repeat="well in wells"
 		    ng-class="{'selected-row': well.selected}"
-		    ng-click="$parent.selectWell($event, well); $event.stopPropagation();">
+		    ng-click="$parent.clickWell($event, well); $event.stopPropagation();">
 	      <td>{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		  ng-class="{'selected-cell': $parent.selectedColumn === column }">
