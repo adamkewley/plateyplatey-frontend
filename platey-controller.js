@@ -170,7 +170,9 @@ angular.module("plateyController", []).controller(
      };
 
      // Extra Behaviors
-     $scope.$on("column-added", $scope.selectColumn);
+     $scope.$on("column-added", (_, newColumn) => {
+       $scope.selectColumn(newColumn);
+     });
 
      /**
       * Handles keypresses that have be bubbled all the way
@@ -179,8 +181,10 @@ angular.module("plateyController", []).controller(
      $scope.bodyKeypressHandler = function($event) {
        if ($event.key === "Escape") {
          $scope.clearSelection();
+         $event.preventDefault();
        } else if ($event.key === "a" && $event.ctrlKey) {
          $scope.selectAll();
+         $event.preventDefault();
        }
      };
 

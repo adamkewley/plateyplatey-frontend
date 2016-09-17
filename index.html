@@ -24,13 +24,24 @@
       <div class="right-panel">
 
 	<div class="fixed-top">
-	  <input type="text"
-		  class="form-control"
-		  ng-model="currentValue"
-		  ng-click="$event.stopPropagation();"
-		  ng-keyup="setValueOfSelectedWells(); $event.stopPropagation();"
-		  ng-disabled="noWellsSelected() || noActiveColumnSelected()"
-		  placeholder="Set the value of the selected wells" />
+	  <div class="input-group">
+	    <div class="input-group-addon">
+	      <span ng-if="selectedColumn === null">
+		No column selected
+	      </span>
+	      <span ng-if="selectedColumn !== null">
+		{{ selectedColumn.header }}:
+	      </span>
+	    </div>
+	    
+	    <input type="text"
+		    class="form-control"
+		    ng-model="currentValue"
+		    ng-click="$event.stopPropagation();"
+		    ng-keyup="setValueOfSelectedWells(); $event.stopPropagation();"
+		    ng-disabled="noWellsSelected() || noActiveColumnSelected()"
+		    placeholder="Set the value of the selected wells" />
+	  </div>
 	</div>
 
 	<table class="table main-table">
@@ -41,7 +52,7 @@
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
 		    ng-click="$parent.selectColumn(column); $event.stopPropagation();">
-	      <input type="text" 
+	      <input type="text"
 		     ng-model="column.header"
 	             class="form-control" />
 	    </th>
