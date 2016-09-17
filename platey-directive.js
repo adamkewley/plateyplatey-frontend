@@ -9,7 +9,7 @@ angular.module("plateyPlate", []).directive(
        let disableSelectionChanged = false;
 
        /**
-        * Fires whenever the selection changes in the plate.
+        * Fires whenever the selection changes in the plate canvas.
         */
        function onPlateSelectionChanged(selectionChangeDetails) {
          if (!disableSelectionChanged) {
@@ -37,20 +37,6 @@ angular.module("plateyPlate", []).directive(
        function onLayoutChanged(element, newLayout) {
          if (newLayout !== undefined && newLayout !== null) {
            plate = new Platey(newLayout, { gridWidth: 13, gridHeight: 9, element: element[0] });
-
-           document.addEventListener("keypress", function(e) {
-             if (e.key === "Escape")
-               plate.clearSelection();
-             else if (e.key === "a" && e.ctrlKey) {
-               plate.selectWells(plate.wellIds);
-               e.preventDefault();
-             }
-           });
-
-           document.body.addEventListener("click", function(e) {
-             if (e.target !== plate.htmlElement)
-               plate.clearSelection();
-           });
 
            // Whenever the plate's selection changes, update
            // the angular scope
