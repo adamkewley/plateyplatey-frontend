@@ -6,19 +6,21 @@
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
   </head>
 
-  <body ng-controller="plateyController">
+  <body ng-controller="plateyController"
+	  ng-keypress="bodyKeypressHandler($event);"
+	  ng-click="bodyClickEventHandler($event);">
 
     <main>
-      <div class="left-panel">      
+      <div class="left-panel">
 	<button class="btn btn-default" ng-click="clearPlate();">
-	  New Plate
+	  Clear Plate
 	</button>
 	<button class="btn btn-default" ng-click="exportTableToCSV();">
 	  CSV Export
 	</button>
 	<div platey-plate></div>
       </div>
-      
+
       <div class="right-panel">
 
 	<div class="fixed-top">
@@ -30,43 +32,47 @@
 		  ng-disabled="noWellsSelected() || noActiveColumnSelected()"
 		  placeholder="Set the value of the selected wells" />
 	</div>
-	
+
 	<table class="table main-table">
-	  
-          <thead>
+
+	  <thead>
 	    <th>Well ID</th>
-	    
-	    <th ng-repeat="n in [] | range:numberOfColumns" 
-		    ng-class="{'selected-cell': $parent.currentColumnIdx === n}"
-		    ng-click="$parent.selectColumn(n); $event.stopPropagation();">
-              {{ n }} 
+
+	    <th ng-repeat="column in columns"
+		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
+		    ng-click="$parent.selectColumn(column); $event.stopPropagation();">
+	      <input type="text" 
+		     ng-model="column.header"
+	             class="form-control" />
 	    </th>
-	    
+
 	    <th>
-	      <button class="btn btn-success" 
+	      <button class="btn btn-success"
 		      ng-click="addColumn(); $event.stopPropagation();">
 		Add Column
 	      </button>
 	    </th>
-          </thead>
-	  
+	  </thead>
+
+	  <!-- Well IDs and their associated data -->
 	  <tbody>
-	    
-	    <tr ng-repeat="well in wells" 
+
+	    <tr ng-repeat="well in wells"
 		    ng-class="{'selected-row': well.selected}"
 		    ng-click="$parent.selectWell($event, well); $event.stopPropagation();">
 	      <td>{{ well.id }}</td>
-	      <td ng-repeat="column in well.columns track by $index" 
-		      ng-class="{'selected-cell': $parent.currentColumnIdx === $index}">
-		<input ng-model="well.columns[$index]"
-			ng-click="$parent.selectColumn($index);"
-			class="form-control">
+	      <td ng-repeat="column in columns"
+		  ng-class="{'selected-cell': $parent.selectedColumn === column }">
+		<input ng-model="well[column.id]"
+		       ng-click="$parent.selectColumn(column);"
+                       class="form-control" />
 	      </td>
 	    </tr>
-	    
+
 	  </tbody>
-	  
+
 	</table>
+
       </div>
     </main>
 

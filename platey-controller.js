@@ -1,15 +1,22 @@
 /**
- * Main application controller.
+ * A column in the platey table.
+ * @typedef {Object} Column
+ * @property {String} id The unique ID of the column.
+ * @property {String} header The header text for the column.
+ */
+
+/**
+ * Main platey application controller.
  */
 angular.module("plateyController", []).controller(
   "plateyController",
   ["$scope", "$http",
    function($scope, $http) {
      $scope.plateLayout = null;
-     $scope.currentValue = "";
-     $scope.numberOfColumns = 0;
-     $scope.currentColumnIdx = -1;
+     $scope.columns = [];
+     $scope.selectedColumn = null;
      $scope.wells = [];
+     $scope.currentValue = "";
 
      // Load a plate layout
      $http.get("96-well-plate.json")
@@ -18,53 +25,87 @@ angular.module("plateyController", []).controller(
      });
 
      /**
-      * Sets the currently selected wells to the entered value.
+      * Internal guid generator - used for IDing columns in the table.
+      * @returns {String} A guid string.
+      */
+     function generateGuid() {
+       function s4() {
+         return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+       }
+       return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+         s4() + '-' + s4() + s4() + s4();
+     }
+
+     /**
+      * Sets the currently selected wells to currentValue.
       */
      $scope.setValueOfSelectedWells = function() {
-       if ($scope.currentColumnIdx !== -1) {
+       const selectedColumn = $scope.selectedColumn;
+
+       if (selectedColumn !== null) {
          $scope
          .wells
          .filter(well => well.selected)
-         .forEach(well => well.columns[$scope.currentColumnIdx] = $scope.currentValue);
+         .forEach(well => well[selectedColumn.id] = $scope.currentValue);
        }
+
+       $scope.$broadcast("values-updated");
      };
 
      /**
       * Selects a column in the plate table.
+      * @param {Column} column The column to select.
       */
-     $scope.selectColumn = function(columnIdx) {
-       $scope.currentColumnIdx = columnIdx;
+     $scope.selectColumn = function(column) {
+       $scope.selectedColumn = column;
+
+       $scope.$broadcast("column-selected", column);
      };
 
      /**
       * Add a column to the data entry table.
+      * @returns {Column} The new column.
       */
      $scope.addColumn = function() {
-       $scope.numberOfColumns++;
+       const newColumn = {
+         header: generateGuid(),
+         id: generateGuid()
+       };
 
-       // Select the new column
-       $scope.selectColumn($scope.numberOfColumns - 1);
+       $scope.columns.push(newColumn);
 
-       // Fill in blanks into the cells of the new column
+       // Populate the wells with null values
+       // for this new column
        $scope.wells.forEach(well => {
-         well.columns[$scope.currentColumnIdx] = null;
+         well[newColumn.id] = null;
        });
+
+       $scope.$broadcast("column-added", newColumn);
+
+       return newColumn;
      };
 
      /**
-      * Clear the plate of all data
+      * Clear the plate of all data.
       */
      $scope.clearPlate = function() {
+       const columnIds = $scope.columns.map(column => column.id);
+
        $scope.wells.forEach(well => {
-         $scope.currentValue = "";
-         $scope.numberOfColumns = 0;
-         $scope.currentColumnIdx = -1;
-         well.columns = [];
+         columnIds.forEach(id => {
+           well[id] = null;
+         });
        });
+
+       $scope.$broadcast("plate-cleared");
      };
 
      /**
       * Select a well in the plate.
+      * @param event The JQueryLite event that triggered the call.
+      * @param {Well} wellToSelect The well to select.
       */
      $scope.selectWell = function($event, wellToSelect) {
        if (!$event.shiftKey) {
@@ -75,12 +116,16 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Exports the main table to a CSV file format and presents the
-      * download to the user.
+      * Exports the main table to a CSV file format and presents it as
+      * a download prompt to the user.
       */
      $scope.exportTableToCSV = function() {
+       const columnIds = $scope.columns.map(column => column.id);
+
        const data = $scope.wells.map(well => {
-         return [well.id].concat(well.columns);
+         const rowData = columnIds.map(columnId => well[columnId]);
+
+         return [well.id].concat(rowData);
        });
 
        const csv = Papa.unparse(data);
@@ -99,14 +144,16 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Returns true if something is selected
+      * Returns true if no wells are selected.
+      * @returns {boolean}
       */
      $scope.noWellsSelected = () => !$scope.wells.some(well => well.selected);
 
      /**
       * Returns true if no column is selected.
+      * @returns {boolean}
       */
-     $scope.noActiveColumnSelected = () => $scope.currentColumnIdx === -1;
+     $scope.noActiveColumnSelected = () => $scope.selectedColumn === null;
 
      /**
       * Clears the current selection.
@@ -116,25 +163,30 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Selects all wells.
+      * Selects all wells in the plate.
       */
      $scope.selectAll = function () {
        $scope.wells.forEach(well => well.selected = true);
      };
 
+     // Extra Behaviors
+     $scope.$on("column-added", $scope.selectColumn);
 
+     /**
+      * Handles keypresses that have be bubbled all the way
+      * upto the body.
+      */
+     $scope.bodyKeypressHandler = function($event) {
+       if ($event.key === "Escape") {
+         $scope.clearSelection();
+       } else if ($event.key === "a" && $event.ctrlKey) {
+         $scope.selectAll();
+       }
+     };
 
-     // SETUP KEYBINDS:
-     const keybinds = [
-       { key: "Escape", command: "clear-selection" },
-       { key: "CTRL+a", command: "select-all" },
-       { key: "Down", command: "move-cell-selection-down" },
-       { key: "SHIFT+Down", command: "expand-selection-down" },
-       { key: "Left", command: "move-column-selection-left" },
-       { key: "Right", command: "move-column-selection-right" },
-       { key: "Delete", command: "clear-selection-values" },
-       { key: "CTRL+Z", command: "undo" },
-       { key: "CTRL+Y", command: "redo" },
-       { key: "CTRL+V", command: "attempt-paste" },
-     ];
+     /**
+      * Handles clicks that have bubbled all the way upto the body.
+      */
+     $scope.bodyClickEventHandler = function($event) {
+     };
    }]);
