@@ -1,0 +1,59 @@
+.top-bar * {
+    display: inline;
+}
+
+main {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+.left-panel, .right-panel {
+    position: absolute;
+    top: 0;
+}
+
+.left-panel {
+    position:fixed;
+    width: 30%;
+    left: 0;
+}
+
+.right-panel {
+    width: 70%;
+    right: 0;
+}
+
+table {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.selected-row, .selected-cell {
+    background-color: #e6eeff;
+}
+
+.selected-row td.selected-cell {
+    background-color: #3366ff;
+}
+
+td {
+    min-width: 200px;
+}
+
+.fixed-top {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 100;
+    background-color: white;
+}
+
+.main-table {
+    position: relative;
+    top: 50;
+}

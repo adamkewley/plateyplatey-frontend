@@ -18,6 +18,7 @@
   "dependencies": {
     "paper": "~0.10.2",
     "angular": "~1.5.8",
-    "bootstrap": "~3.3.7"
+    "bootstrap": "~3.3.7",
+    "papaparse": "~4.1.2"
   }
 }

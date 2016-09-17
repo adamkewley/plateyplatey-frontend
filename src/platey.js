@@ -337,7 +337,7 @@ class _Well {
   }
 
   select(e = null) {
-    this._uiElement.fillColor = "blue";
+    this._uiElement.fillColor = "#3366ff";
     this._isSelected = true;
   }
 
