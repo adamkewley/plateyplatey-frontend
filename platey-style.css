@@ -33,11 +33,11 @@ table {
     user-select: none;
 }
 
-.selected-row, .selected-cell {
+.selected-row, .selected-column {
     background-color: #e6eeff;
 }
 
-.selected-row td.selected-cell {
+.selected-cell {
     background-color: #3366ff;
 }
 

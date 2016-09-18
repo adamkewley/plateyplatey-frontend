@@ -8,7 +8,9 @@
 
   <body ng-controller="plateyController"
 	  ng-keypress="bodyKeypressHandler($event);"
-	  ng-click="bodyClickEventHandler($event);">
+	  ng-click="bodyClickEventHandler($event);"
+	  ng-paste="pasteEventHandler($event);"
+	  contenteditable="true">
 
     <main>
       <div class="left-panel">
@@ -20,6 +22,9 @@
 	</button>
 	<button class="btn btn-default" ng-click="exportTableToCSV();">
 	  CSV Export
+	</button>
+	<button class="btn btn-default" ng-click="copyTableToClipboard();">
+	  Copy Table
 	</button>
 	<div platey-plate></div>
       </div>
@@ -52,7 +57,7 @@
 	    <th>Well ID</th>
 
 	    <th ng-repeat="column in columns"
-		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
+		    ng-class="{'selected-column': column === $parent.selectedColumn }"
 		    ng-click="$parent.selectColumn(column);">
 
 		<input type="text"
@@ -75,11 +80,10 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		    ng-class="{'selected-row': well.selected }"
-		    ng-click="$parent.clickWell($event, well);">
-	      <td>{{ well.id }}</td>
+		ng-click="$parent.clickWell($event, well);">
+	      <td ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
-		  ng-class="{'selected-cell': $parent.selectedColumn === column }"
+		  ng-class="{'selected-cell': well.selected && $parent.selectedColumn == column }"
 		  ng-click="$parent.selectColumn(column);">
 		{{ well[column.id] }}
 	      </td>

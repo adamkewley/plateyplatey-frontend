@@ -255,6 +255,37 @@ angular.module("plateyController", []).controller(
      };
 
      /**
+      * Exports the main table to the clipboard.
+      */
+     $scope.copyTableToClipboard = function() {
+       const columnSeparator = "\t";
+       const rowSeparator = "\n";
+
+       const columnIds = $scope.columns.map(column => column.id);
+
+       const headers =
+         ["Well ID"].concat($scope.columns.map(column => column.header));
+
+       const data = $scope.wells.map(well => {
+         const rowData = columnIds.map(columnId => well[columnId]);
+
+         return [well.id].concat(rowData);
+       });
+
+       const table = [headers].concat(data);
+
+       const text = table.map(row => row.join(columnSeparator)).join(rowSeparator);
+
+       const $textElement = document.createElement("textarea");
+       $textElement.visibility = "hidden";
+       $textElement.value = text;
+       document.body.appendChild($textElement);
+       $textElement.select();
+       document.execCommand("copy");
+       document.body.removeChild($textElement);
+     };
+
+     /**
       * Returns true if no cells are selected.
       * @returns {boolean}
       */
@@ -471,5 +502,73 @@ angular.module("plateyController", []).controller(
 
        if (sourceHandled) return;
        else $scope.clearSelection();
+     };
+
+     /**
+      * Handles applying pastedText to the document.
+      */
+     function handlePastedText(pastedText) {
+       const columnSeparator = /\t/;
+       const lines = pastedText.split(/r\n|\r|\n/);
+       const numberOfLines = lines.length;
+
+       if (numberOfLines === 1 && pastedText.length > 0) {
+         // Treat single-line pastes as "I want to paste to the
+         // current selection".
+         $scope.currentValue = pastedText;
+         $scope.setValueOfSelectedWells();
+       } else if (numberOfLines > 1) {
+         // Treat multi-line pastes as "I want to paste my (tabular)
+         // data".
+
+         const pastedTable = lines.map(line => line.split(columnSeparator));
+
+         const startingWellIdx =
+           $scope.clickedWell !== null ? $scope.wells.indexOf($scope.clickedWell) : 0;
+
+         const startingColumnIdx =
+           $scope.selectedColumn !== null ? $scope.columns.indexOf($scope.selectedColumn) : (
+             $scope.columns.length > 0 ? 0 : $scope.columns.indexOf($scope.addColumn()));
+
+         pastedTable.forEach((row, rowIdx) => {
+           const targetWellIdx = startingWellIdx + rowIdx;
+
+           if ($scope.wells.length <= targetWellIdx)
+             return; // We're at the end of the table, you can't add wells
+           else {
+             const targetWell = $scope.wells[targetWellIdx];
+
+             row.forEach((column, columnIdx) => {
+               const targetColumnIdx = startingColumnIdx + columnIdx;
+
+               if ($scope.columns.length <= targetColumnIdx) {
+                 // We're at the end of the table, add another column.
+                 $scope.addColumn();
+               }
+
+               const targetColumn = $scope.columns[targetColumnIdx];
+
+               targetWell[targetColumn.id] = column;
+             });
+           }
+         });
+       }
+     }
+
+     /**
+      * Handles when the user attempts to paste data into the
+      * application.
+      */
+     $scope.pasteEventHandler = function($event) {
+       // source: http://stackoverflow.com/questions/2176861/javascript-get-clipboard-data-on-paste-event-cross-browser
+
+       // Stop the data from actually being pasted.
+       $event.stopPropagation();
+       $event.preventDefault();
+
+       const clipboardData = $event.clipboardData || window.clipboardData;
+       const text = clipboardData.getData("text/plain");
+
+       handlePastedText(text);
      };
    }]);
