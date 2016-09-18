@@ -8,6 +8,10 @@ angular.module("plateyPlate", []).directive(
        let plate = null;
        let disableSelectionChanged = false;
 
+       element[0].addEventListener("click", function(e) {
+         e.stopPropagation();
+       });
+
        /**
         * Fires whenever the selection changes in the plate canvas.
         */
@@ -15,17 +19,19 @@ angular.module("plateyPlate", []).directive(
          if (!disableSelectionChanged) {
            scope.$apply(() => {
              if (selectionChangeDetails.newItems.length > 0) {
-               scope
-               .wells
-               .filter(well => selectionChangeDetails.newItems.indexOf(well.id) !== -1)
-               .forEach(well => well.selected = true);
+               const wellsToSelect =
+                 scope.wells
+                      .filter(well => selectionChangeDetails.newItems.indexOf(well.id) !== -1)
+
+               scope.selectWells(wellsToSelect);
              }
 
              if (selectionChangeDetails.deSelectedItems.length > 0) {
-               scope
-               .wells
-               .filter(well => selectionChangeDetails.deSelectedItems.indexOf(well.id) !== -1)
-               .forEach(well => well.selected = false);
+               const wellsToDeselect =
+                 scope.wells
+                      .filter(well => selectionChangeDetails.deSelectedItems.indexOf(well.id) !== -1);
+
+               scope.deSelectWells(wellsToDeselect);
              }
            });
          }

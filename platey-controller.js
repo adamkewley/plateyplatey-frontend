@@ -17,6 +17,10 @@ angular.module("plateyController", []).controller(
      $scope.selectedColumn = null;
      $scope.wells = [];
      $scope.currentValue = "";
+     $scope.clickedWell = null;
+
+     const SELECTION_CHANGED = "selection-changed";
+     const COLUMN_ADDED = "column-added";
 
      // Load a plate layout
      $http.get("96-well-plate.json")
@@ -39,19 +43,65 @@ angular.module("plateyController", []).controller(
      }
 
      /**
+      * Returns an array of the currently selected wells.
+      * @returns {Array.<Well>}
+      */
+     function getSelectedWells() {
+       return $scope.wells.filter(well => well.selected);
+     }
+
+     /**
+      * Returns an array of values in the current selection.
+      * @returns {Array.<String>}
+      */
+     function getSelectionValues() {
+       if ($scope.selectedColumn === null) return [];
+       else {
+         const columnId = $scope.selectedColumn.id;
+
+         const values =
+           getSelectedWells().map(selectedWell => selectedWell[columnId]);
+
+         return values;
+       }
+     }
+
+     /**
+      * Determines what should be shown as the current value based on
+      * what is selected.
+      * @returns {String}
+      */
+     function determineCurrentValueFromSelection() {
+       const selectionValues = getSelectionValues();
+
+       if (selectionValues.length === 0) {
+         return "";
+       } else {
+         const firstValue = selectionValues[0];
+
+         if (firstValue === null) return "";
+
+         const allWellsHaveSameValue =
+            selectionValues.every(selectedWell => selectedWell === firstValue);
+
+         if (allWellsHaveSameValue) return firstValue;
+         else return "";
+       }
+     }
+
+     /**
       * Sets the currently selected wells to currentValue.
       */
      $scope.setValueOfSelectedWells = function() {
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-         $scope
-         .wells
-         .filter(well => well.selected)
-         .forEach(well => well[selectedColumn.id] = $scope.currentValue);
-       }
+         const selectedColumnId = selectedColumn.id;
 
-       $scope.$broadcast("values-updated");
+         getSelectedWells().forEach(selectedWell => {
+           selectedWell[selectedColumnId] = $scope.currentValue;
+         });
+       }
      };
 
      /**
@@ -61,7 +111,7 @@ angular.module("plateyController", []).controller(
      $scope.selectColumn = function(column) {
        $scope.selectedColumn = column;
 
-       $scope.$broadcast("column-selected", column);
+       $scope.$broadcast(SELECTION_CHANGED);
      };
 
      /**
@@ -70,7 +120,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.addColumn = function() {
        const newColumn = {
-         header: generateGuid(),
+         header: "Column " + ($scope.columns.length + 1),
          id: generateGuid()
        };
 
@@ -82,9 +132,30 @@ angular.module("plateyController", []).controller(
          well[newColumn.id] = null;
        });
 
-       $scope.$broadcast("column-added", newColumn);
+       $scope.$broadcast(COLUMN_ADDED, newColumn);
 
        return newColumn;
+     };
+
+     /**
+      * Remove a column from the table.
+      * @param {Column} column The column to remove.
+      */
+     $scope.removeColumn = function(column) {
+       const columnIdx = $scope.columns.indexOf(column);
+       const columnId = column.id;
+
+       // Shouldn't happen, but for sanity's sake...
+       if (columnIdx === -1) return;
+
+       if ($scope.selectedColumn === column)
+         $scope.selectedColumn = null;
+
+       $scope.columns.splice(columnIdx, 1);
+
+       $scope.wells.forEach(well => {
+         delete well[columnId];
+       });
      };
 
      /**
@@ -98,8 +169,17 @@ angular.module("plateyController", []).controller(
            well[id] = null;
          });
        });
+     };
 
-       $scope.$broadcast("plate-cleared");
+     /**
+      * Create an entirely new plate, whiping the data and
+      * columns from the current plate.
+      */
+     $scope.newPlate = function() {
+       $scope.columns = [];
+       $scope.selectedColumn = null;
+       $scope.currentValue = "";
+       $scope.clickedWell = null;
      };
 
      /**
@@ -113,6 +193,32 @@ angular.module("plateyController", []).controller(
        }
 
        wellToSelect.selected = true;
+
+       $scope.$broadcast(SELECTION_CHANGED);
+     };
+
+     /**
+      * Select wells in the plate.
+      * @param {Array.<Well>} wells The wells to select.
+      */
+     $scope.selectWells = function(wells) {
+       wells.forEach(well => well.selected = true);
+       $scope.$broadcast(SELECTION_CHANGED);
+     };
+
+     $scope.deSelectWells = function(wells) {
+       wells.forEach(well => well.selected = false);
+       $scope.$broadcast(SELECTION_CHANGED);
+     };
+
+     /**
+      * Click a well in the plate. A clicked well is a kind of a
+      * "higher ranked" selected well. In effect, all arrow-based
+      * selection logic goes relative to the clicked well.
+      */
+     $scope.clickWell = function($event, wellToClick) {
+       $scope.clickedWell = wellToClick;
+       $scope.selectWell($event, wellToClick);
      };
 
      /**
@@ -122,13 +228,18 @@ angular.module("plateyController", []).controller(
      $scope.exportTableToCSV = function() {
        const columnIds = $scope.columns.map(column => column.id);
 
+       const headers =
+         ["Well ID"].concat($scope.columns.map(column => column.header));
+
        const data = $scope.wells.map(well => {
          const rowData = columnIds.map(columnId => well[columnId]);
 
          return [well.id].concat(rowData);
        });
 
-       const csv = Papa.unparse(data);
+       const table = [headers].concat(data);
+
+       const csv = Papa.unparse(table);
 
        const csvBlob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
        const urlToBlob = URL.createObjectURL(csvBlob);
@@ -144,49 +255,221 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Returns true if no wells are selected.
+      * Returns true if no cells are selected.
       * @returns {boolean}
       */
-     $scope.noWellsSelected = () => !$scope.wells.some(well => well.selected);
-
-     /**
-      * Returns true if no column is selected.
-      * @returns {boolean}
-      */
-     $scope.noActiveColumnSelected = () => $scope.selectedColumn === null;
+     $scope.noCellsSelected = () => {
+       return $scope.selectedColumn === null ||
+              !$scope.wells.some(well => well.selected);
+     };
 
      /**
       * Clears the current selection.
       */
      $scope.clearSelection = function() {
        $scope.wells.forEach(well => well.selected = false);
+       $scope.currentValue = "";
      };
 
      /**
       * Selects all wells in the plate.
       */
-     $scope.selectAll = function () {
+     $scope.selectAll = function() {
        $scope.wells.forEach(well => well.selected = true);
+       $scope.currentValue = determineCurrentValueFromSelection();
+     };
+
+     /**
+      * Moves the column selection (if any) left.
+      */
+     $scope.moveColumnSelectionLeft = () => {
+       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
+
+       // -1 is an indexOf sanity check.
+       if (selectedColumnIdx !== 0 && selectedColumnIdx !== -1) {
+         const newIdx = selectedColumnIdx - 1;
+         const columnToSelect = $scope.columns[newIdx];
+
+         $scope.selectColumn(columnToSelect);
+       }
+     };
+
+     /**
+      * Moves the column selection (if any) right.
+      */
+     $scope.moveColumnSelectionRight = () => {
+       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
+       const idxOfLastColumn = $scope.columns.length - 1;
+
+       if (selectedColumnIdx !== idxOfLastColumn && selectedColumnIdx !== -1) {
+         const newIdx = selectedColumnIdx + 1;
+         const columnToSelect = $scope.columns[newIdx];
+
+         $scope.selectColumn(columnToSelect);
+       }
+     };
+
+     /**
+      * Moves the well selection down relative to the last
+      * user-clicked well. Does nothing if the user hasn't
+      * specifically clicked a well to move from.
+      */
+     $scope.moveWellSelectionDown = ($event) => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const lastWellIdx = $scope.wells.length - 1;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
+           // Move, don't grow.
+           $scope.clearSelection();
+           const newIdx = clickedWellIdx + 1;
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
+         }
+       }
+     };
+
+     /**
+      * Grows a well selection down relative to the last
+      * user-clicked well. Does nothing if the user hasn't
+      * specifically clicked a well to move from.
+      */
+     $scope.growWellSelectionDown = ($event) => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const lastWellIdx = $scope.wells.length - 1;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
+           const newIdx = clickedWellIdx + 1;
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
+         }
+       }
+     };
+
+     /**
+      * Moves the well selection up relative to the last user-clicked
+      * well. Does nothing if the user hasn't specifically clicked a
+      * well to move relative to.
+      */
+     $scope.moveWellSelectionUp = ($event) => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const firstWellIdx = 0;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== firstWellIdx) {
+           // Move, don't grow
+           $scope.clearSelection();
+           const newIdx = clickedWellIdx - 1;
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
+         }
+       }
+     };
+
+     /**
+      * Clears the values assigned to the currently selected
+      * wells.
+      */
+     $scope.clearValuesInCurrentSelection = () => {
+       if ($scope.selectedColumn !== null) {
+         const currentColumnId = $scope.selectedColumn.id;
+         const selectedWells = getSelectedWells();
+
+         selectedWells.forEach(well => well[currentColumnId] = null);
+
+         $scope.currentValue = "";
+       }
      };
 
      // Extra Behaviors
-     $scope.$on("column-added", $scope.selectColumn);
+     $scope.$on(COLUMN_ADDED, (_, newColumn) => {
+       $scope.selectColumn(newColumn);
+     });
+
+     $scope.$on(SELECTION_CHANGED, () => {
+       $scope.currentValue = determineCurrentValueFromSelection();
+     });
+
+     // Keybindings
+     const keybinds = {
+       "Escape": $scope.clearSelection,
+       "C-a": $scope.selectAll,
+       "C-n": $scope.newPlate,
+       "ArrowLeft": $scope.moveColumnSelectionLeft,
+       "ArrowRight": $scope.moveColumnSelectionRight,
+       "ArrowDown": $scope.moveWellSelectionDown,
+       "C-ArrowDown": $scope.growWellSelectionDown,
+       "ArrowUp": $scope.moveWellSelectionUp,
+       "Delete": $scope.clearValuesInCurrentSelection,
+       "C-i": $scope.addColumn,
+     };
+
+     /**
+      * Transforms a jQueryLite keyboard event into the
+      * key syntax used internally.
+      */
+     function eventToKeybindKey($event) {
+       let returnValue = "";
+       // Emacs style for modifier keys
+       if ($event.ctrlKey) {
+         returnValue += "C-";
+       }
+
+       returnValue += $event.key;
+
+       return returnValue;
+     }
 
      /**
       * Handles keypresses that have be bubbled all the way
       * upto the body.
       */
-     $scope.bodyKeypressHandler = function($event) {
-       if ($event.key === "Escape") {
-         $scope.clearSelection();
-       } else if ($event.key === "a" && $event.ctrlKey) {
-         $scope.selectAll();
+     $scope.bodyKeypressHandler = ($event) => {
+       const key = eventToKeybindKey($event);
+       const inputIsFocused =
+         document.activeElement.tagName.toLowerCase() === "input";
+
+       if (keybinds[key] !== undefined) {
+         keybinds[key].call(this, $event);
+         $event.preventDefault();
+       } else if (inputIsFocused) {
+         return;
+       } else if (key === "Backspace") {
+         const currentValue = $scope.currentValue;
+         const len = currentValue.length;
+
+         $scope.currentValue = currentValue.substring(0, len - 1);
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
+       } else if ($event.which !== 0 && !$event.ctrlKey) {
+         document.activeElement.blur();
+         document.body.focus();
+         const charCode = $event.charCode;
+         const char = String.fromCharCode(charCode);
+         $scope.currentValue += char;
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
        }
      };
+
+     const sourcesWithClickHandlers =
+        ["button", "input", "td", "th"];
 
      /**
       * Handles clicks that have bubbled all the way upto the body.
       */
      $scope.bodyClickEventHandler = function($event) {
+       const sourceElement = $event.originalTarget.tagName.toLowerCase();
+       const sourceHandled =
+        sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
+
+       if (sourceHandled) return;
+       else $scope.clearSelection();
      };
    }]);

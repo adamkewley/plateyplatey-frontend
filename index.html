@@ -12,6 +12,9 @@
 
     <main>
       <div class="left-panel">
+	<button class="btn btn-default" ng-click="newPlate();">
+	  New Plate
+	</button>
 	<button class="btn btn-default" ng-click="clearPlate();">
 	  Clear Plate
 	</button>
@@ -24,13 +27,23 @@
       <div class="right-panel">
 
 	<div class="fixed-top">
-	  <input type="text"
-		  class="form-control"
-		  ng-model="currentValue"
-		  ng-click="$event.stopPropagation();"
-		  ng-keyup="setValueOfSelectedWells(); $event.stopPropagation();"
-		  ng-disabled="noWellsSelected() || noActiveColumnSelected()"
-		  placeholder="Set the value of the selected wells" />
+	  <div class="input-group">
+	    <div class="input-group-addon">
+	      <span ng-if="selectedColumn === null">
+		No column selected
+	      </span>
+	      <span ng-if="selectedColumn !== null">
+		{{ selectedColumn.header }}:
+	      </span>
+	    </div>
+	    
+	    <input type="text"
+		    class="form-control"
+		    ng-model="currentValue"
+		    ng-keyup="setValueOfSelectedWells();"
+		    ng-disabled="noCellsSelected()"
+		    placeholder="Set the value of the selected wells" />
+	  </div>
 	</div>
 
 	<table class="table main-table">
@@ -40,15 +53,19 @@
 
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
-		    ng-click="$parent.selectColumn(column); $event.stopPropagation();">
-	      <input type="text" 
-		     ng-model="column.header"
-	             class="form-control" />
+		    ng-click="$parent.selectColumn(column);">
+
+		<input type="text"
+		       ng-model="column.header"
+		       class="form-control"
+		       style="width: 80%; display: inline" />
+		<button ng-click="removeColumn(column);"
+			class="btn btn-danger">X</button>
 	    </th>
 
 	    <th>
 	      <button class="btn btn-success"
-		      ng-click="addColumn(); $event.stopPropagation();">
+		      ng-click="addColumn();">
 		Add Column
 	      </button>
 	    </th>
@@ -58,14 +75,13 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		    ng-class="{'selected-row': well.selected}"
-		    ng-click="$parent.selectWell($event, well); $event.stopPropagation();">
+		    ng-class="{'selected-row': well.selected }"
+		    ng-click="$parent.clickWell($event, well);">
 	      <td>{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
-		  ng-class="{'selected-cell': $parent.selectedColumn === column }">
-		<input ng-model="well[column.id]"
-		       ng-click="$parent.selectColumn(column);"
-                       class="form-control" />
+		  ng-class="{'selected-cell': $parent.selectedColumn === column }"
+		  ng-click="$parent.selectColumn(column);">
+		{{ well[column.id] }}
 	      </td>
 	    </tr>
 
