@@ -40,8 +40,7 @@
 	    <input type="text"
 		    class="form-control"
 		    ng-model="currentValue"
-		    ng-click="$event.stopPropagation();"
-		    ng-keyup="setValueOfSelectedWells(); $event.stopPropagation();"
+		    ng-keyup="setValueOfSelectedWells();"
 		    ng-disabled="noWellsSelected() || noActiveColumnSelected()"
 		    placeholder="Set the value of the selected wells" />
 	  </div>
@@ -54,7 +53,7 @@
 
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-cell': column === $parent.selectedColumn }"
-		    ng-click="$parent.selectColumn(column); $event.stopPropagation();">
+		    ng-click="$parent.selectColumn(column);">
 
 		<input type="text"
 		       ng-model="column.header"
@@ -66,7 +65,7 @@
 
 	    <th>
 	      <button class="btn btn-success"
-		      ng-click="addColumn(); $event.stopPropagation();">
+		      ng-click="addColumn();">
 		Add Column
 	      </button>
 	    </th>
@@ -76,8 +75,8 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		    ng-class="{'selected-row': well.selected}"
-		    ng-click="$parent.clickWell($event, well); $event.stopPropagation();">
+		    ng-class="{'selected-row': well.selected }"
+		    ng-click="$parent.clickWell($event, well);">
 	      <td>{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		  ng-class="{'selected-cell': $parent.selectedColumn === column }"

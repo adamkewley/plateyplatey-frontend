@@ -151,7 +151,7 @@ angular.module("plateyController", []).controller(
        $scope.columns.splice(columnIdx, 1);
 
        $scope.wells.forEach(well => {
-         delete well[columnId]
+         delete well[columnId];
        });
      };
 
@@ -456,10 +456,18 @@ angular.module("plateyController", []).controller(
        }
      };
 
+     const sourcesWithClickHandlers =
+        ["button", "input", "td", "th"];
+
      /**
       * Handles clicks that have bubbled all the way upto the body.
       */
      $scope.bodyClickEventHandler = function($event) {
-       $scope.clearSelection();
+       const sourceElement = $event.originalTarget.tagName.toLowerCase();
+       const sourceHandled =
+        sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
+
+       if (sourceHandled) return;
+       else $scope.clearSelection();
      };
    }]);
