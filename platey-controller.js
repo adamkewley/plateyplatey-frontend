@@ -19,6 +19,9 @@ angular.module("plateyController", []).controller(
      $scope.currentValue = "";
      $scope.clickedWell = null;
 
+     const SELECTION_CHANGED = "selection-changed";
+     const COLUMN_ADDED = "column-added";
+
      // Load a plate layout
      $http.get("96-well-plate.json")
      .then(function(plateData) {
@@ -93,13 +96,12 @@ angular.module("plateyController", []).controller(
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-         $scope
-         .wells
-         .filter(well => well.selected)
-         .forEach(well => well[selectedColumn.id] = $scope.currentValue);
-       }
+         const selectedColumnId = selectedColumn.id;
 
-       $scope.$broadcast("values-updated");
+         getSelectedWells().forEach(selectedWell => {
+           selectedWell[selectedColumnId] = $scope.currentValue;
+         });
+       }
      };
 
      /**
@@ -108,9 +110,8 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectColumn = function(column) {
        $scope.selectedColumn = column;
-       $scope.currentValue = determineCurrentValueFromSelection();
 
-       $scope.$broadcast("column-selected", column);
+       $scope.$broadcast(SELECTION_CHANGED);
      };
 
      /**
@@ -118,7 +119,6 @@ angular.module("plateyController", []).controller(
       * @returns {Column} The new column.
       */
      $scope.addColumn = function() {
-
        const newColumn = {
          header: "Column " + ($scope.columns.length + 1),
          id: generateGuid()
@@ -132,7 +132,7 @@ angular.module("plateyController", []).controller(
          well[newColumn.id] = null;
        });
 
-       $scope.$broadcast("column-added", newColumn);
+       $scope.$broadcast(COLUMN_ADDED, newColumn);
 
        return newColumn;
      };
@@ -147,6 +147,9 @@ angular.module("plateyController", []).controller(
 
        // Shouldn't happen, but for sanity's sake...
        if (columnIdx === -1) return;
+
+       if ($scope.selectedColumn === column)
+         $scope.selectedColumn = null;
 
        $scope.columns.splice(columnIdx, 1);
 
@@ -166,8 +169,6 @@ angular.module("plateyController", []).controller(
            well[id] = null;
          });
        });
-
-       $scope.$broadcast("plate-cleared");
      };
 
      /**
@@ -192,7 +193,8 @@ angular.module("plateyController", []).controller(
        }
 
        wellToSelect.selected = true;
-       $scope.currentValue = determineCurrentValueFromSelection();
+
+       $scope.$broadcast(SELECTION_CHANGED);
      };
 
      /**
@@ -201,13 +203,12 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectWells = function(wells) {
        wells.forEach(well => well.selected = true);
-       $scope.currentValue = determineCurrentValueFromSelection();
+       $scope.$broadcast(SELECTION_CHANGED);
      };
 
      $scope.deSelectWells = function(wells) {
        wells.forEach(well => well.selected = false);
-
-       $scope.currentValue = determineCurrentValueFromSelection();
+       $scope.$broadcast(SELECTION_CHANGED);
      };
 
      /**
@@ -254,16 +255,13 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Returns true if no wells are selected.
+      * Returns true if no cells are selected.
       * @returns {boolean}
       */
-     $scope.noWellsSelected = () => !$scope.wells.some(well => well.selected);
-
-     /**
-      * Returns true if no column is selected.
-      * @returns {boolean}
-      */
-     $scope.noActiveColumnSelected = () => $scope.selectedColumn === null;
+     $scope.noCellsSelected = () => {
+       return $scope.selectedColumn === null ||
+              !$scope.wells.some(well => well.selected);
+     };
 
      /**
       * Clears the current selection.
@@ -388,8 +386,12 @@ angular.module("plateyController", []).controller(
      };
 
      // Extra Behaviors
-     $scope.$on("column-added", (_, newColumn) => {
+     $scope.$on(COLUMN_ADDED, (_, newColumn) => {
        $scope.selectColumn(newColumn);
+     });
+
+     $scope.$on(SELECTION_CHANGED, () => {
+       $scope.currentValue = determineCurrentValueFromSelection();
      });
 
      // Keybindings
