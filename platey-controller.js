@@ -31,12 +31,59 @@ angular.module("plateyController", []).controller(
       */
      function generateGuid() {
        function s4() {
-	 return Math.floor((1 + Math.random()) * 0x10000)
-		.toString(16)
-		.substring(1);
+         return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
        }
        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-	 s4() + '-' + s4() + s4() + s4();
+         s4() + '-' + s4() + s4() + s4();
+     }
+
+     /**
+      * Returns an array of the currently selected wells.
+      * @returns {Array.<Well>}
+      */
+     function getSelectedWells() {
+       return $scope.wells.filter(well => well.selected);
+     }
+
+     /**
+      * Returns an array of values in the current selection.
+      * @returns {Array.<String>}
+      */
+     function getSelectionValues() {
+       if ($scope.selectedColumn === null) return [];
+       else {
+         const columnId = $scope.selectedColumn.id;
+
+         const values =
+           getSelectedWells().map(selectedWell => selectedWell[columnId]);
+
+         return values;
+       }
+     }
+
+     /**
+      * Determines what should be shown as the current value based on
+      * what is selected.
+      * @returns {String}
+      */
+     function determineCurrentValueFromSelection() {
+       const selectionValues = getSelectionValues();
+
+       if (selectionValues.length === 0) {
+         return "";
+       } else {
+         const firstValue = selectionValues[0];
+
+         if (firstValue === null) return "";
+
+         const allWellsHaveSameValue =
+            selectionValues.every(selectedWell => selectedWell === firstValue);
+
+         if (allWellsHaveSameValue) return firstValue;
+         else return "";
+       }
      }
 
      /**
@@ -46,10 +93,10 @@ angular.module("plateyController", []).controller(
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-	 $scope
-	 .wells
-	 .filter(well => well.selected)
-	 .forEach(well => well[selectedColumn.id] = $scope.currentValue);
+         $scope
+         .wells
+         .filter(well => well.selected)
+         .forEach(well => well[selectedColumn.id] = $scope.currentValue);
        }
 
        $scope.$broadcast("values-updated");
@@ -61,6 +108,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectColumn = function(column) {
        $scope.selectedColumn = column;
+       $scope.currentValue = determineCurrentValueFromSelection();
 
        $scope.$broadcast("column-selected", column);
      };
@@ -72,8 +120,8 @@ angular.module("plateyController", []).controller(
      $scope.addColumn = function() {
 
        const newColumn = {
-	 header: "Column " + ($scope.columns.length + 1),
-	 id: generateGuid()
+         header: "Column " + ($scope.columns.length + 1),
+         id: generateGuid()
        };
 
        $scope.columns.push(newColumn);
@@ -81,7 +129,7 @@ angular.module("plateyController", []).controller(
        // Populate the wells with null values
        // for this new column
        $scope.wells.forEach(well => {
-	 well[newColumn.id] = null;
+         well[newColumn.id] = null;
        });
 
        $scope.$broadcast("column-added", newColumn);
@@ -114,9 +162,9 @@ angular.module("plateyController", []).controller(
        const columnIds = $scope.columns.map(column => column.id);
 
        $scope.wells.forEach(well => {
-	 columnIds.forEach(id => {
-	   well[id] = null;
-	 });
+         columnIds.forEach(id => {
+           well[id] = null;
+         });
        });
 
        $scope.$broadcast("plate-cleared");
@@ -140,10 +188,26 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectWell = function($event, wellToSelect) {
        if (!$event.shiftKey) {
-	 $scope.wells.forEach(well => well.selected = false);
+         $scope.wells.forEach(well => well.selected = false);
        }
 
        wellToSelect.selected = true;
+       $scope.currentValue = determineCurrentValueFromSelection();
+     };
+
+     /**
+      * Select wells in the plate.
+      * @param {Array.<Well>} wells The wells to select.
+      */
+     $scope.selectWells = function(wells) {
+       wells.forEach(well => well.selected = true);
+       $scope.currentValue = determineCurrentValueFromSelection();
+     };
+
+     $scope.deSelectWells = function(wells) {
+       wells.forEach(well => well.selected = false);
+
+       $scope.currentValue = determineCurrentValueFromSelection();
      };
 
      /**
@@ -164,12 +228,12 @@ angular.module("plateyController", []).controller(
        const columnIds = $scope.columns.map(column => column.id);
 
        const headers =
-	 ["Well ID"].concat($scope.columns.map(column => column.header));
+         ["Well ID"].concat($scope.columns.map(column => column.header));
 
        const data = $scope.wells.map(well => {
-	 const rowData = columnIds.map(columnId => well[columnId]);
+         const rowData = columnIds.map(columnId => well[columnId]);
 
-	 return [well.id].concat(rowData);
+         return [well.id].concat(rowData);
        });
 
        const table = [headers].concat(data);
@@ -206,6 +270,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.clearSelection = function() {
        $scope.wells.forEach(well => well.selected = false);
+       $scope.currentValue = "";
      };
 
      /**
@@ -213,6 +278,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectAll = function() {
        $scope.wells.forEach(well => well.selected = true);
+       $scope.currentValue = determineCurrentValueFromSelection();
      };
 
      /**
@@ -223,10 +289,10 @@ angular.module("plateyController", []).controller(
 
        // -1 is an indexOf sanity check.
        if (selectedColumnIdx !== 0 && selectedColumnIdx !== -1) {
-	 const newIdx = selectedColumnIdx - 1;
-	 const columnToSelect = $scope.columns[newIdx];
+         const newIdx = selectedColumnIdx - 1;
+         const columnToSelect = $scope.columns[newIdx];
 
-	 $scope.selectColumn(columnToSelect);
+         $scope.selectColumn(columnToSelect);
        }
      };
 
@@ -250,7 +316,7 @@ angular.module("plateyController", []).controller(
       * user-clicked well. Does nothing if the user hasn't
       * specifically clicked a well to move from.
       */
-     $scope.moveWellSelectionDown = () => {
+     $scope.moveWellSelectionDown = ($event) => {
        if ($scope.clickedWell !== null) {
          const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
          const lastWellIdx = $scope.wells.length - 1;
@@ -259,7 +325,28 @@ angular.module("plateyController", []).controller(
            // Move, don't grow.
            $scope.clearSelection();
            const newIdx = clickedWellIdx + 1;
-           $scope.wells[newIdx].selected = true; // TODO: Put through func.
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
+         }
+       }
+     };
+
+     /**
+      * Grows a well selection down relative to the last
+      * user-clicked well. Does nothing if the user hasn't
+      * specifically clicked a well to move from.
+      */
+     $scope.growWellSelectionDown = ($event) => {
+       if ($scope.clickedWell !== null) {
+         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
+         const lastWellIdx = $scope.wells.length - 1;
+
+         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
+           const newIdx = clickedWellIdx + 1;
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
          }
        }
      };
@@ -269,7 +356,7 @@ angular.module("plateyController", []).controller(
       * well. Does nothing if the user hasn't specifically clicked a
       * well to move relative to.
       */
-     $scope.moveWellSelectionUp = () => {
+     $scope.moveWellSelectionUp = ($event) => {
        if ($scope.clickedWell !== null) {
          const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
          const firstWellIdx = 0;
@@ -278,7 +365,9 @@ angular.module("plateyController", []).controller(
            // Move, don't grow
            $scope.clearSelection();
            const newIdx = clickedWellIdx - 1;
-           $scope.wells[newIdx].selected = true; // TODO: Put through func.
+           const newWell = $scope.wells[newIdx];
+
+           $scope.clickWell($event, newWell);
          }
        }
      };
@@ -290,11 +379,11 @@ angular.module("plateyController", []).controller(
      $scope.clearValuesInCurrentSelection = () => {
        if ($scope.selectedColumn !== null) {
          const currentColumnId = $scope.selectedColumn.id;
+         const selectedWells = getSelectedWells();
 
-         $scope
-         .wells
-         .filter(well => well.selected)
-         .forEach(well => well[currentColumnId] = null);
+         selectedWells.forEach(well => well[currentColumnId] = null);
+
+         $scope.currentValue = "";
        }
      };
 
@@ -311,6 +400,7 @@ angular.module("plateyController", []).controller(
        "ArrowLeft": $scope.moveColumnSelectionLeft,
        "ArrowRight": $scope.moveColumnSelectionRight,
        "ArrowDown": $scope.moveWellSelectionDown,
+       "C-ArrowDown": $scope.growWellSelectionDown,
        "ArrowUp": $scope.moveWellSelectionUp,
        "Delete": $scope.clearValuesInCurrentSelection,
        "C-i": $scope.addColumn,
@@ -324,7 +414,7 @@ angular.module("plateyController", []).controller(
        let returnValue = "";
        // Emacs style for modifier keys
        if ($event.ctrlKey) {
-	 returnValue += "C-";
+         returnValue += "C-";
        }
 
        returnValue += $event.key;
@@ -338,10 +428,31 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyKeypressHandler = ($event) => {
        const key = eventToKeybindKey($event);
+       const inputIsFocused =
+         document.activeElement.tagName.toLowerCase() === "input";
 
        if (keybinds[key] !== undefined) {
-	 keybinds[key].call(this);
-	 $event.preventDefault();
+         keybinds[key].call(this, $event);
+         $event.preventDefault();
+       } else if (inputIsFocused) {
+         return;
+       } else if (key === "Backspace") {
+         const currentValue = $scope.currentValue;
+         const len = currentValue.length;
+
+         $scope.currentValue = currentValue.substring(0, len - 1);
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
+       } else if ($event.which !== 0 && !$event.ctrlKey) {
+         document.activeElement.blur();
+         document.body.focus();
+         const charCode = $event.charCode;
+         const char = String.fromCharCode(charCode);
+         $scope.currentValue += char;
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
        }
      };
 
