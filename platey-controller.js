@@ -437,6 +437,7 @@ angular.module("plateyController", []).controller(
        "ArrowUp": $scope.moveWellSelectionUp,
        "Delete": $scope.clearValuesInCurrentSelection,
        "C-i": $scope.addColumn,
+       "Enter": $scope.moveWellSelectionDown,
      };
 
      /**
