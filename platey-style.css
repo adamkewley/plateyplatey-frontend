@@ -1,3 +1,7 @@
+body {
+    overflow: hidden;
+}
+
 .top-bar * {
     display: inline;
 }
@@ -15,13 +19,15 @@ main {
 
 .left-panel {
     position:fixed;
-    width: 30%;
+    width: 560px;
     left: 0;
 }
 
 .right-panel {
-    width: 70%;
+    left: 560px;
     right: 0;
+    height: 100%;
+    overflow: scroll;
 }
 
 table {

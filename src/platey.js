@@ -14,18 +14,21 @@ class Platey {
 
     // Setup internal variables
     let defaultOptions = {
-      gridHeight: 8,
-      gridWidth: 14,
-      width: 14 * 40,
-      height: 8 * 40,
-      element: null,
+      gridHeight: 8,  // Number of vertical grid spaces
+      gridWidth: 14,  // Number of horizontal grid spaces
+      width: 14 * 40, // Width in pixels
+      height: 8 * 40, // Height in pixels
+      element: null,  // HTML element to draw plate to
     };
 
     this._options = Platey._extend(defaultOptions, options);
 
     this._gridHeight = this._options.gridHeight;
     this._gridWidth = this._options.gridWidth;
-    this._wellDiameter = 12;
+
+    // 0.1 is a scaling factor; otherwise, the wells will
+    // be as wide as the grid spaces and touch end-to-end
+    this._wellDiameter = (this._options.width / this._options.gridWidth) * 0.3;
 
     // Setup plate <canvas> element
     this._element = document.createElement("canvas");
@@ -236,6 +239,10 @@ class Platey {
       this.deSelectWell(id);
   }
 
+  /**
+   * Transforms a coordinate in the plate's grid coordinate system to
+   * the view's (pixel-oriented) coordinate system.
+   */
   _gridCoordinateToViewCoordinate({ x: x, y: y }) {
     const scaledX = (x / this._gridWidth) * this._element.width;
     const scaledY = (y / this._gridHeight) * this._element.height;
