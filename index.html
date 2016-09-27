@@ -9,49 +9,52 @@
   <body ng-controller="plateyController"
 	  ng-keypress="bodyKeypressHandler($event);"
 	  ng-click="bodyClickEventHandler($event);"
-	  ng-paste="pasteEventHandler($event);"
-	  contenteditable="true">
+	  ng-paste="pasteEventHandler($event);">
 
-    <main>
-      <div class="left-panel">
-	<button class="btn btn-default" ng-click="newPlate();">
-	  New Plate
-	</button>
-	<button class="btn btn-default" ng-click="clearPlate();">
-	  Clear Plate
-	</button>
-	<button class="btn btn-default" ng-click="exportTableToCSV();">
-	  CSV Export
-	</button>
-	<button class="btn btn-default" ng-click="copyTableToClipboard();">
-	  Copy Table
-	</button>
-	<div platey-plate></div>
+    <div class="control-bar">
+      <span class="site-title">PlateToTable</span>
+      <button ng-click="newPlate();">
+	New Plate
+      </button>
+      <button ng-click="clearPlate();">
+	Clear Plate
+      </button>
+      <button ng-click="exportTableToCSV();">
+	CSV Export
+      </button>
+      <button ng-click="copyTableToClipboard();">
+	Copy Table
+      </button>
+
+      <span class="column-selection">
+	<span ng-if="selectedColumn === null">
+	  No column selected
+	</span>
+	<span ng-if="selectedColumn !== null">
+	  {{ selectedColumn.header }}:
+	</span>
+      </span>
+
+      <div class="input-bar">	
+	<input type="text"
+		ng-model="currentValue"
+		ng-keyup="setValueOfSelectedWells();"
+		ng-disabled="noCellsSelected()"
+		placeholder="Set the value of the selected wells" />
       </div>
+    </div>
+    
+    <main>
+      
+      <div class="plate" platey-plate></div>
 
-      <div class="right-panel">
+      <div class="main-panel">
 
-	<div class="fixed-top">
-	  <div class="input-group">
-	    <div class="input-group-addon">
-	      <span ng-if="selectedColumn === null">
-		No column selected
-	      </span>
-	      <span ng-if="selectedColumn !== null">
-		{{ selectedColumn.header }}:
-	      </span>
-	    </div>
-	    
-	    <input type="text"
-		    class="form-control"
-		    ng-model="currentValue"
-		    ng-keyup="setValueOfSelectedWells();"
-		    ng-disabled="noCellsSelected()"
-		    placeholder="Set the value of the selected wells" />
-	  </div>
+	<div class="well-id-column">
+	  
 	</div>
 
-	<table class="table main-table">
+	<table class="main-table">
 
 	  <thead>
 	    <th>Well ID</th>
@@ -60,12 +63,12 @@
 		    ng-class="{'selected-column': column === $parent.selectedColumn }"
 		    ng-click="$parent.selectColumn(column);">
 
-		<input type="text"
-		       ng-model="column.header"
-		       class="form-control"
-		       style="width: 80%; display: inline" />
-		<button ng-click="removeColumn(column);"
-			class="btn btn-danger">X</button>
+	      <input type="text"
+		      ng-model="column.header"
+		      class="form-control"
+		      style="width: 80%; display: inline" />
+	      <button ng-click="removeColumn(column);"
+		      class="btn btn-danger">X</button>
 	    </th>
 
 	    <th>
@@ -80,11 +83,11 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		ng-click="$parent.clickWell($event, well);">
+		    ng-click="$parent.clickWell($event, well);">
 	      <td ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
-		  ng-class="{'selected-cell': well.selected && $parent.selectedColumn == column }"
-		  ng-click="$parent.selectColumn(column);">
+		      ng-class="{'selected-cell': well.selected && $parent.selectedColumn == column }"
+		      ng-click="$parent.selectColumn(column);">
 		{{ well[column.id] }}
 	      </td>
 	    </tr>
@@ -94,6 +97,7 @@
 	</table>
 
       </div>
+
     </main>
 
     <script src="bower_components/paper/dist/paper-full.js"></script>

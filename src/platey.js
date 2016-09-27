@@ -25,18 +25,19 @@ class Platey {
 
     this._gridHeight = this._options.gridHeight;
     this._gridWidth = this._options.gridWidth;
-
-    // 0.1 is a scaling factor; otherwise, the wells will
-    // be as wide as the grid spaces and touch end-to-end
-    this._wellDiameter = (this._options.width / this._options.gridWidth) * 0.3;
+    this._wellDiameter = 0.3; // In plate coordinate space
 
     // Setup plate <canvas> element
     this._element = document.createElement("canvas");
     this._element.width = this._options.width;
     this._element.height = this._options.height;
     this._element.classList.add("plate");
-    this._element.setAttribute("resize", null);
+    this._element.setAttribute("resize", true);
     paper.setup(this._element);
+
+    this._element.addEventListener("resize", function() {
+      alert("resized");
+    });
 
     if (this._options.element !== null)
       this._options.element.appendChild(this._element);
@@ -58,10 +59,6 @@ class Platey {
 
     // Setup selection logic
     this._selectionChangedEvent = new Event();
-
-    // Drag and drop selection logic - will select even if it's
-    // essentially just a click
-    const selectionBoxExpansionAmount = 4 * this._wellDiameter;
 
     // Selection box logic
     let startPoint, endPoint, selectionBox;
@@ -97,7 +94,7 @@ class Platey {
 
           const selectionArea =
               new paper.Rectangle(startPoint, endPoint)
-              .expand(selectionBoxExpansionAmount, selectionBoxExpansionAmount);
+              .expand(this._selectionBoxExpansionAmount, this._selectionBoxExpansionAmount);
 
           if (!e.event.shiftKey)
             this.clearSelection();
@@ -108,30 +105,83 @@ class Platey {
     }
   }
 
+  /**
+   * Get the viewable pixel width of the plate.
+   * @return {float}
+   */
+  get _pixelWidth() {
+    return this._element.width;
+  }
+
+  /**
+   * Get the ratio between the grid (internal) and pixel
+   * (viewable) coordinate systems.
+   * @return {float}
+   */
+  get _gridSpaceToPixelSpaceRatio() {
+    return this._pixelWidth / this._gridWidth;
+  }
+
+  /**
+   * Get the amount that selection boxes need to be scaled by in
+   * order to overlap the midpoints of the well circles.
+   * @return {float}
+   */
+  get _selectionBoxExpansionAmount() {
+    return this._gridSpaceToPixelSpaceRatio * this._wellDiameter * 4;
+  }
+
+  /**
+   * Get the underlying canvas HTML element being drawn to.
+   * @return {HTMLElement}
+   */
   get htmlElement() {
     return this._element;
   }
 
+  /**
+   * Get if the plate contains wells.
+   * @return {boolean}
+   */
   get hasWells() {
     return Object.keys(this._wells).length > 0;
   }
 
+  /**
+   * Get the number of wells in the plate.
+   * @return {integer}
+   */
   get numberOfWells() {
     return Object.keys(this._wells).length;
   }
 
+  /**
+   * Get the IDs of wells in the plate.
+   * @return {Array.<String>}
+   */
   get wellIds() {
     return Object.keys(this._wells);
   }
 
+  /**
+   * Get the IDs of selected wells in the plate.
+   * @return {Array.<string>}
+   */
   get selectedWellIds() {
     return Object.keys(this._wells).filter(key => this._wells[key].isSelected);
   }
 
+  /**
+   * Get the IDs of wells that are not selected in the plate.
+   * @return {Array.<string>}
+   */
   get notSelectedWellIds() {
     return Object.keys(this._wells).filter(key => !this._wells[key].isSelected);
   }
 
+  /**
+   * Get an event that triggers whenever the plate's selection changes.
+   */
   get onSelectionChanged() {
     return this._selectionChangedEvent;
   }
@@ -147,6 +197,10 @@ class Platey {
     this.selectWells(wellsToSelect);
   }
 
+  /**
+   * Select the well with ID wellId.
+   * @param {String} wellId The ID of the well to select.
+   */
   selectWell(wellId) {
     if (this.selectedWellIds.indexOf(wellId) === -1) {
       this._selectWell(wellId);
@@ -159,6 +213,10 @@ class Platey {
     // else: the well was already selected, do nothing.
   }
 
+  /**
+   * Select multiple wells by their ID.
+   * @param {Array.<String>} wellIds The IDs of the wells to select.
+   */
   selectWells(wellIds) {
     const previouslySelectedWells = this.selectedWellIds;
 
@@ -250,10 +308,15 @@ class Platey {
     return { x: scaledX, y: scaledY };
   }
 
+  /**
+   * Create a well paper.js ui element (circle) from
+   * a well's coordinates.
+   */
   _createWellUiElement(well) {
-    const coord = this._gridCoordinateToViewCoordinate(well);
+    var circle = new paper.Path.Circle(new paper.Point(well.x, well.y), this._wellDiameter);
 
-    var circle = new paper.Path.Circle(new paper.Point(coord.x, coord.y), this._wellDiameter);
+    circle.scale(this._gridSpaceToPixelSpaceRatio, new paper.Point(0, 0));
+
     circle.strokeColor = "black";
 
     circle.fillColor = "white";

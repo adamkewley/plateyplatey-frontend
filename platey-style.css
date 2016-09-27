@@ -1,36 +1,83 @@
 body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
 }
 
-.top-bar * {
-    display: inline;
+.control-bar {
+    position: fixed;
+    height: 50px;
+    z-index: 100;
+    background-color: white;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.control-bar > * {
+    float: left;
+    height: 100%;
+    vertical-align: middle;
+    line-height: 50px;
+}
+
+.control-bar .site-title {
+    font-family: "Georgia";
+    padding: 0 20px 0 5px;
+    font-weight: bold;
+}
+
+.control-bar .input-bar {
+    float: none;
+    overflow: hidden;    
+}
+
+.control-bar .input-bar:before {
+    content: "";
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.control-bar .input-bar input {
+    width: 90%;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
 }
 
 main {
-    position: relative;
+    padding-top: 75px;
     height: 100%;
-    width: 100%;
+    background-color: #efefef;
 }
 
-.left-panel, .right-panel {
-    position: absolute;
-    top: 0;
-}
-
-.left-panel {
-    position:fixed;
+.plate {
+    position: fixed;
     width: 560px;
     left: 0;
 }
 
-.right-panel {
-    left: 560px;
-    right: 0;
+.main-panel {
+    width: 100%;
     height: 100%;
+    padding-left: 560px;
     overflow: scroll;
 }
 
-table {
+/* Collapse under plate on smaller screens */
+@media screen and (max-width: 800px) {
+    .main-panel {
+	padding-top: 400px;
+	padding-left: 0;
+    }
+}
+
+.main-table {
+    white-space: nowrap;
+
+    /* Prevent normal selection behavior because
+       we handle selection behavior in the javascript */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -39,27 +86,15 @@ table {
     user-select: none;
 }
 
-.selected-row, .selected-column {
+
+.main-table .selected-row, .selected-column {
     background-color: #e6eeff;
 }
 
-.selected-cell {
+.main-table .selected-cell {
     background-color: #3366ff;
 }
 
-td {
+.main-table td {
     min-width: 200px;
-}
-
-.fixed-top {
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 100;
-    background-color: white;
-}
-
-.main-table {
-    position: relative;
-    top: 50;
 }
