@@ -1,6 +1,7 @@
-body {
+html, body {
     width: 100%;
     height: 100%;
+    position: relative;
     overflow: hidden;
 }
 
@@ -29,7 +30,7 @@ body {
 
 .control-bar .input-bar {
     float: none;
-    overflow: hidden;    
+    overflow: hidden;
 }
 
 .control-bar .input-bar:before {
@@ -47,6 +48,7 @@ body {
 }
 
 main {
+    position: relative;
     padding-top: 75px;
     height: 100%;
     background-color: #efefef;
@@ -63,7 +65,7 @@ main {
     width: 100%;
     height: 100%;
     padding-left: 560px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 /* Collapse under plate on smaller screens */
@@ -87,13 +89,13 @@ main {
     user-select: none;
 }
 
+.selected-well {
+    background-color: #3366ff;
+    transition: background-color 0.25s ease-out;
+}
 
 .main-table .selected-row, .selected-column {
     background-color: #e6eeff;
-}
-
-.main-table .selected-cell {
-    background-color: #3366ff;
 }
 
 .main-table td {

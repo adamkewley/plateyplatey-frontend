@@ -1,9 +1,14 @@
+<!DOCTYPE html>
 <html ng-app="plateyApp">
 
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="description" content="A simple UI for translating between laboratory plate layouts and standard tables." />
+
     <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
+
+    <title>Plate to Table Translator</title>
   </head>
 
   <body ng-controller="plateyController"
@@ -35,7 +40,7 @@
 	</span>
       </span>
 
-      <div class="input-bar">	
+      <div class="input-bar">
 	<input type="text"
 		ng-model="currentValue"
 		ng-keyup="setValueOfSelectedWells();"
@@ -45,14 +50,10 @@
     </div>
     
     <main>
-      
+
       <div class="plate" platey-plate></div>
 
       <div class="main-panel">
-
-	<div class="well-id-column">
-	  
-	</div>
 
 	<table class="main-table">
 
@@ -65,10 +66,9 @@
 
 	      <input type="text"
 		      ng-model="column.header"
-		      class="form-control"
-		      style="width: 80%; display: inline" />
-	      <button ng-click="removeColumn(column);"
-		      class="btn btn-danger">X</button>
+		      style="display: inline"
+	              ng-keydown="$event.stopPropagation();"/>
+	      <button ng-click="removeColumn(column);">X</button>
 	    </th>
 
 	    <th>
@@ -86,7 +86,7 @@
 		    ng-click="$parent.clickWell($event, well);">
 	      <td ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
-		      ng-class="{'selected-cell': well.selected && $parent.selectedColumn == column }"
+		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column }"
 		      ng-click="$parent.selectColumn(column);">
 		{{ well[column.id] }}
 	      </td>

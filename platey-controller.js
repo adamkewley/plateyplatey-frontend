@@ -466,11 +466,11 @@ angular.module("plateyController", []).controller(
        const inputIsFocused =
          document.activeElement.tagName.toLowerCase() === "input";
 
-       if (keybinds[key] !== undefined) {
-         keybinds[key].call(this, $event);
-         $event.preventDefault();
-       } else if (inputIsFocused) {
+       if (inputIsFocused) {
          return;
+       } else if (keybinds[key] !== undefined) {
+           keybinds[key].call(this, $event);
+           $event.preventDefault();
        } else if (key === "Backspace") {
          const currentValue = $scope.currentValue;
          const len = currentValue.length;
