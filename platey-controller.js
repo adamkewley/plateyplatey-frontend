@@ -303,6 +303,61 @@ angular.module("plateyController", []).controller(
      };
 
      /**
+      * Invert the current selection, making all selected wells
+      * deselect and all deselected wells select.
+      */
+     $scope.invertSelection = () => {
+       $scope.wells.forEach(well => well.selected = !well.selected);
+
+       $scope.currentValue = "";
+     };
+
+     /**
+      * Moves the selected column left in the table.
+      */
+     $scope.moveSelectedColumnLeft = () => {
+       const selectedColumn = $scope.selectedColumn;
+
+       if (selectedColumn === null) {
+         return; // Nothing to move.
+       } else if ($scope.columns.indexOf(selectedColumn) === 0) {
+         return; // Can't move leftmost column left.
+       } else {
+         // Swap whatever's left of the selected column
+         // with the selected column.
+         const idx = $scope.columns.indexOf(selectedColumn);
+         const leftIdx = idx - 1;
+         const left = $scope.columns[leftIdx];
+
+         $scope.columns[leftIdx] = selectedColumn;
+         $scope.columns[idx] = left;
+       }
+     };
+
+     /**
+      * Moves the selected column right in the table.
+      */
+     $scope.moveSelectedColumnRight = () => {
+       const selectedColumn = $scope.selectedColumn;
+       const idx = $scope.columns.indexOf(selectedColumn);
+       const len = $scope.columns.length;
+
+       if (idx === -1) {
+         return; // Nothing to move
+       } else if (idx === (len - 1)) {
+         return; // It's already the last column
+       } else {
+         // Swap whatever's right of the selected column
+         // with the selected column.
+         const rightIdx = idx + 1;
+         const right = $scope.columns[rightIdx];
+
+         $scope.columns[rightIdx] = selectedColumn;
+         $scope.columns[idx] = right;
+       }
+     };
+
+     /**
       * Selects all wells in the plate.
       */
      $scope.selectAll = function() {
@@ -439,6 +494,8 @@ angular.module("plateyController", []).controller(
        "C-i": $scope.addColumn,
        "Enter": $scope.moveWellSelectionDown,
        "Tab": $scope.moveColumnSelectionRight,
+       "M-ArrowLeft": $scope.moveSelectedColumnLeft,
+       "M-ArrowRight": $scope.moveSelectedColumnRight,
      };
 
      /**
@@ -450,6 +507,10 @@ angular.module("plateyController", []).controller(
        // Emacs style for modifier keys
        if ($event.ctrlKey) {
          returnValue += "C-";
+       }
+
+       if ($event.altKey) {
+         returnValue += "M-";
        }
 
        returnValue += $event.key;
