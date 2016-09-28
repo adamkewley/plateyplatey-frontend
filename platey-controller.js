@@ -25,7 +25,7 @@ angular.module("plateyController", []).controller(
      // Load a plate layout
      $http.get("96-well-plate.json")
      .then(function(plateData) {
-       $scope.plateLayout = plateData.data.wells;
+       $scope.plateLayout = plateData.data;
      });
 
      /**

@@ -42,7 +42,14 @@ angular.module("plateyPlate", []).directive(
         */
        function onLayoutChanged(element, newLayout) {
          if (newLayout !== undefined && newLayout !== null) {
-           plate = new Platey(newLayout, { gridWidth: 13, gridHeight: 9, element: element[0] });
+           plate = new Platey(
+             newLayout.wells,
+             {
+               gridWidth: newLayout.gridWidth,
+               gridHeight: newLayout.gridHeight,
+               element: element[0],
+               selectors: newLayout.selectors
+             });
 
            // Whenever the plate's selection changes, update
            // the angular scope

@@ -17,8 +17,9 @@ class Platey {
       gridHeight: 8,  // Number of vertical grid spaces
       gridWidth: 14,  // Number of horizontal grid spaces
       width: 14 * 40, // Width in pixels
-      height: 8 * 40, // Height in pixels
+      height: 10 * 40, // Height in pixels
       element: null,  // HTML element to draw plate to
+      selectors: [],  // Selector elements
     };
 
     this._options = Platey._extend(defaultOptions, options);
@@ -34,10 +35,6 @@ class Platey {
     this._element.classList.add("plate");
     this._element.setAttribute("resize", true);
     paper.setup(this._element);
-
-    this._element.addEventListener("resize", function() {
-      alert("resized");
-    });
 
     if (this._options.element !== null)
       this._options.element.appendChild(this._element);
@@ -57,12 +54,18 @@ class Platey {
       this._wells[well.id] = new _Well(wellUiElement);
     });
 
+    // Setup selectors
+    this._options.selectors.forEach(selector => {
+      this._createSelectorUiElement(selector);
+    });
+
     // Setup selection logic
     this._selectionChangedEvent = new Event();
 
     // Selection box logic
     let startPoint, endPoint, selectionBox;
     {
+      // TODO: fix this interrupting other click handlers
       paper.view.attach("mousedown", function(e) {
         startPoint = e.point;
         endPoint = e.point;
@@ -114,12 +117,22 @@ class Platey {
   }
 
   /**
+   * Get the viewable pixel height of the plate.
+   */
+  get _pixelHeight() {
+    return this._element.height;
+  }
+
+  /**
    * Get the ratio between the grid (internal) and pixel
    * (viewable) coordinate systems.
    * @return {float}
    */
   get _gridSpaceToPixelSpaceRatio() {
-    return this._pixelWidth / this._gridWidth;
+    const pixelSpaceVector = new paper.Point(this._pixelWidth, this._pixelHeight);
+    const plateSpaceVector = new paper.Point(this._gridWidth, this._gridHeight);
+
+    return pixelSpaceVector.length / plateSpaceVector.length;
   }
 
   /**
@@ -324,6 +337,31 @@ class Platey {
     return circle;
   }
 
+  /**
+   * Create a selector paper.js element (text) from
+   * a selector's details.
+   */
+  _createSelectorUiElement(selector) {
+    let selectorElement =
+      new paper.PointText({
+        point: [selector.x, selector.y],
+        content: selector.label,
+        fontSize: 0.3,
+      });
+
+    selectorElement.position = new paper.Point(selector.x, selector.y);
+
+    selectorElement.scale(this._gridSpaceToPixelSpaceRatio, new paper.Point(0,0));
+
+    selectorElement.attach("mousedown", (e) => {
+      this.selectWells(selector.selects);
+
+      e.stopPropagation();
+    });
+
+    return selectorElement;
+  }
+
   _getIdsOfWellsUnderRect(rect) {
     return Object.keys(this._wells)
                  .map(wellId => { return { id: wellId, well: this._wells[wellId] }})
@@ -407,7 +445,7 @@ class _Well {
   }
 
   select(e = null) {
-    this._uiElement.fillColor = "#3366ff";
+    this._uiElement.fillColor = "#ccefff";
     this._isSelected = true;
   }
 

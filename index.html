@@ -31,6 +31,7 @@
 	Copy Table
       </button>
 
+      <div class="input-bar">
       <span class="column-selection">
 	<span ng-if="selectedColumn === null">
 	  No column selected
@@ -39,8 +40,6 @@
 	  {{ selectedColumn.header }}:
 	</span>
       </span>
-
-      <div class="input-bar">
 	<input type="text"
 		ng-model="currentValue"
 		ng-keyup="setValueOfSelectedWells();"
