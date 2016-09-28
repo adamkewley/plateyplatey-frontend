@@ -7,6 +7,7 @@ html, body {
 
 .control-bar {
     position: fixed;
+    display: flex;
     height: 30px;
     z-index: 100;
     border-width: 0 0 1px 0;
@@ -18,21 +19,27 @@ html, body {
 }
 
 .control-bar > * {
-    float: left;
+    flex: none;
     height: 100%;
     vertical-align: middle;
     line-height: 30px;
+}
+
+.control-bar .column-selection {
+    padding-left: 20px;
+    padding-right: 10px;
+    font-style: italic;
+}
+
+.control-bar > *:last-child {
+    flex: auto;
+    border-radius: 0;
 }
 
 .control-bar .site-title {
     font-family: "Georgia";
     padding: 0 20px 0 5px;
     font-weight: bold;
-}
-
-.control-bar .input-bar {
-    float: none;
-    overflow: hidden;
 }
 
 /* Make the control buttons match the control
@@ -47,42 +54,26 @@ html, body {
     background-color: #eee;
 }
 
-.control-bar .input-bar {
-    padding-left: 50px;
-}
-
-/* Vertically center the input bar */
-.control-bar .input-bar:before {
-    content: "";
-    display: inline-block;
-    height: 100%;
-    vertical-align: middle;
-}
-
 .control-bar .input-bar input {
-    width: 90%;
-    display: inline-block;
     vertical-align: middle;
     line-height: normal;
 }
 
 main {
-    position: relative;
+    display: flex;
+    flex-direction: row;
     padding-top: 40px;
     height: 100%;
 }
 
 .plate {
-    position: fixed;
     width: 560px;
-    left: 0;
     cursor: pointer;
 }
 
 .main-panel {
-    width: 100%;
+    flex: auto;
     height: 100%;
-    padding-left: 560px;
     overflow: auto;
 }
 
@@ -122,6 +113,12 @@ main {
 }
 
 .main-table td {
+    text-align: center;
+    padding: 0em 1em;
     min-width: 200px;
     cursor: pointer;
+}
+
+.main-table td.well-id {
+    min-width: auto;
 }

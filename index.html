@@ -31,21 +31,14 @@
 	Copy Table
       </button>
 
-      <div class="input-bar">
       <span class="column-selection">
-	<span ng-if="selectedColumn === null">
-	  No column selected
-	</span>
-	<span ng-if="selectedColumn !== null">
-	  {{ selectedColumn.header }}:
-	</span>
+	{{ selectedColumn === null ? "No column selected" : selectedColumn.header + ": " }}
       </span>
-	<input type="text"
-		ng-model="currentValue"
-		ng-keyup="setValueOfSelectedWells();"
-		ng-disabled="noCellsSelected()"
-		placeholder="Set the value of the selected wells" />
-      </div>
+
+      <input type="text"
+	      ng-model="currentValue"
+	      ng-keyup="setValueOfSelectedWells();"
+	      ng-disabled="noCellsSelected()" />
     </div>
     
     <main>
@@ -83,7 +76,7 @@
 
 	    <tr ng-repeat="well in wells"
 		    ng-click="$parent.clickWell($event, well);">
-	      <td ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
+	      <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column }"
 		      ng-click="$parent.selectColumn(column);">
