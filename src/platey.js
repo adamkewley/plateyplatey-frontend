@@ -346,7 +346,7 @@ class Platey {
       new paper.PointText({
         point: [selector.x, selector.y],
         content: selector.label,
-        fontSize: 0.3,
+        fontSize: 0.2,
       });
 
     selectorElement.position = new paper.Point(selector.x, selector.y);
