@@ -3,26 +3,21 @@ html, body {
     height: 100%;
     position: relative;
     overflow: hidden;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
 }
 
 .control-bar {
-    position: fixed;
     display: flex;
-    height: 30px;
-    z-index: 100;
-    border-width: 0 0 1px 0;
-    border-color: black;
-    border-style: solid;
-    top: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 1px 5px #999;
     width: 100%;
-    overflow: hidden;
 }
 
 .control-bar > * {
     flex: none;
-    height: 100%;
-    vertical-align: middle;
-    line-height: 30px;
+    display: inline-block;
 }
 
 .control-bar .column-selection {
@@ -56,37 +51,50 @@ html, body {
 
 .control-bar .input-bar input {
     vertical-align: middle;
-    line-height: normal;
+    background-color: #eee;
 }
 
 main {
-    display: flex;
-    flex-direction: row;
-    padding-top: 40px;
+    padding-top: 1em;
     height: 100%;
 }
 
+
 .plate {
-    width: 560px;
+    width: 30%;
+    float: left;
+}
+
+.plate .well {
+    fill: grey;
+    cursor: pointer;
+}
+
+.plate .well.selected {
+    fill: blue;
+}
+
+.plate .well:hover {
+    fill: lightgrey;
+}
+
+.plate .selector {
+    font-size: 0.4px; /* px in unscaled svg coordinate system */
+    text-anchor: middle;
     cursor: pointer;
 }
 
 .main-panel {
-    flex: auto;
+    width: 70%;
+    float: left;
     height: 100%;
     overflow: auto;
 }
 
-/* Collapse under plate on smaller screens */
-@media screen and (max-width: 800px) {
-    .main-panel {
-	padding-top: 400px;
-	padding-left: 0;
-    }
-}
-
 .main-table {
+    align: left;
     white-space: nowrap;
+    min-width: 100%;
 
     /* Prevent normal selection behavior because
        we handle selection behavior in the javascript */
@@ -99,6 +107,7 @@ main {
 }
 
 .main-table thead {
+    text-align: left;
     border-width: 0 0 1px 0;
     border-style: solid;
     border-color: grey;
@@ -112,7 +121,7 @@ main {
     background-color: #e6f7ff;
 }
 
-.main-table td {
+.main-table tbody td {
     text-align: center;
     padding: 0em 1em;
     min-width: 200px;
@@ -121,4 +130,5 @@ main {
 
 .main-table td.well-id {
     min-width: auto;
+    width: 1em;
 }

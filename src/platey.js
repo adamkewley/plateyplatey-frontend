@@ -1,3 +1,5 @@
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+
 class Platey {
   constructor(wells, options = {}) {
     // Perform input checks
@@ -16,8 +18,6 @@ class Platey {
     let defaultOptions = {
       gridHeight: 8,  // Number of vertical grid spaces
       gridWidth: 14,  // Number of horizontal grid spaces
-      width: 14 * 40, // Width in pixels
-      height: 10 * 40, // Height in pixels
       element: null,  // HTML element to draw plate to
       selectors: [],  // Selector elements
     };
@@ -28,16 +28,18 @@ class Platey {
     this._gridWidth = this._options.gridWidth;
     this._wellDiameter = 0.3; // In plate coordinate space
 
-    // Setup plate <canvas> element
-    this._element = document.createElement("canvas");
-    this._element.width = this._options.width;
-    this._element.height = this._options.height;
+    // Setup plate drawing element
+    this._element = document.createElementNS(SVG_NAMESPACE, "svg");
     this._element.classList.add("plate");
-    this._element.setAttribute("resize", true);
-    paper.setup(this._element);
+
+    this._element.setAttribute("viewBox", `0 0 ${this._gridWidth} ${this._gridHeight}`);
+    this._element.setAttribute("preserveAspectRatio", "xMinYMin");
 
     if (this._options.element !== null)
       this._options.element.appendChild(this._element);
+
+    // Draw all plate elements into a document fragment
+    const documentFragment = document.createDocumentFragment();
 
     // Setup wells
     this._wells = {};
@@ -51,101 +53,27 @@ class Platey {
 
       const wellUiElement = this._createWellUiElement(well);
 
+      documentFragment.appendChild(wellUiElement);
+
+      this._element.appendChild(wellUiElement);
+
       this._wells[well.id] = new _Well(wellUiElement);
     });
 
     // Setup selectors
     this._options.selectors.forEach(selector => {
-      this._createSelectorUiElement(selector);
+      documentFragment.appendChild(this._createSelectorUiElement(selector));
     });
 
     // Setup selection logic
     this._selectionChangedEvent = new Event();
 
-    // Selection box logic
-    let startPoint, endPoint, selectionBox;
-    {
-      // TODO: fix this interrupting other click handlers
-      paper.view.attach("mousedown", function(e) {
-        startPoint = e.point;
-        endPoint = e.point;
-
-        selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
-        selectionBox.strokeColor = "black";
-
-        paper.view.update();
-      });
-
-      paper.view.attach("mousedrag", function(e) {
-        if (startPoint != null && selectionBox != null)
-        {
-          endPoint = e.point;
-
-          selectionBox.remove();
-
-          selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
-          selectionBox.strokeColor = "black";
-        }
-      });
-
-      paper.view.attach("mouseup", (e) => {
-        if (startPoint != null && selectionBox != null)
-        {
-          endPoint = e.point;
-          selectionBox.remove();
-          selectionBox = null;
-
-          const selectionArea =
-              new paper.Rectangle(startPoint, endPoint)
-              .expand(this._selectionBoxExpansionAmount, this._selectionBoxExpansionAmount);
-
-          if (!e.event.shiftKey)
-            this.clearSelection();
-
-          this.selectWellsWithinRectangle(selectionArea);
-        }
-      });
-    }
+    // Draw the plate
+    this._element.appendChild(documentFragment);
   }
 
   /**
-   * Get the viewable pixel width of the plate.
-   * @return {float}
-   */
-  get _pixelWidth() {
-    return this._element.width;
-  }
-
-  /**
-   * Get the viewable pixel height of the plate.
-   */
-  get _pixelHeight() {
-    return this._element.height;
-  }
-
-  /**
-   * Get the ratio between the grid (internal) and pixel
-   * (viewable) coordinate systems.
-   * @return {float}
-   */
-  get _gridSpaceToPixelSpaceRatio() {
-    const pixelSpaceVector = new paper.Point(this._pixelWidth, this._pixelHeight);
-    const plateSpaceVector = new paper.Point(this._gridWidth, this._gridHeight);
-
-    return pixelSpaceVector.length / plateSpaceVector.length;
-  }
-
-  /**
-   * Get the amount that selection boxes need to be scaled by in
-   * order to overlap the midpoints of the well circles.
-   * @return {float}
-   */
-  get _selectionBoxExpansionAmount() {
-    return this._gridSpaceToPixelSpaceRatio * this._wellDiameter * 4;
-  }
-
-  /**
-   * Get the underlying canvas HTML element being drawn to.
+   * Get the underlying HTML element being drawn to.
    * @return {HTMLElement}
    */
   get htmlElement() {
@@ -305,34 +233,27 @@ class Platey {
     else well.deSelect();
   }
 
+  /**
+   * Clears the current selection.
+   */
   clearSelection() {
     for (var id in this._wells)
       this.deSelectWell(id);
   }
 
   /**
-   * Transforms a coordinate in the plate's grid coordinate system to
-   * the view's (pixel-oriented) coordinate system.
-   */
-  _gridCoordinateToViewCoordinate({ x: x, y: y }) {
-    const scaledX = (x / this._gridWidth) * this._element.width;
-    const scaledY = (y / this._gridHeight) * this._element.height;
-
-    return { x: scaledX, y: scaledY };
-  }
-
-  /**
-   * Create a well paper.js ui element (circle) from
-   * a well's coordinates.
+   * Create a UI element (circle) from a well's coordinates.
    */
   _createWellUiElement(well) {
-    var circle = new paper.Path.Circle(new paper.Point(well.x, well.y), this._wellDiameter);
+    const circle = document.createElementNS(SVG_NAMESPACE, "circle");
+    circle.setAttribute("cx", well.x);
+    circle.setAttribute("cy", well.y);
+    circle.setAttribute("r", 0.3);
+    circle.classList.add("well");
 
-    circle.scale(this._gridSpaceToPixelSpaceRatio, new paper.Point(0, 0));
-
-    circle.strokeColor = "black";
-
-    circle.fillColor = "white";
+    circle.addEventListener("click", () => {
+      this.selectWell(well.id);
+    });
 
     return circle;
   }
@@ -342,24 +263,19 @@ class Platey {
    * a selector's details.
    */
   _createSelectorUiElement(selector) {
-    let selectorElement =
-      new paper.PointText({
-        point: [selector.x, selector.y],
-        content: selector.label,
-        fontSize: 0.2,
-      });
+    const textElement = document.createElementNS(SVG_NAMESPACE, "text");
+    textElement.setAttribute("x", selector.x);
+    textElement.setAttribute("y", selector.y);
+    textElement.classList.add("selector");
 
-    selectorElement.position = new paper.Point(selector.x, selector.y);
+    const text = document.createTextNode(selector.label);
+    textElement.appendChild(text);
 
-    selectorElement.scale(this._gridSpaceToPixelSpaceRatio, new paper.Point(0,0));
-
-    selectorElement.attach("mousedown", (e) => {
+    textElement.addEventListener("click", () => {
       this.selectWells(selector.selects);
-
-      e.stopPropagation();
     });
 
-    return selectorElement;
+    return textElement;
   }
 
   _getIdsOfWellsUnderRect(rect) {
@@ -367,14 +283,6 @@ class Platey {
                  .map(wellId => { return { id: wellId, well: this._wells[wellId] }})
                  .filter(tuple => tuple.well.isUnder(rect))
                  .map(tuple => tuple.id);
-  }
-
-  serialize() {
-    throw "Not yet implemented";
-  }
-
-  static deserialize(json) {
-    throw "Not yet implemented";
   }
 
   static _testWellCoordinate(coordinate) {
@@ -423,9 +331,8 @@ class _Well {
     this._isSelected = false;
     this._isHoveredOver = false;
 
-    // Hovering over it
-    uiElement.attach("mouseenter", this.mouseOver.bind(this));
-    uiElement.attach("mouseleave", this.mouseLeave.bind(this));
+    uiElement.addEventListener("mouseenter", this.mouseOver.bind(this));
+    uiElement.addEventListener("mouseleave", this.mouseLeave.bind(this));
   }
 
   get isSelected() {
@@ -445,27 +352,25 @@ class _Well {
   }
 
   select(e = null) {
-    this._uiElement.fillColor = "#ccefff";
+    this._uiElement.classList.add("selected");
     this._isSelected = true;
   }
 
   deSelect(e = null) {
-    this._uiElement.fillColor = "white";
+    this._uiElement.classList.remove("selected");
     this._isSelected = false;
   }
 
   mouseOver() {
-    this._uiElement.strokeColor = "grey";
     this._isHoveredOver = true;
   }
 
   mouseLeave() {
-    this._uiElement.strokeColor = "black";
     this._isHoveredOver = false;
   }
 
   isUnder(rect) {
-    return this._uiElement.isInside(rect);
+    return false; // TODO: fix
   }
 }
 

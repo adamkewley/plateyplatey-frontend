@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="description" content="A simple UI for translating between laboratory plate layouts and standard tables." />
 
-    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="bower_components/normalize-css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
 
     <title>Plate to Table Translator</title>
@@ -52,7 +52,7 @@
     
     <main>
 
-      <div class="plate" platey-plate></div>
+      <div platey-plate></div>
 
       <div class="main-panel">
 
@@ -101,9 +101,8 @@
 
     </main>
 
-    <script src="bower_components/paper/dist/paper-full.js"></script>
-    <script src="bower_components/papaparse/papaparse.js"></script>
-    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/papaparse/papaparse.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
     <script src="src/platey.js"></script>
     <script src="platey-directive.js"></script>
     <script src="platey-controller.js"></script>
