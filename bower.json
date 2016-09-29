@@ -16,13 +16,11 @@
     "tests"
   ],
   "dependencies": {
-    "paper": "~0.10.2",
     "angular": "~1.5.8",
-    "bootstrap": "~3.3.7",
     "papaparse": "~4.1.2",
-    "d3": "~4.2.6"
+    "normalize-css": "~4.2.0"
   },
   "devDependencies": {
-    "normalize-css": "~4.2.0"
+    "angular-mocks": "~1.5.8"
   }
 }
