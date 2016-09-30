@@ -1,0 +1,134 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+}
+
+.control-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 1px 5px #999;
+    width: 100%;
+}
+
+.control-bar > * {
+    flex: none;
+    display: inline-block;
+}
+
+.control-bar .column-selection {
+    padding-left: 20px;
+    padding-right: 10px;
+    font-style: italic;
+}
+
+.control-bar > *:last-child {
+    flex: auto;
+    border-radius: 0;
+}
+
+.control-bar .site-title {
+    font-family: "Georgia";
+    padding: 0 20px 0 5px;
+    font-weight: bold;
+}
+
+/* Make the control buttons match the control
+   bar */
+.control-bar button {
+    margin: 0 5px;
+    border-width: 0;
+    background-color: #fff;
+}
+
+.control-bar button:hover {
+    background-color: #eee;
+}
+
+.control-bar .input-bar input {
+    vertical-align: middle;
+    background-color: #eee;
+}
+
+main {
+    padding-top: 1em;
+    height: 100%;
+}
+
+
+.plate {
+    width: 30%;
+    float: left;
+}
+
+.plate .well {
+    fill: grey;
+    cursor: pointer;
+}
+
+.plate .well.selected {
+    fill: blue;
+}
+
+.plate .well:hover {
+    fill: lightgrey;
+}
+
+.plate .selector {
+    font-size: 0.4px; /* px in unscaled svg coordinate system */
+    text-anchor: middle;
+    cursor: pointer;
+}
+
+.main-panel {
+    width: 70%;
+    float: left;
+    height: 100%;
+    overflow: auto;
+}
+
+.main-table {
+    align: left;
+    white-space: nowrap;
+    min-width: 100%;
+
+    /* Prevent normal selection behavior because
+       we handle selection behavior in the javascript */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.main-table thead {
+    text-align: left;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: grey;
+}
+
+.selected-well {
+    background-color: #ccefff;
+}
+
+.main-table .selected-row, .selected-column {
+    background-color: #e6f7ff;
+}
+
+.main-table tbody td {
+    text-align: center;
+    padding: 0em 1em;
+    min-width: 200px;
+    cursor: pointer;
+}
+
+.main-table td.well-id {
+    min-width: auto;
+    width: 1em;
+}

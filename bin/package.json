@@ -1,0 +1,30 @@
+{
+  "name": "platey",
+  "version": "0.0.0",
+  "description": "Map well-plate layouts to standard tables",
+  "main": "platey.js",
+  "dependencies": {
+    "karma": "~1.1.2",
+    "karma-cli": "~1.0.1",
+    "dev": "~0.1.3"
+  },
+  "devDependencies": {
+    "karma": "~1.1.2",
+    "jasmine-core": "~2.4.1",
+    "karma-jasmine": "~1.0.2",
+    "karma-firefox-launcher": "~1.0.0",
+    "karma-jasmine-html-reporter": "~0.2.1"
+  },
+  "scripts": {
+    "test": "./node_modules/karma/bin/karma start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "C:/Users/adam.kewley/Desktop/..\\\\Documents\\\\projects\\\\platey.git"
+  },
+  "keywords": [
+    "plate"
+  ],
+  "author": "Adam Kewley",
+  "license": "BSD-2-Clause"
+}
