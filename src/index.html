@@ -39,6 +39,9 @@
       <button ng-click="copyTableToClipboard();">
 	Copy Table
       </button>
+      <button platey-command="some-command">
+	Custom command
+      </button>
 
       <span class="column-selection">
 	{{ selectedColumn === null ? "No column selected" : selectedColumn.header + ": " }}
@@ -133,7 +136,6 @@
     <script src="bower_components/es6-shim/es6-shim.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
     <script src="bower_components/angular/angular.min.js"></script>
-    <script src="platey-controller.js"></script>
-    <script src="platey-app.js"></script>
+    <script src="platey.js"></script>
   </body>
 </html>
