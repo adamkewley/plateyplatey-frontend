@@ -18,7 +18,8 @@
   "dependencies": {
     "angular": "~1.5.8",
     "papaparse": "~4.1.2",
-    "normalize-css": "~4.2.0"
+    "normalize-css": "~4.2.0",
+    "es6-shim": "~0.35.1"
   },
   "devDependencies": {
     "angular-mocks": "~1.5.8"

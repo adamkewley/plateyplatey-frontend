@@ -67,7 +67,7 @@
 		ng-class="{ hovered: well.hovered, selected: well.selected }"
 	        ng-click="$parent.selectWell($event, well);"
 	        ng-mouseover="hoverOverWell(well);"
-	        ng-mouseout="unHoverOverWell(well);" />
+	        ng-mouseout="unHoverOverWell(well);"></circle>
 
 	<!-- Selectors -->
 	<text ng-repeat="selector in selectors"
@@ -130,6 +130,7 @@
 
     </main>
     
+    <script src="bower_components/es6-shim/es6-shim.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
     <script src="bower_components/angular/angular.min.js"></script>
     <script src="platey-controller.js"></script>

@@ -15,8 +15,9 @@ ${OUT_DIR}/bower_components: bower_components | ${OUT_DIR}
 ${OUT_DIR}/%.css: src/%.scss | ${OUT_DIR}
 	sass $< $@
 
+# es6 to es5 javascript files
 ${OUT_DIR}/%.js: src/%.js | ${OUT_DIR}
-	cp $< $@
+	babel $< -o $@
 
 ${OUT_DIR}/%.json: src/%.json | ${OUT_DIR}
 	cp $< $@

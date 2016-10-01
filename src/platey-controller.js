@@ -599,7 +599,8 @@ angular.module("plateyController", []).controller(
       * Handles clicks that have bubbled all the way upto the body.
       */
      $scope.bodyClickEventHandler = function($event) {
-       const sourceElement = $event.originalTarget.tagName.toLowerCase();
+       // .originalTarget does not work on IE11
+       const sourceElement = ($event.originalTarget || $event.srcElement).tagName.toLowerCase();
        const sourceHandled =
         sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
