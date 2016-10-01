@@ -12,6 +12,7 @@ angular.module("plateyController", []).controller(
   "plateyController",
   ["$scope", "$http",
    function($scope, $http) {
+     $scope.plateLayout = null;
      $scope.columns = [];
      $scope.selectedColumn = null;
      $scope.wells = [];
@@ -23,29 +24,8 @@ angular.module("plateyController", []).controller(
 
      // Load a plate layout
      $http.get("96-well-plate.json")
-     .then(function(response) {
-       const data = response.data;
-       $scope.vbox = `0 0 ${data.gridWidth} ${data.gridHeight}`;
-
-       $scope.wells = data.wells.map(well => {
-         return {
-           id: well.id,
-           columns: [],
-           selected: false,
-           hovered: false,
-           x: well.x,
-           y: well.y,
-         };
-       });
-
-       $scope.selectors = data.selectors.map(selector => {
-         return {
-           x: selector.x,
-           y: selector.y,
-           label: selector.label,
-           selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
-         };
-       });
+     .then(function(plateData) {
+       $scope.plateLayout = plateData.data;
      });
 
      /**
@@ -108,26 +88,6 @@ angular.module("plateyController", []).controller(
          else return "";
        }
      }
-
-     $scope.getWellsFromIds = (wellIds) => {
-       return $scope.wells.filter(well => wellIds.indexOf(well.id) !== -1);
-     };
-
-     $scope.hoverOverWell = (well) => {
-       well.hovered = true;
-     };
-
-     $scope.unHoverOverWell = (well) => {
-       well.hovered = false;
-     };
-
-     $scope.hoverOverWells = (wells) => {
-       wells.forEach($scope.hoverOverWell);
-     };
-
-     $scope.unHoverOverWells = (wells) => {
-       wells.forEach($scope.unHoverOverWell);
-     };
 
      /**
       * Sets the currently selected wells to currentValue.
@@ -593,7 +553,7 @@ angular.module("plateyController", []).controller(
      };
 
      const sourcesWithClickHandlers =
-        ["button", "input", "td", "th", "circle", "text", "svg"];
+        ["button", "input", "td", "th"];
 
      /**
       * Handles clicks that have bubbled all the way upto the body.

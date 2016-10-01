@@ -15,7 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      "bower_components/rxjs/dist/rx.all.min.js",
+      'bower_components/paper/dist/paper-full.js',
       'src/*.js',
       'test/*.js',
     ],

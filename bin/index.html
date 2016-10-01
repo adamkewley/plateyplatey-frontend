@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="bower_components/normalize-css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
 
-    <title>PlateyPlatey</title>
+    <title>Plate to Table Translator</title>
   </head>
 
   <body ng-controller="plateyController"
@@ -17,7 +17,7 @@
 	  ng-paste="pasteEventHandler($event);">
 
     <div class="control-bar">
-      <span class="site-title">PlateyPlatey</span>
+      <span class="site-title">PlateToTable</span>
       <button ng-click="newPlate();">
 	New Plate
       </button>
@@ -51,35 +51,8 @@
     </div>
     
     <main>
-      
-      <!--       <div platey-plate></div> -->
 
-      <svg class="plate" 
-	      vbox="{{ vbox }}"
-	      preserveAspectRatio="xMinYMin">
-
-	<!-- Wells -->
-	<circle ng-repeat="well in wells" 
-		ng-attr-cx="{{ well.x }}" 
-		ng-attr-cy="{{ well.y }}"
-		r="0.3"
-		class="well"
-		ng-class="{ hovered: well.hovered, selected: well.selected }"
-	        ng-click="$parent.selectWell($event, well);"
-	        ng-mouseover="hoverOverWell(well);"
-	        ng-mouseout="unHoverOverWell(well);" />
-
-	<!-- Selectors -->
-	<text ng-repeat="selector in selectors"
-		ng-attr-x="{{ selector.x }}"
-		ng-attr-y="{{ selector.y }}"
-		class="selector"
-		ng-click="$parent.selectWells(selector.selects);"
-		ng-mouseover="hoverOverWells(selector.selects);"
-		ng-mouseout="unHoverOverWells(selector.selects);">
-	  {{ selector.label }}
-	</text>
-      </svg>
+      <div platey-plate></div>
 
       <div class="main-panel">
 
@@ -114,10 +87,8 @@
 		    ng-click="$parent.clickWell($event, well);">
 	      <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
-		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
-		      ng-click="$parent.selectColumn(column);"
-		      ng-mouseover="hoverOverWell(well);"
-		      ng-mouseout="unHoverOverWell(well);">
+		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column }"
+		      ng-click="$parent.selectColumn(column);">
 		{{ well[column.id] }}
 	      </td>
 	    </tr>
@@ -129,9 +100,11 @@
       </div>
 
     </main>
-    
+
     <script src="bower_components/papaparse/papaparse.min.js"></script>
     <script src="bower_components/angular/angular.min.js"></script>
+    <script src="src/platey.js"></script>
+    <script src="platey-directive.js"></script>
     <script src="platey-controller.js"></script>
     <script src="platey-app.js"></script>
   </body>

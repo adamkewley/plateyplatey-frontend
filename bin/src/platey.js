@@ -1,3 +1,5 @@
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+
 class Platey {
   constructor(wells, options = {}) {
     // Perform input checks
@@ -14,29 +16,30 @@ class Platey {
 
     // Setup internal variables
     let defaultOptions = {
-      gridHeight: 8,
-      gridWidth: 14,
-      width: 14 * 40,
-      height: 8 * 40,
-      element: null,
+      gridHeight: 8,  // Number of vertical grid spaces
+      gridWidth: 14,  // Number of horizontal grid spaces
+      element: null,  // HTML element to draw plate to
+      selectors: [],  // Selector elements
     };
 
     this._options = Platey._extend(defaultOptions, options);
 
     this._gridHeight = this._options.gridHeight;
     this._gridWidth = this._options.gridWidth;
-    this._wellDiameter = 12;
+    this._wellDiameter = 0.3; // In plate coordinate space
 
-    // Setup plate <canvas> element
-    this._element = document.createElement("canvas");
-    this._element.width = this._options.width;
-    this._element.height = this._options.height;
+    // Setup plate drawing element
+    this._element = document.createElementNS(SVG_NAMESPACE, "svg");
     this._element.classList.add("plate");
-    this._element.setAttribute("resize", null);
-    paper.setup(this._element);
+
+    this._element.setAttribute("viewBox", `0 0 ${this._gridWidth} ${this._gridHeight}`);
+    this._element.setAttribute("preserveAspectRatio", "xMinYMin");
 
     if (this._options.element !== null)
       this._options.element.appendChild(this._element);
+
+    // Draw all plate elements into a document fragment
+    const documentFragment = document.createDocumentFragment();
 
     // Setup wells
     this._wells = {};
@@ -50,85 +53,76 @@ class Platey {
 
       const wellUiElement = this._createWellUiElement(well);
 
+      documentFragment.appendChild(wellUiElement);
+
+      this._element.appendChild(wellUiElement);
+
       this._wells[well.id] = new _Well(wellUiElement);
+    });
+
+    // Setup selectors
+    this._options.selectors.forEach(selector => {
+      documentFragment.appendChild(this._createSelectorUiElement(selector));
     });
 
     // Setup selection logic
     this._selectionChangedEvent = new Event();
 
-    // Drag and drop selection logic - will select even if it's
-    // essentially just a click
-    const selectionBoxExpansionAmount = 4 * this._wellDiameter;
-
-    // Selection box logic
-    let startPoint, endPoint, selectionBox;
-    {
-      paper.view.attach("mousedown", function(e) {
-        startPoint = e.point;
-        endPoint = e.point;
-
-        selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
-        selectionBox.strokeColor = "black";
-
-        paper.view.update();
-      });
-
-      paper.view.attach("mousedrag", function(e) {
-        if (startPoint != null && selectionBox != null)
-        {
-          endPoint = e.point;
-
-          selectionBox.remove();
-
-          selectionBox = paper.Shape.Rectangle(startPoint, endPoint);
-          selectionBox.strokeColor = "black";
-        }
-      });
-
-      paper.view.attach("mouseup", (e) => {
-        if (startPoint != null && selectionBox != null)
-        {
-          endPoint = e.point;
-          selectionBox.remove();
-          selectionBox = null;
-
-          const selectionArea =
-              new paper.Rectangle(startPoint, endPoint)
-              .expand(selectionBoxExpansionAmount, selectionBoxExpansionAmount);
-
-          if (!e.event.shiftKey)
-            this.clearSelection();
-
-          this.selectWellsWithinRectangle(selectionArea);
-        }
-      });
-    }
+    // Draw the plate
+    this._element.appendChild(documentFragment);
   }
 
+  /**
+   * Get the underlying HTML element being drawn to.
+   * @return {HTMLElement}
+   */
   get htmlElement() {
     return this._element;
   }
 
+  /**
+   * Get if the plate contains wells.
+   * @return {boolean}
+   */
   get hasWells() {
     return Object.keys(this._wells).length > 0;
   }
 
+  /**
+   * Get the number of wells in the plate.
+   * @return {integer}
+   */
   get numberOfWells() {
     return Object.keys(this._wells).length;
   }
 
+  /**
+   * Get the IDs of wells in the plate.
+   * @return {Array.<String>}
+   */
   get wellIds() {
     return Object.keys(this._wells);
   }
 
+  /**
+   * Get the IDs of selected wells in the plate.
+   * @return {Array.<string>}
+   */
   get selectedWellIds() {
     return Object.keys(this._wells).filter(key => this._wells[key].isSelected);
   }
 
+  /**
+   * Get the IDs of wells that are not selected in the plate.
+   * @return {Array.<string>}
+   */
   get notSelectedWellIds() {
     return Object.keys(this._wells).filter(key => !this._wells[key].isSelected);
   }
 
+  /**
+   * Get an event that triggers whenever the plate's selection changes.
+   */
   get onSelectionChanged() {
     return this._selectionChangedEvent;
   }
@@ -144,6 +138,10 @@ class Platey {
     this.selectWells(wellsToSelect);
   }
 
+  /**
+   * Select the well with ID wellId.
+   * @param {String} wellId The ID of the well to select.
+   */
   selectWell(wellId) {
     if (this.selectedWellIds.indexOf(wellId) === -1) {
       this._selectWell(wellId);
@@ -156,6 +154,10 @@ class Platey {
     // else: the well was already selected, do nothing.
   }
 
+  /**
+   * Select multiple wells by their ID.
+   * @param {Array.<String>} wellIds The IDs of the wells to select.
+   */
   selectWells(wellIds) {
     const previouslySelectedWells = this.selectedWellIds;
 
@@ -231,27 +233,49 @@ class Platey {
     else well.deSelect();
   }
 
+  /**
+   * Clears the current selection.
+   */
   clearSelection() {
     for (var id in this._wells)
       this.deSelectWell(id);
   }
 
-  _gridCoordinateToViewCoordinate({ x: x, y: y }) {
-    const scaledX = (x / this._gridWidth) * this._element.width;
-    const scaledY = (y / this._gridHeight) * this._element.height;
-
-    return { x: scaledX, y: scaledY };
-  }
-
+  /**
+   * Create a UI element (circle) from a well's coordinates.
+   */
   _createWellUiElement(well) {
-    const coord = this._gridCoordinateToViewCoordinate(well);
+    const circle = document.createElementNS(SVG_NAMESPACE, "circle");
+    circle.setAttribute("cx", well.x);
+    circle.setAttribute("cy", well.y);
+    circle.setAttribute("r", 0.3);
+    circle.classList.add("well");
 
-    var circle = new paper.Path.Circle(new paper.Point(coord.x, coord.y), this._wellDiameter);
-    circle.strokeColor = "black";
-
-    circle.fillColor = "white";
+    circle.addEventListener("click", () => {
+      this.selectWell(well.id);
+    });
 
     return circle;
+  }
+
+  /**
+   * Create a selector paper.js element (text) from
+   * a selector's details.
+   */
+  _createSelectorUiElement(selector) {
+    const textElement = document.createElementNS(SVG_NAMESPACE, "text");
+    textElement.setAttribute("x", selector.x);
+    textElement.setAttribute("y", selector.y);
+    textElement.classList.add("selector");
+
+    const text = document.createTextNode(selector.label);
+    textElement.appendChild(text);
+
+    textElement.addEventListener("click", () => {
+      this.selectWells(selector.selects);
+    });
+
+    return textElement;
   }
 
   _getIdsOfWellsUnderRect(rect) {
@@ -259,14 +283,6 @@ class Platey {
                  .map(wellId => { return { id: wellId, well: this._wells[wellId] }})
                  .filter(tuple => tuple.well.isUnder(rect))
                  .map(tuple => tuple.id);
-  }
-
-  serialize() {
-    throw "Not yet implemented";
-  }
-
-  static deserialize(json) {
-    throw "Not yet implemented";
   }
 
   static _testWellCoordinate(coordinate) {
@@ -315,9 +331,8 @@ class _Well {
     this._isSelected = false;
     this._isHoveredOver = false;
 
-    // Hovering over it
-    uiElement.attach("mouseenter", this.mouseOver.bind(this));
-    uiElement.attach("mouseleave", this.mouseLeave.bind(this));
+    uiElement.addEventListener("mouseenter", this.mouseOver.bind(this));
+    uiElement.addEventListener("mouseleave", this.mouseLeave.bind(this));
   }
 
   get isSelected() {
@@ -337,27 +352,25 @@ class _Well {
   }
 
   select(e = null) {
-    this._uiElement.fillColor = "#3366ff";
+    this._uiElement.classList.add("selected");
     this._isSelected = true;
   }
 
   deSelect(e = null) {
-    this._uiElement.fillColor = "white";
+    this._uiElement.classList.remove("selected");
     this._isSelected = false;
   }
 
   mouseOver() {
-    this._uiElement.strokeColor = "grey";
     this._isHoveredOver = true;
   }
 
   mouseLeave() {
-    this._uiElement.strokeColor = "black";
     this._isHoveredOver = false;
   }
 
   isUnder(rect) {
-    return this._uiElement.isInside(rect);
+    return false; // TODO: fix
   }
 }
 
