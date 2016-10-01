@@ -64,7 +64,7 @@
 		ng-attr-cy="{{ well.y }}"
 		r="0.3"
 		class="well"
-		ng-class="{ selected: well.selected, hovered: well.hovered }"
+		ng-class="{ hovered: well.hovered, selected: well.selected }"
 	        ng-click="$parent.selectWell($event, well);"
 	        ng-mouseover="hoverOverWell(well);"
 	        ng-mouseout="unHoverOverWell(well);" />

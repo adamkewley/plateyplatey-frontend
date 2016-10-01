@@ -76,7 +76,9 @@ main {
 }
 
 .plate .well {
-    fill: grey;
+    fill: transparent;
+    stroke-width: 0.2%;
+    stroke: black;
     cursor: pointer;
 }
 
@@ -84,20 +86,14 @@ main {
     fill: blue;
 }
 
-.plate .well.hovered {
-    fill: black;
+.plate .hovered {
+    fill: #eee;
 }
 
 .plate .selector {
     font-size: 0.4px; /* px in unscaled svg coordinate system */
     text-anchor: middle;
     cursor: pointer;
-}
-
-.plate .selection-box {
-    fill: none;
-    stroke-width: 0.25%;
-    stroke: black;
 }
 
 .main-panel {
@@ -134,7 +130,7 @@ main {
 }
 
 .hovered-well {
-    background-color: black;
+    background-color: #eee;
 }
 
 /* The end row/column, to show the user
