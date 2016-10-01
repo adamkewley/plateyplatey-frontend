@@ -581,7 +581,6 @@ angular.module("plateyController", []).controller(
          $event.stopPropagation();
          $event.preventDefault();
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-         document.activeElement.blur();
          document.body.focus();
          const charCode = $event.charCode;
          const char = String.fromCharCode(charCode);
