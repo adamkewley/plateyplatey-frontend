@@ -63,6 +63,16 @@ main {
 .plate {
     width: 30%;
     float: left;
+
+
+    /* Prevent normal selection behavior because
+       we handle selection behavior in the javascript */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .plate .well {
@@ -74,14 +84,20 @@ main {
     fill: blue;
 }
 
-.plate .well:hover {
-    fill: lightgrey;
+.plate .well.hovered {
+    fill: black;
 }
 
 .plate .selector {
     font-size: 0.4px; /* px in unscaled svg coordinate system */
     text-anchor: middle;
     cursor: pointer;
+}
+
+.plate .selection-box {
+    fill: none;
+    stroke-width: 0.25%;
+    stroke: black;
 }
 
 .main-panel {
@@ -117,10 +133,18 @@ main {
     background-color: #ccefff;
 }
 
+.hovered-well {
+    background-color: black;
+}
+
+/* The end row/column, to show the user
+   which row/column they're in */
 .main-table .selected-row, .selected-column {
     background-color: #e6f7ff;
 }
 
+/* Body columns have a minimum size, to prevent them
+   from looking really funky. */
 .main-table tbody td {
     text-align: center;
     padding: 0em 1em;
@@ -128,6 +152,7 @@ main {
     cursor: pointer;
 }
 
+/* The well ID column should be narrower */
 .main-table td.well-id {
     min-width: auto;
     width: 1em;

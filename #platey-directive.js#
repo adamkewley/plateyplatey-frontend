@@ -54,9 +54,6 @@ angular.module("plateyPlate", []).directive(
            // Whenever the plate's selection changes, update
            // the angular scope
            plate.onSelectionChanged.add(onPlateSelectionChanged);
-
-           scope.wells =
-             plate.wellIds.map(wellId => { return { id: wellId, columns: [], selected: false }});
          }
        }
 
