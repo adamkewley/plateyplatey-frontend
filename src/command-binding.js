@@ -29,6 +29,12 @@ class ExampleCommand {
     this._description = "Clear the plate of data, leaving the columns intact.";
     this._disabledSubject =
       new Rx.BehaviorSubject({ isDisabled: false, hasReason: true, reason: "Fuck you" });
+
+    window.setInterval(() => {
+      const newValue = !this._disabledSubject.getValue().isDisabled;
+
+      this._disabledSubject.onNext({ isDisabled: newValue });
+    }, 300);
   }
 
   /**
