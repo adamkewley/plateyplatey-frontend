@@ -18,55 +18,6 @@
  */
 
 /**
- * An example native command implementation.
- */
-class ExampleCommand {
-  constructor(scope) {
-    // Hook into the scope etc.
-
-    this._id = "clear-plate";
-    this._title = "Clear Plate";
-    this._description = "Clear the plate of data, leaving the columns intact.";
-    this._disabledSubject =
-      new Rx.BehaviorSubject({ isDisabled: false, hasReason: true, reason: "Fuck you" });
-
-    window.setInterval(() => {
-      const newValue = !this._disabledSubject.getValue().isDisabled;
-
-      this._disabledSubject.onNext({ isDisabled: newValue });
-    }, 300);
-  }
-
-  /**
-   * The unique ID of the command.
-   */
-  get id () { return this._id; }
-
-  /**
-   * The user-friendly title of the command.
-   */
-  get title () { return this._title; }
-
-  get description() { return this._description; }
-
-  /**
-   * The current disabled state of the command.
-   * {Rx.BehaviorSubject.<false|true|string>}
-   */
-  get disabledSubject() { return this._disabledSubject; }
-
-  /**
-   * Execute the command.
-   * @param {Event} e The event that triggered the command.
-   */
-  execute() {
-    alert("hello world");
-  }
-}
-
-const exampleCommand = new ExampleCommand(null);
-
-/**
  * Describes a command that the UI can bind to.
  */
 angular
@@ -76,13 +27,17 @@ angular
   function link(scope, element, attrs) {
     const el = element[0];
 
-    // TODO: this command is just here to test the idea
-    const command = exampleCommand;
+    const command = scope.getCommand(attrs.plateyCommand);
 
-    command.disabledSubject.subscribe(e => {
-      el.disabled = e.isDisabled;
-      el.title = (e.isDisabled && e.hasReason) ? e.reason : command.description;
-    });
+    if (command.isAlwaysEnabled) {
+      el.disabled = false;
+      el.title = command.description;
+    } else {
+      command.disabledSubject.subscribe(e => {
+        el.disabled = e.isDisabled;
+        el.title = (e.isDisabled && e.hasReason) ? e.reason : command.description;
+      });
+    }
 
     el.addEventListener("click", (e) => {
       scope.$apply(() => command.execute(e));

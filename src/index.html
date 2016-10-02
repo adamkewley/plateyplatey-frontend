@@ -13,34 +13,48 @@
 
   <body ng-controller="plateyController"
 	  ng-keypress="bodyKeypressHandler($event);"
-	  ng-click="bodyClickEventHandler($event);"
-	  ng-paste="pasteEventHandler($event);">
+	  ng-click="bodyClickEventHandler($event);">
 
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
-      <button ng-click="newPlate();">
+      <button platey-command="new-plate">
 	New Plate
       </button>
-      <button ng-click="clearPlate();">
+      <button platey-command="clear-plate">
 	Clear Plate
       </button>
-      <button ng-click="invertSelection();">
+      <button platey-command="invert-selection">
 	Invert Selection
       </button>
-      <button ng-click="moveSelectedColumnLeft();">
+      <button platey-command="move-selected-column-left">
 	Move Selected Column Left
       </button>
-      <button ng-click="moveSelectedColumnRight();">
+      <button platey-command="move-selected-column-right">
 	Move Selected Column Right
       </button>
-      <button ng-click="exportTableToCSV();">
+      <button platey-command="export-table-to-csv">
 	CSV Export
       </button>
-      <button ng-click="copyTableToClipboard();">
+      <button platey-command="copy-table-to-clipboard">
 	Copy Table
       </button>
-      <button platey-command="some-command">
-	Custom command
+      <button platey-command="select-all">
+	Select All
+      </button>
+      <button platey-command="move-column-selection-left">
+	Move Column Selection Left
+      </button>
+      <button platey-command="move-column-selection-right">
+	Move Column Selection Right
+      </button>
+      <button platey-command="move-row-focus-down">
+	Move Row Focus Down
+      </button>
+      <button platey-command="move-row-focus-up">
+	Move Row Focus Up
+      </button>
+      <button platey-command="clear-values-in-current-selection">
+	Clear Values in Current Selection
       </button>
 
       <span class="column-selection">
@@ -54,8 +68,6 @@
     </div>
     
     <main>
-      
-      <!--       <div platey-plate></div> -->
 
       <svg class="plate" 
 	      vbox="{{ vbox }}"
@@ -93,18 +105,17 @@
 
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-column': column === $parent.selectedColumn }"
-		    ng-click="$parent.selectColumn(column);">
+		    ng-click="$parent.selectColumn(column.id);">
 
 	      <input type="text"
 		      ng-model="column.header"
 		      style="display: inline"
 	              ng-keydown="$event.stopPropagation();"/>
-	      <button ng-click="removeColumn(column);">X</button>
+	      <button ng-click="removeColumn(column.id);">X</button>
 	    </th>
 
 	    <th>
-	      <button class="btn btn-success"
-		      ng-click="addColumn();">
+	      <button class="btn btn-success" platey-command="add-column">
 		Add Column
 	      </button>
 	    </th>
@@ -118,7 +129,7 @@
 	      <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
-		      ng-click="$parent.selectColumn(column);"
+		      ng-click="$parent.selectColumn(column.id);"
 		      ng-mouseover="hoverOverWell(well);"
 		      ng-mouseout="unHoverOverWell(well);">
 		{{ well[column.id] }}
@@ -136,7 +147,7 @@
     <script src="bower_components/es6-shim/es6-shim.min.js"></script>
     <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
-    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
     <script src="platey.js"></script>
   </body>
 </html>
