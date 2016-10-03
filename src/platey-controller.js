@@ -12,9 +12,6 @@ angular.module("plateyController", []).controller(
   "plateyController",
   ["$scope", "$http",
    function($scope, $http) {
-     // To avoid $broadcast null bugs.
-     const NOTHING = "";
-
      // DATA - The underlying data structure. Only the UI and the
      // primatives should be able to touch these. Native and
      // non-native commands should access them indirectly via
@@ -36,14 +33,14 @@ angular.module("plateyController", []).controller(
       * Create a new document.
       */
      $scope.newDocument = () => {
-       $scope.$broadcast("before-new-document-created", NOTHING);
+       $scope.$broadcast("before-new-document-created", null);
 
        $scope.selectColumn(null);
        $scope.currentValue = "";
        $scope.columns = [];
        $scope.clickedWell = null;
 
-       $scope.$broadcast("after-new-document-created", NOTHING);
+       $scope.$broadcast("after-new-document-created", null);
      };
 
      /**
@@ -51,7 +48,7 @@ angular.module("plateyController", []).controller(
       * @return {ColumnId} The ID of the new column.
       */
      $scope.addColumn = () => {
-       $scope.$broadcast("before-column-added", NOTHING);
+       $scope.$broadcast("before-column-added", null);
 
        const newColumn = {
          header: "Column " + ($scope.columns.length + 1),
@@ -318,23 +315,18 @@ angular.module("plateyController", []).controller(
      };
 
      // Aggregate / co-dependant events.
-     $scope.$on("after-column-added", () => $scope.$broadcast("after-table-columns-changed", NOTHING));
-     $scope.$on("after-column-removed", () => $scope.$broadcast("after-table-columns-changed", NOTHING));
-     $scope.$on("after-column-moved", () => $scope.$broadcast("after-table-columns-changed", NOTHING));
+     $scope.$on("after-column-added", () => $scope.$broadcast("after-table-columns-changed", null));
+     $scope.$on("after-column-removed", () => $scope.$broadcast("after-table-columns-changed", null));
+     $scope.$on("after-column-moved", () => $scope.$broadcast("after-table-columns-changed", null));
 
-     $scope.$on("after-table-columns-changed", () => $scope.$broadcast("after-table-changed", NOTHING));
+     $scope.$on("after-table-columns-changed", () => $scope.$broadcast("after-table-changed", null));
 
-     $scope.$on("after-selecting-rows", () => $scope.$broadcast("after-table-selection-changed", NOTHING));
-     $scope.$on("after-deselecting-rows", () => $scope.$broadcast("after-table-selection-changed", NOTHING));
-     $scope.$on("after-column-selection-changed", () => $scope.$broadcast("after-table-selection-changed", NOTHING));
+     $scope.$on("after-selecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
+     $scope.$on("after-deselecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
 
-     // NATIVE COMMANDS - These commands use primatives, and any
-     // standard javascript / library functionality to do higher-level
-     // stuff such as inverting a selection or exporting the plate's
-     // data. They offer a high degree of control over platey but may
-     // need patching as the primatives evolve. The outer interface of
-     // native commands should not change much over time. Because they
-     // use primatives, they are the least encapsulated command.
+     $scope.$on("after-row-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
+     $scope.$on("after-column-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
+
      const primativeCommands = {
        newDocument: $scope.newDocument,
        addColumn: $scope.addColumn,
@@ -356,6 +348,14 @@ angular.module("plateyController", []).controller(
        getFocusedRowId: $scope.getFocusedRowId,
        focusRow: $scope.focusRow,
      };
+
+     // NATIVE COMMANDS - These commands use primatives, and any
+     // standard javascript / library functionality to do higher-level
+     // stuff such as inverting a selection or exporting the plate's
+     // data. They offer a high degree of control over platey but may
+     // need patching as the primatives evolve. The outer interface of
+     // native commands should not change much over time. Because they
+     // use primatives, they are the least encapsulated command.
 
      // Native commands hook into the core's events.
      const events = {
@@ -488,74 +488,12 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Select a well in the plate.
-      * @param event The JQueryLite event that triggered the call.
-      * @param {Well} wellToSelect The well to select.
-      */
-     $scope.selectWell = function($event, wellToSelect) {
-       if (!$event.shiftKey) {
-         $scope.wells.forEach(well => well.selected = false);
-       }
-
-       wellToSelect.selected = true;
-     };
-
-     /**
-      * Select wells in the plate.
-      * @param {Array.<Well>} wells The wells to select.
-      */
-     $scope.selectWells = function(wells) {
-       wells.forEach(well => well.selected = true);
-     };
-
-     $scope.deSelectWells = function(wells) {
-       wells.forEach(well => well.selected = false);
-     };
-
-     /**
-      * Click a well in the plate. A clicked well is a kind of a
-      * "higher ranked" selected well. In effect, all arrow-based
-      * selection logic goes relative to the clicked well.
-      */
-     $scope.clickWell = function($event, wellToClick) {
-       $scope.clickedWell = wellToClick;
-       $scope.selectWell($event, wellToClick);
-     };
-
-     /**
       * Returns true if no cells are selected.
       * @returns {boolean}
       */
      $scope.noCellsSelected = () => {
        return $scope.selectedColumn === null ||
               !$scope.wells.some(well => well.selected);
-     };
-
-     /**
-      * Clears the current selection.
-      */
-     $scope.clearSelection = function() {
-       $scope.wells.forEach(well => well.selected = false);
-       $scope.currentValue = "";
-     };
-
-     /**
-      * Grows a well selection down relative to the last
-      * user-clicked well. Does nothing if the user hasn't
-      * specifically clicked a well to move from.
-      */
-     $scope.growWellSelectionDown = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const lastWellIdx = $scope.wells.length - 1;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
-           const newIdx = clickedWellIdx + 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
      };
 
      // Extra Behaviors
@@ -646,6 +584,8 @@ angular.module("plateyController", []).controller(
      const sourcesWithClickHandlers =
         ["button", "input", "td", "th", "circle", "text", "svg"];
 
+     const clearRowSelectionCommand = $scope.getCommand("clear-row-selection");
+
      /**
       * Handles clicks that have bubbled all the way upto the body.
       */
@@ -656,7 +596,7 @@ angular.module("plateyController", []).controller(
         sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
-       else $scope.clearSelection();
+       else clearRowSelectionCommand.execute();
      };
 
      /**
@@ -673,6 +613,9 @@ angular.module("plateyController", []).controller(
          s4() + '-' + s4() + s4() + s4();
      }
 
+     /**
+      * Internal function for moving items in an array.
+      */
      function moveItemInArray(array, old_index, new_index) {
        if (new_index >= array.length) {
          var k = new_index - array.length;

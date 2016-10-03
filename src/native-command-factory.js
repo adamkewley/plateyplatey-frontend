@@ -37,13 +37,31 @@ class ClearPlateCommand {
  * A native command that inverts the selection in the plate.
  */
 class InvertSelectionCommand {
-  constructor(primativeCommands) {
+  constructor(primativeCommands, applicationEvents) {
+    this._primativeCommands = primativeCommands;
     this.id = "invert-selection";
     this.title = "Invert Selection";
     this.description = "Invert the current selection, which de-selects anything that is currently selected and selects anything that is not currently selected.";
-    this.isAlwaysEnabled = true;
+    this.isAlwaysEnabled = false;
 
-    this._primativeCommands = primativeCommands;
+    this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
+    const callback = () => this.disabledSubject.onNext(this._calculateDisabled());
+
+    applicationEvents.subscribeTo("after-row-selection-changed", callback);
+  }
+
+  _calculateDisabled() {
+    const selectedRows = this._primativeCommands.getSelectedRowIds();
+
+    if (selectedRows.length > 0) {
+      return { disabled: false };
+    } else {
+      return {
+        isDisabled: true,
+        hasReason: true,
+        reason: "You do not have anything selected",
+      };
+    }
   }
 
   execute(e) {
@@ -395,6 +413,22 @@ class ClearValuesInCurrentSelectionCommand {
   }
 }
 
+class ClearRowSelectionCommand {
+  constructor(primativeCommands) {
+    this._primativeCommands = primativeCommands;
+    this.id = "clear-row-selection";
+    this.title = "Clear Row Selection";
+    this.description = "Clear the current row selection, leaving the column selection intact.";
+
+    this.isAlwaysEnabled = true;
+  }
+
+  execute(e) {
+    const selectedRows = this._primativeCommands.getSelectedRowIds();
+    this._primativeCommands.deSelectRowsById(selectedRows);
+  }
+}
+
 class NativeCommands {
   constructor(primativeCommands, events) {
     const commandClasses = [
@@ -413,6 +447,7 @@ class NativeCommands {
       MoveRowFocusDownCommand,
       MoveRowFocusUpCommand,
       ClearValuesInCurrentSelectionCommand,
+      ClearRowSelectionCommand,
     ];
 
     this._commands =

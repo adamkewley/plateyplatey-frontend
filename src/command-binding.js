@@ -47,7 +47,7 @@ angular
     } else {
       command.disabledSubject.subscribe(e => {
         el.disabled = e.isDisabled;
-        el.title = (e.isDisabled && e.hasReason) ? e.reason : command.description;
+        el.title = (e.isDisabled && e.hasReason) ? e.reason : command.description + (hasKeybinds ? " (" + keybinds + ")" : "");
       });
     }
 

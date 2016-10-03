@@ -54,7 +54,7 @@
     
     <main>
 
-      <svg class="plate" 
+      <svg class="plate"
 	      vbox="{{ vbox }}"
 	      preserveAspectRatio="xMinYMin">
 
@@ -110,7 +110,7 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		    ng-click="$parent.clickWell($event, well);">
+		    ng-click="$parent.focusRow(well.id);">
 	      <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
