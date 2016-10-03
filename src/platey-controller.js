@@ -12,14 +12,374 @@ angular.module("plateyController", []).controller(
   "plateyController",
   ["$scope", "$http",
    function($scope, $http) {
+     // DATA - The underlying data structure. Only the UI and the
+     // primatives should be able to touch these. Native and
+     // non-native commands should access them indirectly via
+     // primatives.
+
      $scope.columns = [];
      $scope.selectedColumn = null;
      $scope.wells = [];
      $scope.currentValue = "";
      $scope.clickedWell = null;
 
-     const SELECTION_CHANGED = "selection-changed";
-     const COLUMN_ADDED = "column-added";
+     // PRIMATIVES - The lowest-level platey commands that expose all
+     // platey functionality. These are used by the **DATABINDING**
+     // parts of the UI. They are also used by native
+     // commands. Because they're low-level, they may change as the
+     // application evolves.
+
+     /**
+      * Create a new document.
+      */
+     $scope.newDocument = () => {
+       $scope.$broadcast("before-new-document-created", null);
+
+       $scope.selectColumn(null);
+       $scope.currentValue = "";
+       $scope.columns = [];
+       $scope.clickedWell = null;
+
+       $scope.$broadcast("after-new-document-created", null);
+     };
+
+     /**
+      * Add a new column to the platey table.
+      * @return {ColumnId} The ID of the new column.
+      */
+     $scope.addColumn = () => {
+       $scope.$broadcast("before-column-added", null);
+
+       const newColumn = {
+         header: "Column " + ($scope.columns.length + 1),
+         id: generateGuid()
+       };
+
+       $scope.columns.push(newColumn);
+
+       // Populate the wells with null values
+       // for this new column
+       $scope.wells.forEach(well => {
+         well[newColumn.id] = null;
+       });
+
+       $scope.$broadcast("after-column-added", newColumn.id);
+
+       return newColumn.id;
+     };
+
+     /**
+      * Move a column in the table to a different index.
+      * @param {ColumnId} columnId - The id of the column to move.
+      * @param {integer} newIndex - The new index of the column.
+      */
+     $scope.moveColumn = (columnId, newIndex) => {
+       const oldIndex =
+         $scope
+         .columns
+         .map(column => column.id)
+         .indexOf(columnId);
+
+       if (oldIndex === -1)
+         return; // The column wasn't in the table
+       else if (oldIndex === newIndex)
+         return; // It doesn't need to move
+       else if (newIndex >= $scope.columns.length)
+         return; // The new index is out of bounds
+       else {
+         $scope.$broadcast("before-column-moved", columnId);
+
+         moveItemInArray($scope.columns, oldIndex, newIndex);
+
+         $scope.$broadcast("after-column-moved", columnId);
+       }
+     };
+
+     /**
+      * Remove a column from the table.
+      * @param {ColumnId} column - ID of the column to remove.
+      */
+     $scope.removeColumn = function(columnId) {
+       $scope.$broadcast("before-column-removed", columnId);
+
+       const columnIdx = $scope.columns.find(column => column.id === columnId);
+
+       // Shouldn't happen, but for sanity's sake...
+       if (columnIdx === -1) return;
+
+       if ($scope.selectedColumn !== null && $scope.selectedColumn.id === columnId)
+         $scope.selectedColumn = null;
+
+       $scope.columns.splice(columnIdx, 1);
+
+       $scope.wells.forEach(well => {
+         delete well[columnId];
+       });
+
+       $scope.$broadcast("after-column-removed", columnId);
+     };
+
+     /**
+      * Get the currently selected column.
+      * @return {ColumnId} The currently selected column.
+      */
+     $scope.getSelectedColumnId = () => {
+       if ($scope.selectedColumn === null)
+         return null;
+       else return $scope.selectedColumn.id;
+     };
+
+     /**
+      * Set the currently selected column.
+      * @param {ColumnId} columnId - The ID of the column to select (nullable).
+      */
+     $scope.selectColumn = (columnId) => {
+       if (columnId === null) {
+         $scope.$broadcast("before-column-selection-changed", columnId);
+
+         $scope.selectedColumn = null;
+
+         $scope.$broadcast("after-column-selection-changed", columnId);
+       }
+
+       const columnToSelect = $scope.columns.find(column => column.id === columnId);
+
+       if (columnToSelect !== undefined) {
+         $scope.$broadcast("before-column-selection-changed", columnId);
+
+         $scope.selectedColumn = columnToSelect;
+
+         $scope.$broadcast("after-column-selection-changed", columnId);
+       }
+     };
+
+     /**
+      * Clear all data in a column.
+      * @param {ColumnId} columnId - The ID of the column to clear data from.
+      */
+     $scope.clearDataInColumn = (columnId) => {
+       $scope.$broadcast("before-column-data-cleared", columnId);
+
+       $scope.wells.forEach(well => well[columnId] = null);
+
+       $scope.$broadcast("after-column-data-cleared", columnId);
+     };
+
+     /**
+      * Get ids of columns in the table. The order of IDs is
+      * guaranteed to reflect the order of columns in the table.
+      * @return {Array.<ColumnId>}
+      */
+     $scope.getColumnIds = () => $scope.columns.map(column => column.id);
+
+     /**
+      * Get the header text of a column.
+      * @return {string}
+      */
+     $scope.getColumnHeader = (columnId) => {
+       const column = $scope.columns.find(column => column.id === columnId);
+
+       if (column === undefined) return undefined;
+       else return column.header;
+     };
+
+     /**
+      * Get the IDs of rows in the table.
+      * @return {Array.<WellId>}
+      */
+     $scope.getRowIds = () => $scope.wells.map(well => well.id);
+
+     /**
+      * Gets selected rows in the table.
+      * @return {Array.<RowId>}
+      */
+     $scope.getSelectedRowIds = () => {
+       return $scope
+       .wells
+       .filter(well => well.selected === true)
+       .map(well => well.id);
+     };
+
+     /**
+      * Select multiple rows in the table.
+      * @param {Array.<RowId>} rowIds - The IDs of the rows to select.
+      */
+     $scope.selectRowsById = (rowIds) => {
+       $scope.$broadcast("before-selecting-rows", rowIds);
+
+       $scope
+       .wells
+       .filter(well => rowIds.indexOf(well.id) !== -1)
+       .forEach(well => well.selected = true);
+
+       $scope.$broadcast("after-selecting-rows", rowIds);
+     };
+
+     /**
+      * Deselect multiple rows in the table.
+      */
+     $scope.deSelectRowsById = (rowIds) => {
+       $scope.$broadcast("before-deselecting-rows", rowIds);
+
+       $scope
+       .wells
+       .filter(well => rowIds.indexOf(well.id) !== -1)
+       .forEach(well => well.selected = false);
+
+       $scope.$broadcast("after-deselecting-rows", rowIds);
+     };
+
+     /**
+      * Assign a column value to multiple rows of the table.
+      * @param {ColumnId} columnId
+      * @param {Array.<RowId>} rowIds
+      * @param {string} value
+      */
+     $scope.assignValueToCells = (columnId, rowIds, value) => {
+       const columnExists = $scope.columns.find(column => column.id === columnId);
+       const rows = $scope.wells.filter(well => rowIds.indexOf(well.id) !== -1);
+
+       if (columnExists !== undefined && rows.length > 0) {
+         rows.forEach(row => row[columnId] = value);
+       }
+     };
+
+     /**
+      * Create a prompt that allows the user to save the data to a
+      * location on their disk.
+      * @param {string} fileName - Proposed name of the file to save.
+      * @param {string} contentType - The content-type of the data (e.g. "text/csv;charset=utf-8;".
+      * @param {byte} data - The data to save.
+      */
+     $scope.promptUserToSaveData = (fileName, contentType, data) => {
+       const blob = new Blob([data], { type: contentType });
+       const blobUrl = URL.createObjectURL(blob);
+
+       const downloadLink = document.createElement("a");
+       downloadLink.href = blobUrl;
+       downloadLink.download = fileName;
+       downloadLink.visibility = "hidden";
+
+       document.body.appendChild(downloadLink);
+       downloadLink.click();
+       document.body.removeChild(downloadLink);
+     };
+
+     /**
+      * Copy text to the user's clipboard.
+      * @param {string} text - The text to copy.
+      */
+     $scope.copyTextToClipboard = (text) => {
+       const $textElement = document.createElement("textarea");
+       $textElement.visibility = "hidden";
+       $textElement.value = text;
+       document.body.appendChild($textElement);
+       $textElement.select();
+       document.execCommand("copy");
+       document.body.removeChild($textElement);
+     };
+
+     /**
+      * Returns the table's data in a row-by-row format
+      * @return {Array.<Array.<TableDataValue>>}
+      */
+     $scope.getTableData = () => {
+       const orderedColumnIds = ["id"].concat($scope.columns.map(column => column.id));
+
+       return $scope.wells.map(wellData => orderedColumnIds.map(columnId => wellData[columnId]));
+     };
+
+     /**
+      * Get the ID of the focused row (nullable).
+      * @return {RowId}
+      */
+     $scope.getFocusedRowId = () => {
+       return $scope.clickedWell.id;
+     };
+
+     /**
+      * Set a row as focused.
+      * @param {RowId} rowId - The ID of the row to focus.
+      */
+     $scope.focusRow = (rowId) => {
+       const row = $scope.wells.find(well => well.id === rowId);
+
+       if (row !== undefined) {
+         $scope.$broadcast("before-focus-row", rowId);
+
+         $scope.clickedWell = row;
+         $scope.selectRowsById([rowId]);
+
+         $scope.$broadcast("after-focused-row", rowId);
+       }
+     };
+
+     // Aggregate / co-dependant events.
+     $scope.$on("after-column-added", () => $scope.$broadcast("after-table-columns-changed", null));
+     $scope.$on("after-column-removed", () => $scope.$broadcast("after-table-columns-changed", null));
+     $scope.$on("after-column-moved", () => $scope.$broadcast("after-table-columns-changed", null));
+
+     $scope.$on("after-table-columns-changed", () => $scope.$broadcast("after-table-changed", null));
+
+     $scope.$on("after-selecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
+     $scope.$on("after-deselecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
+
+     $scope.$on("after-row-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
+     $scope.$on("after-column-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
+
+     const primativeCommands = {
+       newDocument: $scope.newDocument,
+       addColumn: $scope.addColumn,
+       moveColumn: $scope.moveColumn,
+       removeColumn: $scope.removeColumn,
+       getSelectedColumnId: $scope.getSelectedColumnId,
+       selectColumn: $scope.selectColumn,
+       clearDataInColumn: $scope.clearDataInColumn,
+       getColumnIds: $scope.getColumnIds,
+       getRowIds: $scope.getRowIds,
+       getSelectedRowIds: $scope.getSelectedRowIds,
+       selectRowsById: $scope.selectRowsById,
+       deSelectRowsById: $scope.deSelectRowsById,
+       assignValueToCells: $scope.assignValueToCells,
+       promptUserToSaveData: $scope.promptUserToSaveData,
+       getColumnHeader: $scope.getColumnHeader,
+       getTableData: $scope.getTableData,
+       copyTextToClipboard: $scope.copyTextToClipboard,
+       getFocusedRowId: $scope.getFocusedRowId,
+       focusRow: $scope.focusRow,
+     };
+
+     // NATIVE COMMANDS - These commands use primatives, and any
+     // standard javascript / library functionality to do higher-level
+     // stuff such as inverting a selection or exporting the plate's
+     // data. They offer a high degree of control over platey but may
+     // need patching as the primatives evolve. The outer interface of
+     // native commands should not change much over time. Because they
+     // use primatives, they are the least encapsulated command.
+
+     // Native commands hook into the core's events.
+     const events = {
+       subscribeTo: (eventName, callback) => $scope.$on(eventName, callback),
+       broadcast: (eventName, value) => $scope.$broadcast(eventName, value),
+     };
+
+     $scope.nativeCommands = new NativeCommands(primativeCommands, events);
+
+     // NON-NATIVE COMMANDS - These commands operate in the high-level
+     // wild-west of commands-ville. Essentially, they are passed a
+     // mutable context containing *at least* the native commands but
+     // the context is populated by the other non-native commands at
+     // runtime. These commands are the high-level ones which build on
+     // top of the entire engine (without any connection to the
+     // primatives that actually drive the engine).
+
+     // NYI
+
+     // The UI, and keybinds, bind via this getCommand interface,
+     // which provides all native/non-native commands. The interface
+     // should use these to *do* stuff (it may use the primatives /
+     // data to *bind* to stuff).
+     $scope.getCommand = (id) => $scope.nativeCommands.getCommandById(id);
 
      // Load a plate layout
      $http.get("96-well-plate.json")
@@ -43,24 +403,11 @@ angular.module("plateyController", []).controller(
            x: selector.x,
            y: selector.y,
            label: selector.label,
+           selectsIds: selector.selects,
            selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
          };
        });
      });
-
-     /**
-      * Internal guid generator - used for IDing columns in the table.
-      * @returns {String} A guid string.
-      */
-     function generateGuid() {
-       function s4() {
-         return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-       }
-       return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-         s4() + '-' + s4() + s4() + s4();
-     }
 
      /**
       * Returns an array of the currently selected wells.
@@ -109,10 +456,6 @@ angular.module("plateyController", []).controller(
        }
      }
 
-     $scope.getWellsFromIds = (wellIds) => {
-       return $scope.wells.filter(well => wellIds.indexOf(well.id) !== -1);
-     };
-
      $scope.hoverOverWell = (well) => {
        well.hovered = true;
      };
@@ -145,187 +488,6 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Selects a column in the plate table.
-      * @param {Column} column The column to select.
-      */
-     $scope.selectColumn = function(column) {
-       $scope.selectedColumn = column;
-
-       $scope.$broadcast(SELECTION_CHANGED);
-     };
-
-     /**
-      * Add a column to the data entry table.
-      * @returns {Column} The new column.
-      */
-     $scope.addColumn = function() {
-       const newColumn = {
-         header: "Column " + ($scope.columns.length + 1),
-         id: generateGuid()
-       };
-
-       $scope.columns.push(newColumn);
-
-       // Populate the wells with null values
-       // for this new column
-       $scope.wells.forEach(well => {
-         well[newColumn.id] = null;
-       });
-
-       $scope.$broadcast(COLUMN_ADDED, newColumn);
-
-       return newColumn;
-     };
-
-     /**
-      * Remove a column from the table.
-      * @param {Column} column The column to remove.
-      */
-     $scope.removeColumn = function(column) {
-       const columnIdx = $scope.columns.indexOf(column);
-       const columnId = column.id;
-
-       // Shouldn't happen, but for sanity's sake...
-       if (columnIdx === -1) return;
-
-       if ($scope.selectedColumn === column)
-         $scope.selectedColumn = null;
-
-       $scope.columns.splice(columnIdx, 1);
-
-       $scope.wells.forEach(well => {
-         delete well[columnId];
-       });
-     };
-
-     /**
-      * Clear the plate of all data.
-      */
-     $scope.clearPlate = function() {
-       const columnIds = $scope.columns.map(column => column.id);
-
-       $scope.wells.forEach(well => {
-         columnIds.forEach(id => {
-           well[id] = null;
-         });
-       });
-     };
-
-     /**
-      * Create an entirely new plate, whiping the data and
-      * columns from the current plate.
-      */
-     $scope.newPlate = function() {
-       $scope.columns = [];
-       $scope.selectedColumn = null;
-       $scope.currentValue = "";
-       $scope.clickedWell = null;
-     };
-
-     /**
-      * Select a well in the plate.
-      * @param event The JQueryLite event that triggered the call.
-      * @param {Well} wellToSelect The well to select.
-      */
-     $scope.selectWell = function($event, wellToSelect) {
-       if (!$event.shiftKey) {
-         $scope.wells.forEach(well => well.selected = false);
-       }
-
-       wellToSelect.selected = true;
-
-       $scope.$broadcast(SELECTION_CHANGED);
-     };
-
-     /**
-      * Select wells in the plate.
-      * @param {Array.<Well>} wells The wells to select.
-      */
-     $scope.selectWells = function(wells) {
-       wells.forEach(well => well.selected = true);
-       $scope.$broadcast(SELECTION_CHANGED);
-     };
-
-     $scope.deSelectWells = function(wells) {
-       wells.forEach(well => well.selected = false);
-       $scope.$broadcast(SELECTION_CHANGED);
-     };
-
-     /**
-      * Click a well in the plate. A clicked well is a kind of a
-      * "higher ranked" selected well. In effect, all arrow-based
-      * selection logic goes relative to the clicked well.
-      */
-     $scope.clickWell = function($event, wellToClick) {
-       $scope.clickedWell = wellToClick;
-       $scope.selectWell($event, wellToClick);
-     };
-
-     /**
-      * Exports the main table to a CSV file format and presents it as
-      * a download prompt to the user.
-      */
-     $scope.exportTableToCSV = function() {
-       const columnIds = $scope.columns.map(column => column.id);
-
-       const headers =
-         ["Well ID"].concat($scope.columns.map(column => column.header));
-
-       const data = $scope.wells.map(well => {
-         const rowData = columnIds.map(columnId => well[columnId]);
-
-         return [well.id].concat(rowData);
-       });
-
-       const table = [headers].concat(data);
-
-       const csv = Papa.unparse(table);
-
-       const csvBlob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-       const urlToBlob = URL.createObjectURL(csvBlob);
-
-       const downloadLink = document.createElement("a");
-       downloadLink.href = urlToBlob;
-       downloadLink.download = "platey-export.csv";
-       downloadLink.visibility = "hidden";
-
-       document.body.appendChild(downloadLink);
-       downloadLink.click();
-       document.body.removeChild(downloadLink);
-     };
-
-     /**
-      * Exports the main table to the clipboard.
-      */
-     $scope.copyTableToClipboard = function() {
-       const columnSeparator = "\t";
-       const rowSeparator = "\n";
-
-       const columnIds = $scope.columns.map(column => column.id);
-
-       const headers =
-         ["Well ID"].concat($scope.columns.map(column => column.header));
-
-       const data = $scope.wells.map(well => {
-         const rowData = columnIds.map(columnId => well[columnId]);
-
-         return [well.id].concat(rowData);
-       });
-
-       const table = [headers].concat(data);
-
-       const text = table.map(row => row.join(columnSeparator)).join(rowSeparator);
-
-       const $textElement = document.createElement("textarea");
-       $textElement.visibility = "hidden";
-       $textElement.value = text;
-       document.body.appendChild($textElement);
-       $textElement.select();
-       document.execCommand("copy");
-       document.body.removeChild($textElement);
-     };
-
-     /**
       * Returns true if no cells are selected.
       * @returns {boolean}
       */
@@ -334,209 +496,33 @@ angular.module("plateyController", []).controller(
               !$scope.wells.some(well => well.selected);
      };
 
-     /**
-      * Clears the current selection.
-      */
-     $scope.clearSelection = function() {
-       $scope.wells.forEach(well => well.selected = false);
-       $scope.currentValue = "";
-     };
-
-     /**
-      * Invert the current selection, making all selected wells
-      * deselect and all deselected wells select.
-      */
-     $scope.invertSelection = () => {
-       $scope.wells.forEach(well => well.selected = !well.selected);
-
-       $scope.currentValue = "";
-     };
-
-     /**
-      * Moves the selected column left in the table.
-      */
-     $scope.moveSelectedColumnLeft = () => {
-       const selectedColumn = $scope.selectedColumn;
-
-       if (selectedColumn === null) {
-         return; // Nothing to move.
-       } else if ($scope.columns.indexOf(selectedColumn) === 0) {
-         return; // Can't move leftmost column left.
-       } else {
-         // Swap whatever's left of the selected column
-         // with the selected column.
-         const idx = $scope.columns.indexOf(selectedColumn);
-         const leftIdx = idx - 1;
-         const left = $scope.columns[leftIdx];
-
-         $scope.columns[leftIdx] = selectedColumn;
-         $scope.columns[idx] = left;
-       }
-     };
-
-     /**
-      * Moves the selected column right in the table.
-      */
-     $scope.moveSelectedColumnRight = () => {
-       const selectedColumn = $scope.selectedColumn;
-       const idx = $scope.columns.indexOf(selectedColumn);
-       const len = $scope.columns.length;
-
-       if (idx === -1) {
-         return; // Nothing to move
-       } else if (idx === (len - 1)) {
-         return; // It's already the last column
-       } else {
-         // Swap whatever's right of the selected column
-         // with the selected column.
-         const rightIdx = idx + 1;
-         const right = $scope.columns[rightIdx];
-
-         $scope.columns[rightIdx] = selectedColumn;
-         $scope.columns[idx] = right;
-       }
-     };
-
-     /**
-      * Selects all wells in the plate.
-      */
-     $scope.selectAll = function() {
-       $scope.wells.forEach(well => well.selected = true);
-       $scope.currentValue = determineCurrentValueFromSelection();
-     };
-
-     /**
-      * Moves the column selection (if any) left.
-      */
-     $scope.moveColumnSelectionLeft = () => {
-       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
-
-       // -1 is an indexOf sanity check.
-       if (selectedColumnIdx !== 0 && selectedColumnIdx !== -1) {
-         const newIdx = selectedColumnIdx - 1;
-         const columnToSelect = $scope.columns[newIdx];
-
-         $scope.selectColumn(columnToSelect);
-       }
-     };
-
-     /**
-      * Moves the column selection (if any) right.
-      */
-     $scope.moveColumnSelectionRight = () => {
-       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
-       const idxOfLastColumn = $scope.columns.length - 1;
-
-       if (selectedColumnIdx !== idxOfLastColumn && selectedColumnIdx !== -1) {
-         const newIdx = selectedColumnIdx + 1;
-         const columnToSelect = $scope.columns[newIdx];
-
-         $scope.selectColumn(columnToSelect);
-       }
-     };
-
-     /**
-      * Moves the well selection down relative to the last
-      * user-clicked well. Does nothing if the user hasn't
-      * specifically clicked a well to move from.
-      */
-     $scope.moveWellSelectionDown = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const lastWellIdx = $scope.wells.length - 1;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
-           // Move, don't grow.
-           $scope.clearSelection();
-           const newIdx = clickedWellIdx + 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
-     };
-
-     /**
-      * Grows a well selection down relative to the last
-      * user-clicked well. Does nothing if the user hasn't
-      * specifically clicked a well to move from.
-      */
-     $scope.growWellSelectionDown = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const lastWellIdx = $scope.wells.length - 1;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
-           const newIdx = clickedWellIdx + 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
-     };
-
-     /**
-      * Moves the well selection up relative to the last user-clicked
-      * well. Does nothing if the user hasn't specifically clicked a
-      * well to move relative to.
-      */
-     $scope.moveWellSelectionUp = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const firstWellIdx = 0;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== firstWellIdx) {
-           // Move, don't grow
-           $scope.clearSelection();
-           const newIdx = clickedWellIdx - 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
-     };
-
-     /**
-      * Clears the values assigned to the currently selected
-      * wells.
-      */
-     $scope.clearValuesInCurrentSelection = () => {
-       if ($scope.selectedColumn !== null) {
-         const currentColumnId = $scope.selectedColumn.id;
-         const selectedWells = getSelectedWells();
-
-         selectedWells.forEach(well => well[currentColumnId] = null);
-
-         $scope.currentValue = "";
-       }
-     };
-
      // Extra Behaviors
-     $scope.$on(COLUMN_ADDED, (_, newColumn) => {
-       $scope.selectColumn(newColumn);
+     $scope.$on("after-column-added", (_, columnId) => {
+       $scope.selectColumn(columnId);
      });
 
-     $scope.$on(SELECTION_CHANGED, () => {
+     $scope.$on("after-table-selection-changed", () => {
        $scope.currentValue = determineCurrentValueFromSelection();
      });
 
-     // Keybindings
      const keybinds = {
-       "Escape": $scope.clearSelection,
-       "C-a": $scope.selectAll,
-       "C-n": $scope.newPlate,
-       "ArrowLeft": $scope.moveColumnSelectionLeft,
-       "ArrowRight": $scope.moveColumnSelectionRight,
-       "ArrowDown": $scope.moveWellSelectionDown,
-       "C-ArrowDown": $scope.growWellSelectionDown,
-       "ArrowUp": $scope.moveWellSelectionUp,
-       "Delete": $scope.clearValuesInCurrentSelection,
-       "C-i": $scope.addColumn,
-       "Enter": $scope.moveWellSelectionDown,
-       "Tab": $scope.moveColumnSelectionRight,
-       "M-ArrowLeft": $scope.moveSelectedColumnLeft,
-       "M-ArrowRight": $scope.moveSelectedColumnRight,
+       "Escape": "clear-selection",
+       "C-a": "select-all",
+       "C-n": "new-plate",
+       "ArrowLeft": "move-column-selection-left",
+       "ArrowRight": "move-column-selection-right",
+       "ArrowDown": "move-row-focus-down",
+       "ArrowUp": "move-row-focus-up",
+       "Delete": "clear-values-in-current-selection",
+       "C-i": "add-column",
+       "Enter": "move-row-focus-down",
+       "Tab": "move-column-selection-right",
+       "M-ArrowLeft": "move-selected-column-left",
+       "M-ArrowRight": "move-selected-column-right",
      };
+
+     // So that buttons etc. can see the current keybinds.
+     $scope.keybinds = keybinds;
 
      /**
       * Transforms a jQueryLite keyboard event into the
@@ -570,8 +556,12 @@ angular.module("plateyController", []).controller(
        if (inputIsFocused) {
          return;
        } else if (keybinds[key] !== undefined) {
-           keybinds[key].call(this, $event);
+         const commandName = keybinds[key];
+         const command = $scope.getCommand(commandName);
+         if (command !== undefined) {
+           command.execute($event);
            $event.preventDefault();
+         }
        } else if (key === "Backspace") {
          const currentValue = $scope.currentValue;
          const len = currentValue.length;
@@ -581,7 +571,7 @@ angular.module("plateyController", []).controller(
          $event.stopPropagation();
          $event.preventDefault();
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-         document.body.focus();
+         document.activeElement || document.activeElement.blur || document.activeElement.blur();
          const charCode = $event.charCode;
          const char = String.fromCharCode(charCode);
          $scope.currentValue += char;
@@ -594,6 +584,8 @@ angular.module("plateyController", []).controller(
      const sourcesWithClickHandlers =
         ["button", "input", "td", "th", "circle", "text", "svg"];
 
+     const clearRowSelectionCommand = $scope.getCommand("clear-row-selection");
+
      /**
       * Handles clicks that have bubbled all the way upto the body.
       */
@@ -604,74 +596,34 @@ angular.module("plateyController", []).controller(
         sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
-       else $scope.clearSelection();
+       else clearRowSelectionCommand.execute();
      };
 
      /**
-      * Handles applying pastedText to the document.
+      * Internal guid generator - used for IDing columns in the table.
+      * @returns {String} A guid string.
       */
-     function handlePastedText(pastedText) {
-       const columnSeparator = /\t/;
-       const lines = pastedText.split(/r\n|\r|\n/);
-       const numberOfLines = lines.length;
-
-       if (numberOfLines === 1 && pastedText.length > 0) {
-         // Treat single-line pastes as "I want to paste to the
-         // current selection".
-         $scope.currentValue = pastedText;
-         $scope.setValueOfSelectedWells();
-       } else if (numberOfLines > 1) {
-         // Treat multi-line pastes as "I want to paste my (tabular)
-         // data".
-
-         const pastedTable = lines.map(line => line.split(columnSeparator));
-
-         const startingWellIdx =
-           $scope.clickedWell !== null ? $scope.wells.indexOf($scope.clickedWell) : 0;
-
-         const startingColumnIdx =
-           $scope.selectedColumn !== null ? $scope.columns.indexOf($scope.selectedColumn) : (
-             $scope.columns.length > 0 ? 0 : $scope.columns.indexOf($scope.addColumn()));
-
-         pastedTable.forEach((row, rowIdx) => {
-           const targetWellIdx = startingWellIdx + rowIdx;
-
-           if ($scope.wells.length <= targetWellIdx)
-             return; // We're at the end of the table, you can't add wells
-           else {
-             const targetWell = $scope.wells[targetWellIdx];
-
-             row.forEach((column, columnIdx) => {
-               const targetColumnIdx = startingColumnIdx + columnIdx;
-
-               if ($scope.columns.length <= targetColumnIdx) {
-                 // We're at the end of the table, add another column.
-                 $scope.addColumn();
-               }
-
-               const targetColumn = $scope.columns[targetColumnIdx];
-
-               targetWell[targetColumn.id] = column;
-             });
-           }
-         });
+     function generateGuid() {
+       function s4() {
+         return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
        }
+       return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+         s4() + '-' + s4() + s4() + s4();
      }
 
      /**
-      * Handles when the user attempts to paste data into the
-      * application.
+      * Internal function for moving items in an array.
       */
-     $scope.pasteEventHandler = function($event) {
-       // source: http://stackoverflow.com/questions/2176861/javascript-get-clipboard-data-on-paste-event-cross-browser
-
-       // Stop the data from actually being pasted.
-       $event.stopPropagation();
-       $event.preventDefault();
-
-       const clipboardData = $event.clipboardData || window.clipboardData;
-       const text = clipboardData.getData("text/plain");
-
-       handlePastedText(text);
+     function moveItemInArray(array, old_index, new_index) {
+       if (new_index >= array.length) {
+         var k = new_index - array.length;
+         while ((k--) + 1) {
+           array.push(undefined);
+         }
+       }
+       array.splice(new_index, 0, array.splice(old_index, 1)[0]);
+       return array; // for testing purposes
      };
    }]);

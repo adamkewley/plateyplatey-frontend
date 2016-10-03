@@ -13,30 +13,32 @@
 
   <body ng-controller="plateyController"
 	  ng-keypress="bodyKeypressHandler($event);"
-	  ng-click="bodyClickEventHandler($event);"
-	  ng-paste="pasteEventHandler($event);">
+	  ng-click="bodyClickEventHandler($event);">
 
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
-      <button ng-click="newPlate();">
+      <button platey-command="new-plate">
 	New Plate
       </button>
-      <button ng-click="clearPlate();">
+      <button platey-command="clear-plate">
 	Clear Plate
       </button>
-      <button ng-click="invertSelection();">
+      <button platey-command="invert-selection">
 	Invert Selection
       </button>
-      <button ng-click="moveSelectedColumnLeft();">
+      <button platey-command="select-all">
+	Select All
+      </button>
+      <button platey-command="move-selected-column-left">
 	Move Selected Column Left
       </button>
-      <button ng-click="moveSelectedColumnRight();">
+      <button platey-command="move-selected-column-right">
 	Move Selected Column Right
       </button>
-      <button ng-click="exportTableToCSV();">
+      <button platey-command="export-table-to-csv">
 	CSV Export
       </button>
-      <button ng-click="copyTableToClipboard();">
+      <button platey-command="copy-table-to-clipboard">
 	Copy Table
       </button>
 
@@ -51,10 +53,8 @@
     </div>
     
     <main>
-      
-      <!--       <div platey-plate></div> -->
 
-      <svg class="plate" 
+      <svg class="plate"
 	      vbox="{{ vbox }}"
 	      preserveAspectRatio="xMinYMin">
 
@@ -65,7 +65,7 @@
 		r="0.3"
 		class="well"
 		ng-class="{ hovered: well.hovered, selected: well.selected }"
-	        ng-click="$parent.selectWell($event, well);"
+	        ng-click="$parent.selectRowsById([well.id]);"
 	        ng-mouseover="hoverOverWell(well);"
 	        ng-mouseout="unHoverOverWell(well);"></circle>
 
@@ -74,7 +74,7 @@
 		ng-attr-x="{{ selector.x }}"
 		ng-attr-y="{{ selector.y }}"
 		class="selector"
-		ng-click="$parent.selectWells(selector.selects);"
+		ng-click="$parent.selectRowsById(selector.selectsIds);"
 		ng-mouseover="hoverOverWells(selector.selects);"
 		ng-mouseout="unHoverOverWells(selector.selects);">
 	  {{ selector.label }}
@@ -90,18 +90,17 @@
 
 	    <th ng-repeat="column in columns"
 		    ng-class="{'selected-column': column === $parent.selectedColumn }"
-		    ng-click="$parent.selectColumn(column);">
+		    ng-click="$parent.selectColumn(column.id);">
 
 	      <input type="text"
 		      ng-model="column.header"
 		      style="display: inline"
 	              ng-keydown="$event.stopPropagation();"/>
-	      <button ng-click="removeColumn(column);">X</button>
+	      <button ng-click="removeColumn(column.id);">X</button>
 	    </th>
 
 	    <th>
-	      <button class="btn btn-success"
-		      ng-click="addColumn();">
+	      <button class="btn btn-success" platey-command="add-column">
 		Add Column
 	      </button>
 	    </th>
@@ -111,11 +110,11 @@
 	  <tbody>
 
 	    <tr ng-repeat="well in wells"
-		    ng-click="$parent.clickWell($event, well);">
+		    ng-click="$parent.focusRow(well.id);">
 	      <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
 	      <td ng-repeat="column in columns"
 		      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
-		      ng-click="$parent.selectColumn(column);"
+		      ng-click="$parent.selectColumn(column.id);"
 		      ng-mouseover="hoverOverWell(well);"
 		      ng-mouseout="unHoverOverWell(well);">
 		{{ well[column.id] }}
@@ -131,9 +130,9 @@
     </main>
     
     <script src="bower_components/es6-shim/es6-shim.min.js"></script>
+    <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
-    <script src="bower_components/angular/angular.min.js"></script>
-    <script src="platey-controller.js"></script>
-    <script src="platey-app.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="platey.js"></script>
   </body>
 </html>

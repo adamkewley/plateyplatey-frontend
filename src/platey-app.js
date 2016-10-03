@@ -1,4 +1,4 @@
-const plateyModule = angular.module("plateyApp", ["plateyController"]);
+const plateyModule = angular.module("plateyApp", ["plateyController", "plateyCommand"]);
 
 /**
  * Create a range from the supplied number.
@@ -17,7 +17,8 @@ plateyModule.directive('vbox', function() {
   return {
     link: function(scope, element, attrs) {
       attrs.$observe('vbox', function(value) {
-        element.attr('viewBox', value);
+        if (value !== "")
+          element.attr('viewBox', value);
       })
     }
   };
