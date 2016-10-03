@@ -64,7 +64,7 @@ class MoveSelectedColumnLeftCommand {
     this._primativeCommands = primativeCommands;
     this.id = "move-selected-column-left";
     this.title = "Move Selected Column Left";
-    this.description = "Moves the currently selected column left.";
+    this.description = "Move the currently selected column left.";
     this.isAlwaysEnabled = false;
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
@@ -114,7 +114,7 @@ class MoveSelectedColumnRightCommand {
     this._primativeCommands = primativeCommands;
     this.id = "move-selected-column-right";
     this.title = "Move Selected Column Right";
-    this.description = "Moves the currently selected column right.";
+    this.description = "Move the currently selected column right.";
     this.isAlwaysEnabled = false;
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
@@ -161,7 +161,7 @@ class ExportTableToCSVCommand {
     this._primativeCommands = primativeCommands;
     this.id = "export-table-to-csv";
     this.title = "Export Table to CSV";
-    this.description = "Exports the current content of the table as a downloadable CSV file.";
+    this.description = "Export the current content of the table as a downloadable CSV file.";
 
     this.isAlwaysEnabled = true;
   }
@@ -192,7 +192,7 @@ class CopyTableToClipboardCommand {
     this._primativeCommands = primativeCommands;
     this.id = "copy-table-to-clipboard";
     this.title = "Copy Table to Clipboard";
-    this.description = "Copies the table to the clipboard as a tab-separated text block.";
+    this.description = "Copy the table to the clipboard as a tab-separated text block.";
 
     this.isAlwaysEnabled = true;
   }
@@ -222,7 +222,7 @@ class AddColumnCommand {
     this._addColumn = primativeCommands.addColumn;
     this.id = "add-column";
     this.title = "Add Column";
-    this.description = "Adds a column to the table.";
+    this.description = "Add a column to the table.";
 
     this.isAlwaysEnabled = true;
   }
@@ -262,7 +262,7 @@ class SelectAllCommand {
     this._primativeCommands = primativeCommands;
     this.id = "select-all";
     this.title = "Select All";
-    this.description = "Selects all rows in the current column.";
+    this.description = "Select all rows in the current column.";
 
     this.isAlwaysEnabled = true;
   }
@@ -306,7 +306,7 @@ class MoveColumnSelectionRightCommand {
     this._primativeCommands = primativeCommands;
     this.id = "move-column-selection-right";
     this.title = "Move Column Selection Right";
-    this.description = "Selects the column right of the currently selected column.";
+    this.description = "Select the column right of the currently selected column.";
 
     this.isAlwaysEnabled = true;
   }
@@ -331,7 +331,7 @@ class MoveRowFocusDownCommand {
     this._primativeCommands = primativeCommands;
     this.id = "move-row-focus-down";
     this.title = "Move Row Focus Down";
-    this.description = "Focuses the row immediately beneath the currently focused row.";
+    this.description = "Focuss the row immediately beneath the currently focused row.";
 
     this.isAlwaysEnabled = true;
   }
@@ -357,7 +357,7 @@ class MoveRowFocusUpCommand {
     this._primativeCommands = primativeCommands;
     this.id = "move-row-focus-up";
     this.title = "Move Row Focus Up";
-    this.description = "Moves the row focus up.";
+    this.description = "Move the row focus up.";
 
     this.isAlwaysEnabled = true;
   }
@@ -380,7 +380,7 @@ class ClearValuesInCurrentSelectionCommand {
     this._primativeCommands = primativeCommands;
     this.id = "clear-values-in-current-selection";
     this.title = "Clear Values in Current Selection";
-    this.description = "Clears the values within the current selection.";
+    this.description = "Clear the values within the current selection.";
 
     this.isAlwaysEnabled = true;
   }

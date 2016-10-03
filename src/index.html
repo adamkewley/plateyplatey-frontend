@@ -26,6 +26,9 @@
       <button platey-command="invert-selection">
 	Invert Selection
       </button>
+      <button platey-command="select-all">
+	Select All
+      </button>
       <button platey-command="move-selected-column-left">
 	Move Selected Column Left
       </button>
@@ -37,24 +40,6 @@
       </button>
       <button platey-command="copy-table-to-clipboard">
 	Copy Table
-      </button>
-      <button platey-command="select-all">
-	Select All
-      </button>
-      <button platey-command="move-column-selection-left">
-	Move Column Selection Left
-      </button>
-      <button platey-command="move-column-selection-right">
-	Move Column Selection Right
-      </button>
-      <button platey-command="move-row-focus-down">
-	Move Row Focus Down
-      </button>
-      <button platey-command="move-row-focus-up">
-	Move Row Focus Up
-      </button>
-      <button platey-command="clear-values-in-current-selection">
-	Clear Values in Current Selection
       </button>
 
       <span class="column-selection">
@@ -80,7 +65,7 @@
 		r="0.3"
 		class="well"
 		ng-class="{ hovered: well.hovered, selected: well.selected }"
-	        ng-click="$parent.selectWell($event, well);"
+	        ng-click="$parent.selectRowsById([well.id]);"
 	        ng-mouseover="hoverOverWell(well);"
 	        ng-mouseout="unHoverOverWell(well);"></circle>
 
@@ -89,7 +74,7 @@
 		ng-attr-x="{{ selector.x }}"
 		ng-attr-y="{{ selector.y }}"
 		class="selector"
-		ng-click="$parent.selectWells(selector.selects);"
+		ng-click="$parent.selectRowsById(selector.selectsIds);"
 		ng-mouseover="hoverOverWells(selector.selects);"
 		ng-mouseout="unHoverOverWells(selector.selects);">
 	  {{ selector.label }}

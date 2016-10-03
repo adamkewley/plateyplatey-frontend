@@ -29,9 +29,21 @@ angular
 
     const command = scope.getCommand(attrs.plateyCommand);
 
+    const keybinds =
+      Object
+      .keys(scope.keybinds)
+      .filter(key => {
+        const keyboundCommandId = scope.keybinds[key];
+
+        return keyboundCommandId === command.id;
+      })
+      .join(", ");
+
+    const hasKeybinds = keybinds.length > 0;
+
     if (command.isAlwaysEnabled) {
       el.disabled = false;
-      el.title = command.description;
+      el.title = command.description + (hasKeybinds ? " (" + keybinds + ")" : "");
     } else {
       command.disabledSubject.subscribe(e => {
         el.disabled = e.isDisabled;

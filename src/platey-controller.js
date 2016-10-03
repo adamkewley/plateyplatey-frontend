@@ -403,6 +403,7 @@ angular.module("plateyController", []).controller(
            x: selector.x,
            y: selector.y,
            label: selector.label,
+           selectsIds: selector.selects,
            selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
          };
        });
@@ -454,10 +455,6 @@ angular.module("plateyController", []).controller(
          else return "";
        }
      }
-
-     $scope.getWellsFromIds = (wellIds) => {
-       return $scope.wells.filter(well => wellIds.indexOf(well.id) !== -1);
-     };
 
      $scope.hoverOverWell = (well) => {
        well.hovered = true;
@@ -543,65 +540,6 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Selects all wells in the plate.
-      */
-     $scope.selectAll = function() {
-       $scope.wells.forEach(well => well.selected = true);
-       $scope.currentValue = determineCurrentValueFromSelection();
-     };
-
-     /**
-      * Moves the column selection (if any) left.
-      */
-     $scope.moveColumnSelectionLeft = () => {
-       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
-
-       // -1 is an indexOf sanity check.
-       if (selectedColumnIdx !== 0 && selectedColumnIdx !== -1) {
-         const newIdx = selectedColumnIdx - 1;
-         const columnToSelect = $scope.columns[newIdx];
-
-         $scope.selectColumn(columnToSelect);
-       }
-     };
-
-     /**
-      * Moves the column selection (if any) right.
-      */
-     $scope.moveColumnSelectionRight = () => {
-       const selectedColumnIdx = $scope.columns.indexOf($scope.selectedColumn);
-       const idxOfLastColumn = $scope.columns.length - 1;
-
-       if (selectedColumnIdx !== idxOfLastColumn && selectedColumnIdx !== -1) {
-         const newIdx = selectedColumnIdx + 1;
-         const columnToSelect = $scope.columns[newIdx];
-
-         $scope.selectColumn(columnToSelect);
-       }
-     };
-
-     /**
-      * Moves the well selection down relative to the last
-      * user-clicked well. Does nothing if the user hasn't
-      * specifically clicked a well to move from.
-      */
-     $scope.moveWellSelectionDown = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const lastWellIdx = $scope.wells.length - 1;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== lastWellIdx) {
-           // Move, don't grow.
-           $scope.clearSelection();
-           const newIdx = clickedWellIdx + 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
-     };
-
-     /**
       * Grows a well selection down relative to the last
       * user-clicked well. Does nothing if the user hasn't
       * specifically clicked a well to move from.
@@ -620,42 +558,6 @@ angular.module("plateyController", []).controller(
        }
      };
 
-     /**
-      * Moves the well selection up relative to the last user-clicked
-      * well. Does nothing if the user hasn't specifically clicked a
-      * well to move relative to.
-      */
-     $scope.moveWellSelectionUp = ($event) => {
-       if ($scope.clickedWell !== null) {
-         const clickedWellIdx = $scope.wells.indexOf($scope.clickedWell);
-         const firstWellIdx = 0;
-
-         if (clickedWellIdx !== -1 && clickedWellIdx !== firstWellIdx) {
-           // Move, don't grow
-           $scope.clearSelection();
-           const newIdx = clickedWellIdx - 1;
-           const newWell = $scope.wells[newIdx];
-
-           $scope.clickWell($event, newWell);
-         }
-       }
-     };
-
-     /**
-      * Clears the values assigned to the currently selected
-      * wells.
-      */
-     $scope.clearValuesInCurrentSelection = () => {
-       if ($scope.selectedColumn !== null) {
-         const currentColumnId = $scope.selectedColumn.id;
-         const selectedWells = getSelectedWells();
-
-         selectedWells.forEach(well => well[currentColumnId] = null);
-
-         $scope.currentValue = "";
-       }
-     };
-
      // Extra Behaviors
      $scope.$on("after-column-added", (_, columnId) => {
        $scope.selectColumn(columnId);
@@ -665,10 +567,10 @@ angular.module("plateyController", []).controller(
        $scope.currentValue = determineCurrentValueFromSelection();
      });
 
-     const newStyleKeybinds = {
+     const keybinds = {
        "Escape": "clear-selection",
        "C-a": "select-all",
-       "C-n": "new-document",
+       "C-n": "new-plate",
        "ArrowLeft": "move-column-selection-left",
        "ArrowRight": "move-column-selection-right",
        "ArrowDown": "move-row-focus-down",
@@ -681,23 +583,8 @@ angular.module("plateyController", []).controller(
        "M-ArrowRight": "move-selected-column-right",
      };
 
-     // Keybindings
-     const keybinds = {
-       "Escape": $scope.clearSelection,
-       "C-a": $scope.selectAll,
-       "C-n": $scope.newDocument,
-       "ArrowLeft": $scope.moveColumnSelectionLeft,
-       "ArrowRight": $scope.moveColumnSelectionRight,
-       "ArrowDown": $scope.moveWellSelectionDown,
-       "C-ArrowDown": $scope.growWellSelectionDown,
-       "ArrowUp": $scope.moveWellSelectionUp,
-       "Delete": $scope.clearValuesInCurrentSelection,
-       "C-i": $scope.addColumn,
-       "Enter": $scope.moveWellSelectionDown,
-       "Tab": $scope.moveColumnSelectionRight,
-       "M-ArrowLeft": $scope.moveSelectedColumnLeft,
-       "M-ArrowRight": $scope.moveSelectedColumnRight,
-     };
+     // So that buttons etc. can see the current keybinds.
+     $scope.keybinds = keybinds;
 
      /**
       * Transforms a jQueryLite keyboard event into the
@@ -731,8 +618,12 @@ angular.module("plateyController", []).controller(
        if (inputIsFocused) {
          return;
        } else if (keybinds[key] !== undefined) {
-           keybinds[key].call(this, $event);
+         const commandName = keybinds[key];
+         const command = $scope.getCommand(commandName);
+         if (command !== undefined) {
+           command.execute($event);
            $event.preventDefault();
+         }
        } else if (key === "Backspace") {
          const currentValue = $scope.currentValue;
          const len = currentValue.length;
@@ -742,7 +633,7 @@ angular.module("plateyController", []).controller(
          $event.stopPropagation();
          $event.preventDefault();
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-         document.body.focus();
+         document.activeElement || document.activeElement.blur || document.activeElement.blur();
          const charCode = $event.charCode;
          const char = String.fromCharCode(charCode);
          $scope.currentValue += char;
