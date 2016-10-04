@@ -20,7 +20,7 @@ angular.module("plateyController", []).controller(
      $scope.columns = [];
      $scope.selectedColumn = null;
      $scope.wells = [];
-     $scope.currentValue = "";
+     $scope.currentValue = ""; // TODO: Make this more redundant.
      $scope.clickedWell = null;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
@@ -102,21 +102,22 @@ angular.module("plateyController", []).controller(
      $scope.removeColumn = function(columnId) {
        $scope.$broadcast("before-column-removed", columnId);
 
-       const columnIdx = $scope.columns.find(column => column.id === columnId);
+       const column = $scope.columns.find(col => col.id === columnId);
 
-       // Shouldn't happen, but for sanity's sake...
-       if (columnIdx === -1) return;
+       if (column === undefined) return;
+       else {
+         if (column === $scope.selectedColumn)
+           $scope.selectedColumn = null;
 
-       if ($scope.selectedColumn !== null && $scope.selectedColumn.id === columnId)
-         $scope.selectedColumn = null;
+         const idx = $scope.columns.indexOf(column);
+         $scope.columns.splice(idx, 1);
 
-       $scope.columns.splice(columnIdx, 1);
+         $scope.wells.forEach(well => {
+           delete well[columnId];
+         });
 
-       $scope.wells.forEach(well => {
-         delete well[columnId];
-       });
-
-       $scope.$broadcast("after-column-removed", columnId);
+         $scope.$broadcast("after-column-removed", columnId);
+       }
      };
 
      /**
@@ -505,20 +506,43 @@ angular.module("plateyController", []).controller(
        $scope.currentValue = determineCurrentValueFromSelection();
      });
 
+     // BUG: keyboard command callers don't check the disabled state
+     // of a command.
+
+     // Keyboard interaction stuff
+
+     const KEYCODES_OF_UNPRINTABLE_KEYPRESSES = {
+       "8": "<backspace>",
+       "9": "<tab>",
+       "13": "<return>",
+       "27": "<escape>",
+       "33": "<prior>",
+       "34": "<next>",
+       "35": "<end>",
+       "36": "<home>",
+       "37": "<left>",
+       "38": "<up>",
+       "39": "<right>",
+       "40": "<down>",
+       "45": "<insert>",
+       "46": "<delete>"
+     };
+
+     // EMACS-style kbd representation
      const keybinds = {
-       "Escape": "clear-selection",
+       "<escape>": "clear-selection",
        "C-a": "select-all",
        "C-n": "new-plate",
-       "ArrowLeft": "move-column-selection-left",
-       "ArrowRight": "move-column-selection-right",
-       "ArrowDown": "move-row-focus-down",
-       "ArrowUp": "move-row-focus-up",
-       "Delete": "clear-values-in-current-selection",
+       "<left>": "move-column-selection-left",
+       "<right>": "move-column-selection-right",
+       "<down>": "move-row-focus-down",
+       "<up>": "move-row-focus-up",
+       "<delete>": "clear-values-in-current-selection",
        "C-i": "add-column",
-       "Enter": "move-row-focus-down",
-       "Tab": "move-column-selection-right",
-       "M-ArrowLeft": "move-selected-column-left",
-       "M-ArrowRight": "move-selected-column-right",
+       "<return>": "move-row-focus-down",
+       "<tab>": "move-column-selection-right",
+       "M-<left>": "move-selected-column-left",
+       "M-<right>": "move-selected-column-right"
      };
 
      // So that buttons etc. can see the current keybinds.
@@ -529,20 +553,57 @@ angular.module("plateyController", []).controller(
       * key syntax used internally.
       */
      function eventToKeybindKey($event) {
-       let returnValue = "";
-       // Emacs style for modifier keys
-       if ($event.ctrlKey) {
-         returnValue += "C-";
-       }
+       let modifiers = "";
 
-       if ($event.altKey) {
-         returnValue += "M-";
-       }
+       if ($event.ctrlKey)
+         modifiers += "C-";
 
-       returnValue += $event.key;
+       if ($event.altKey)
+         modifiers += "M-";
 
-       return returnValue;
+       const translatedKeyCode =
+         KEYCODES_OF_UNPRINTABLE_KEYPRESSES[$event.keyCode];
+
+       if (translatedKeyCode === undefined)
+         return modifiers + $event.key;
+       else return modifiers + translatedKeyCode;
      }
+
+     /**
+      * Keydown events occur before anything else (input capture,
+      * browser keybind execution, etc) This is the best place to do
+      * any bespoke keybinds but care needs to be taken to ensure that
+      * those keybinds don't wreck standard HTML elements (such as
+      * input)
+      */
+     $scope.bodyKeydownHandler = ($event) => {
+       if ($event.target.tagName.toLowerCase() === "input")
+         return;
+
+       const keypressIdentifier = eventToKeybindKey($event);
+       const commandIdentifier = keybinds[keypressIdentifier];
+
+       if (commandIdentifier !== undefined) {
+         const command = $scope.getCommand(commandIdentifier);
+         command.execute($event);
+         $event.stopPropagation();
+         $event.preventDefault();
+       }
+
+       // Prevent the backspace key from navigating back. This must be
+       // handled in the keyDown handler because IE11 will navigate
+       // backwards in its history before the keyPress handler gets a
+       // chance to call.
+       if ($event.keyCode === 8) {
+         const currentValue = $scope.currentValue;
+         const len = currentValue.length;
+
+         $scope.currentValue = currentValue.substring(0, len - 1);
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
+       }
+     };
 
      /**
       * Handles keypresses that have be bubbled all the way
@@ -555,23 +616,12 @@ angular.module("plateyController", []).controller(
 
        if (inputIsFocused) {
          return;
-       } else if (keybinds[key] !== undefined) {
-         const commandName = keybinds[key];
-         const command = $scope.getCommand(commandName);
-         if (command !== undefined) {
-           command.execute($event);
-           $event.preventDefault();
-         }
-       } else if (key === "Backspace") {
-         const currentValue = $scope.currentValue;
-         const len = currentValue.length;
-
-         $scope.currentValue = currentValue.substring(0, len - 1);
-         $scope.setValueOfSelectedWells();
-         $event.stopPropagation();
-         $event.preventDefault();
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-         document.activeElement || document.activeElement.blur || document.activeElement.blur();
+         // The current focus could be a button, pressing a key while
+         // focused on a button can result in navigation.
+         if (document.activeElement.blur !== undefined) // In IE11, some elements don't have a .blur
+           document.activeElement.blur();
+
          const charCode = $event.charCode;
          const char = String.fromCharCode(charCode);
          $scope.currentValue += char;
@@ -579,10 +629,11 @@ angular.module("plateyController", []).controller(
          $event.stopPropagation();
          $event.preventDefault();
        }
+       // Else, let it bubble up to the browser.
      };
 
      const sourcesWithClickHandlers =
-        ["button", "input", "td", "th", "circle", "text", "svg"];
+        ["button", "input", "td", "th", "circle", "text", "circle"];
 
      const clearRowSelectionCommand = $scope.getCommand("clear-row-selection");
 
@@ -590,8 +641,7 @@ angular.module("plateyController", []).controller(
       * Handles clicks that have bubbled all the way upto the body.
       */
      $scope.bodyClickEventHandler = function($event) {
-       // .originalTarget does not work on IE11
-       const sourceElement = ($event.originalTarget || $event.srcElement).tagName.toLowerCase();
+       const sourceElement = $event.target.tagName.toLowerCase();
        const sourceHandled =
         sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
