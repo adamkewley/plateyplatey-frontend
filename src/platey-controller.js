@@ -254,16 +254,22 @@ angular.module("plateyController", []).controller(
       */
      $scope.promptUserToSaveData = (fileName, contentType, data) => {
        const blob = new Blob([data], { type: contentType });
-       const blobUrl = URL.createObjectURL(blob);
 
-       const downloadLink = document.createElement("a");
-       downloadLink.href = blobUrl;
-       downloadLink.download = fileName;
-       downloadLink.visibility = "hidden";
+       // If it's shitty IE
+       if (window.navigator.msSaveOrOpenBlob) {
+         window.navigator.msSaveOrOpenBlob(blob, fileName);
+       } else {
+         const blobUrl = URL.createObjectURL(blob);
 
-       document.body.appendChild(downloadLink);
-       downloadLink.click();
-       document.body.removeChild(downloadLink);
+         const downloadLink = document.createElement("a");
+         downloadLink.href = blobUrl;
+         downloadLink.download = fileName;
+         downloadLink.visibility = "hidden";
+
+         document.body.appendChild(downloadLink);
+         downloadLink.click();
+         document.body.removeChild(downloadLink);
+       }
      };
 
      /**
@@ -509,8 +515,9 @@ angular.module("plateyController", []).controller(
      // BUG: keyboard command callers don't check the disabled state
      // of a command.
 
-     // Keyboard interaction stuff
-
+     // These are used instead of directly using .key because a) it's
+     // easier to understand what's going on and b) browsers are
+     // inconsistient about keys (firefox: "ArrowLeft", ie: "Left")
      const KEYCODES_OF_UNPRINTABLE_KEYPRESSES = {
        "8": "<backspace>",
        "9": "<tab>",
