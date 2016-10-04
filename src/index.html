@@ -13,7 +13,8 @@
 
   <body ng-controller="plateyController"
 	  ng-keypress="bodyKeypressHandler($event);"
-	  ng-click="bodyClickEventHandler($event);">
+	  ng-click="bodyClickEventHandler($event);"
+	  ng-keydown="bodyKeydownHandler($event);">
 
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
