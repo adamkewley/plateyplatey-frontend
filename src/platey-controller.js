@@ -349,6 +349,40 @@ angular.module("plateyController", []).controller(
        wells.forEach($scope.unHoverOverWell);
      };
 
+     const performHttpGetRequest = (path) => {
+       return $http.get(path);
+     };
+
+     const setPlateLayout = (layout) => {
+       $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
+
+       $scope.wells = layout.wells.map(well => {
+         return {
+           id: well.id,
+           columns: [],
+           selected: false,
+           hovered: false,
+           x: well.x,
+           y: well.y,
+         };
+       });
+
+       $scope.selectors = layout.selectors.map(selector => {
+         return {
+           x: selector.x,
+           y: selector.y,
+           label: selector.label,
+           selectsIds: selector.selects,
+           selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
+         };
+       });
+     };
+
+     $scope.loadPlateLayout = (filePath) => {
+       // Initial plate population
+       performHttpGetRequest(filePath).then(response => setPlateLayout(response.data));
+     };
+
      // Aggregate / co-dependant events.
      $scope.$on("after-column-added", () => $scope.$broadcast("after-table-columns-changed", null));
      $scope.$on("after-column-removed", () => $scope.$broadcast("after-table-columns-changed", null));
@@ -387,6 +421,8 @@ angular.module("plateyController", []).controller(
        hoverOverWells: $scope.hoverOverWells, // TODO: Make more generic
        unHoverOverWell: $scope.unHoverOverWell, // TODO: Make more generic
        unHoverOverWells: $scope.unHoverOverWells, // TODO: Make more generic
+       performHttpGetRequest: performHttpGetRequest, // TODO: Make more generic
+       setPlateLayout: setPlateLayout, // TODO: Make more generic
      };
 
      // NATIVE COMMANDS - These commands use primatives, and any
@@ -416,33 +452,8 @@ angular.module("plateyController", []).controller(
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
 
-     // Load a plate layout
-     $http.get("96-well-plate.json")
-     .then(function(response) {
-       const data = response.data;
-       $scope.vbox = `0 0 ${data.gridWidth} ${data.gridHeight}`;
-
-       $scope.wells = data.wells.map(well => {
-         return {
-           id: well.id,
-           columns: [],
-           selected: false,
-           hovered: false,
-           x: well.x,
-           y: well.y,
-         };
-       });
-
-       $scope.selectors = data.selectors.map(selector => {
-         return {
-           x: selector.x,
-           y: selector.y,
-           label: selector.label,
-           selectsIds: selector.selects,
-           selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
-         };
-       });
-     });
+     // Initial plate population
+     $scope.loadPlateLayout("48-well-plate.json");
 
      /**
       * Returns an array of the currently selected wells.
@@ -656,7 +667,7 @@ angular.module("plateyController", []).controller(
      };
 
      const sourcesWithClickHandlers =
-        ["button", "input", "td", "th", "circle", "text", "circle"];
+        ["button", "input", "td", "th", "circle", "text", "circle", "option", "select"];
 
      /**
       * Handles clicks that have bubbled all the way upto the body.
