@@ -356,8 +356,10 @@ angular.module("plateyController", []).controller(
      const setPlateLayout = (layout) => {
        $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
 
+       const columnIds = $scope.columns.map(column => column.id);
+
        $scope.wells = layout.wells.map(well => {
-         return {
+         const wellData = {
            id: well.id,
            columns: [],
            selected: false,
@@ -365,6 +367,12 @@ angular.module("plateyController", []).controller(
            x: well.x,
            y: well.y,
          };
+
+         columnIds.forEach(id => {
+           wellData[id] = null;
+         });
+
+         return wellData;
        });
 
        $scope.selectors = layout.selectors.map(selector => {
@@ -452,8 +460,14 @@ angular.module("plateyController", []).controller(
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
 
-     // Initial plate population
-     $scope.loadPlateLayout("48-well-plate.json");
+     // TODO: This is hacky, but works. The Makefile is currently
+     // concatenating all the plate filenames into a space-sparated
+     // text file so that we can load a list of them in one GET
+     // request
+     performHttpGetRequest("plates.txt").then(function(response) {
+       $scope.plates = response.data.split(" ");
+       $scope.loadPlateLayout($scope.plates[0]);
+     });
 
      /**
       * Returns an array of the currently selected wells.

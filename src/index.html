@@ -43,7 +43,7 @@
 	Copy Table
       </button>
       <select>
-	<option ng-click="loadPlateLayout('fucku');"">B</option>
+	<option ng-repeat="plate in plates" ng-click="loadPlateLayout(plate);">{{ plate }}</option>
       </select>
 
       <span class="column-selection">
