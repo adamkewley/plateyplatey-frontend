@@ -26,8 +26,8 @@ angular
 
   function link(scope, element, attrs) {
     const el = element[0];
-
-    const command = scope.getCommand(attrs.plateyCommand);
+    const commandId = attrs.plateyCommand;
+    const commandDetails = scope.getCommandDetails(commandId);
 
     const keybinds =
       Object
@@ -35,24 +35,21 @@ angular
       .filter(key => {
         const keyboundCommandId = scope.keybinds[key];
 
-        return keyboundCommandId === command.id;
+        return keyboundCommandId === commandId;
       })
       .join(", ");
 
     const hasKeybinds = keybinds.length > 0;
 
-    if (command.isAlwaysEnabled) {
-      el.disabled = false;
-      el.title = command.description + (hasKeybinds ? " (" + keybinds + ")" : "");
-    } else {
-      command.disabledSubject.subscribe(e => {
-        el.disabled = e.isDisabled;
-        el.title = (e.isDisabled && e.hasReason) ? e.reason : command.description + (hasKeybinds ? " (" + keybinds + ")" : "");
-      });
-    }
+    commandDetails.disabledSubject.subscribe(e => {
+      el.disabled = e.isDisabled;
+      el.title = (e.isDisabled && e.hasReason) ? e.reason : commandDetails.description + (hasKeybinds ? " (" + keybinds + ")" : "");
+    });
 
     el.addEventListener("click", (e) => {
-      scope.$apply(() => command.execute(e));
+      scope.$apply(() => {
+        scope.exec(commandId);
+      });
     });
   }
 
