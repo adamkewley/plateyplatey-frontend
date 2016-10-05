@@ -1,16 +1,29 @@
 /**
+ * Abstract mixin for commands that are always enabled.
+ */
+class AlwaysEnabledCommand {
+  constructor() {}
+
+  get disabledSubject() {
+    return AlwaysEnabledCommand.sharedDisabledAgent;
+  }
+}
+
+AlwaysEnabledCommand.sharedDisabledAgent = new Rx.BehaviorSubject(false);
+
+/**
  * A native command that creates a new plate.
  */
-class NewPlateCommand {
+class NewPlateCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this.id = "new-plate";
     this.title = "New Plate";
     this.description = "Create a new plate.";
-    this.isAlwaysEnabled = true;
     this._newDocument = primativeCommands.newDocument;
   }
 
-  execute(e) {
+  execute() {
     this._newDocument();
   }
 }
@@ -18,16 +31,16 @@ class NewPlateCommand {
 /**
  * A native command that clears data from the plate.
  */
-class ClearPlateCommand {
+class ClearPlateCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this.id = "clear-plate";
     this.title = "Clear Plate";
     this.description = "Clear the plate of data, leaving the columns intact.";
-    this.isAlwaysEnabled = true;
     this._primativeCommands = primativeCommands;
   }
 
-  execute(e) {
+  execute() {
     const columnIds = this._primativeCommands.getColumnIds();
     columnIds.forEach(columnId => this._primativeCommands.clearDataInColumn(columnId));
   }
@@ -41,8 +54,8 @@ class InvertSelectionCommand {
     this._primativeCommands = primativeCommands;
     this.id = "invert-selection";
     this.title = "Invert Selection";
-    this.description = "Invert the current selection, which de-selects anything that is currently selected and selects anything that is not currently selected.";
-    this.isAlwaysEnabled = false;
+    this.description =
+      "Invert the current selection, which de-selects anything that is currently selected and selects anything that is not currently selected.";
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
     const callback = () => this.disabledSubject.onNext(this._calculateDisabled());
@@ -59,12 +72,12 @@ class InvertSelectionCommand {
       return {
         isDisabled: true,
         hasReason: true,
-        reason: "You do not have anything selected",
+        reason: "Nothing currently selected.",
       };
     }
   }
 
-  execute(e) {
+  execute() {
     const allRows = this._primativeCommands.getRowIds();
     const selectedRows = this._primativeCommands.getSelectedRowIds();
     const notSelectedRows = allRows.filter(rowId => selectedRows.indexOf(rowId) === -1);
@@ -83,7 +96,6 @@ class MoveSelectedColumnLeftCommand {
     this.id = "move-selected-column-left";
     this.title = "Move Selected Column Left";
     this.description = "Move the currently selected column left.";
-    this.isAlwaysEnabled = false;
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
 
@@ -114,7 +126,7 @@ class MoveSelectedColumnLeftCommand {
     else return { isDisabled: false };
   }
 
-  execute(e) {
+  execute() {
     const selectedColumn = this._primativeCommands.getSelectedColumnId();
     const allColumns = this._primativeCommands.getColumnIds();
     const oldIndex = allColumns.indexOf(selectedColumn);
@@ -133,7 +145,6 @@ class MoveSelectedColumnRightCommand {
     this.id = "move-selected-column-right";
     this.title = "Move Selected Column Right";
     this.description = "Move the currently selected column right.";
-    this.isAlwaysEnabled = false;
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
 
@@ -164,7 +175,7 @@ class MoveSelectedColumnRightCommand {
     } else return { isDisabled: false };
   }
 
-  execute(e) {
+  execute() {
     const selectedColumn = this._primativeCommands.getSelectedColumnId();
     const allColumns = this._primativeCommands.getColumnIds();
     const oldIndex = allColumns.indexOf(selectedColumn);
@@ -174,17 +185,16 @@ class MoveSelectedColumnRightCommand {
   }
 }
 
-class ExportTableToCSVCommand {
+class ExportTableToCSVCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "export-table-to-csv";
     this.title = "Export Table to CSV";
     this.description = "Export the current content of the table as a downloadable CSV file.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const primativeCommands = this._primativeCommands;
 
     const columnIds = primativeCommands.getColumnIds();
@@ -205,17 +215,16 @@ class ExportTableToCSVCommand {
   }
 }
 
-class CopyTableToClipboardCommand {
+class CopyTableToClipboardCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "copy-table-to-clipboard";
     this.title = "Copy Table to Clipboard";
     this.description = "Copy the table to the clipboard as a tab-separated text block.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const primativeCommands = this._primativeCommands;
     const columnSeparator = "\t";
     const rowSeparator = "\n";
@@ -235,17 +244,16 @@ class CopyTableToClipboardCommand {
   }
 }
 
-class AddColumnCommand {
+class AddColumnCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._addColumn = primativeCommands.addColumn;
     this.id = "add-column";
     this.title = "Add Column";
     this.description = "Add a column to the table.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     this._addColumn();
   }
 }
@@ -253,17 +261,16 @@ class AddColumnCommand {
 /**
  * A command the clears the current row and column selection.
  */
-class ClearSelectionCommand {
+class ClearSelectionCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "clear-selection";
     this.title = "Clear Selection";
     this.description = "Clear the current row and column selection.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     this._primativeCommands.selectColumn(null);
 
     const selectedRowIds = this._primativeCommands.getSelectedRowIds();
@@ -275,17 +282,16 @@ class ClearSelectionCommand {
 /**
  * A command that selects all rows in the current column.
  */
-class SelectAllCommand {
+class SelectAllCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "select-all";
     this.title = "Select All";
     this.description = "Select all rows in the current column.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const allRowIds = this._primativeCommands.getRowIds();
 
     this._primativeCommands.selectRowsById(allRowIds);
@@ -295,16 +301,16 @@ class SelectAllCommand {
 /**
  * A command that moves the current column selection left.
  */
-class MoveColumnSelectionLeftCommand {
+class MoveColumnSelectionLeftCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "move-column-selection-left";
     this.title = "Move Column Selection Left";
     this.description = "Move the column selection left";
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const currentColumnSelection = this._primativeCommands.getSelectedColumnId();
     const columns = this._primativeCommands.getColumnIds();
     const selectionIndex = columns.indexOf(currentColumnSelection);
@@ -319,8 +325,9 @@ class MoveColumnSelectionLeftCommand {
 /**
  * A command that moves the current column selection right.
  */
-class MoveColumnSelectionRightCommand {
+class MoveColumnSelectionRightCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "move-column-selection-right";
     this.title = "Move Column Selection Right";
@@ -329,7 +336,7 @@ class MoveColumnSelectionRightCommand {
     this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const currentColumnSelection = this._primativeCommands.getSelectedColumnId();
     const columns = this._primativeCommands.getColumnIds();
     const selectionIndex = columns.indexOf(currentColumnSelection);
@@ -344,17 +351,16 @@ class MoveColumnSelectionRightCommand {
 /**
  * A command that moves the row focus down.
  */
-class MoveRowFocusDownCommand {
+class MoveRowFocusDownCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "move-row-focus-down";
     this.title = "Move Row Focus Down";
-    this.description = "Focuss the row immediately beneath the currently focused row.";
-
-    this.isAlwaysEnabled = true;
+    this.description = "Focus the row immediately beneath the currently focused row.";
   }
 
-  execute(e) {
+  execute() {
     const focusedRowId = this._primativeCommands.getFocusedRowId();
     const allRowIds = this._primativeCommands.getRowIds();
     const focusedRowIdx = allRowIds.indexOf(focusedRowId);
@@ -370,17 +376,16 @@ class MoveRowFocusDownCommand {
 /**
  * A command that moves the row focus up.
  */
-class MoveRowFocusUpCommand {
+class MoveRowFocusUpCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "move-row-focus-up";
     this.title = "Move Row Focus Up";
     this.description = "Move the row focus up.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const focusedRowId = this._primativeCommands.getFocusedRowId();
     const allRowIds = this._primativeCommands.getRowIds();
     const focusedRowIdx = allRowIds.indexOf(focusedRowId);
@@ -393,14 +398,13 @@ class MoveRowFocusUpCommand {
   }
 }
 
-class ClearValuesInCurrentSelectionCommand {
+class ClearValuesInCurrentSelectionCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "clear-values-in-current-selection";
     this.title = "Clear Values in Current Selection";
     this.description = "Clear the values within the current selection.";
-
-    this.isAlwaysEnabled = true;
   }
 
   execute(e) {
@@ -413,17 +417,16 @@ class ClearValuesInCurrentSelectionCommand {
   }
 }
 
-class ClearRowSelectionCommand {
+class ClearRowSelectionCommand extends AlwaysEnabledCommand {
   constructor(primativeCommands) {
+    super();
     this._primativeCommands = primativeCommands;
     this.id = "clear-row-selection";
     this.title = "Clear Row Selection";
     this.description = "Clear the current row selection, leaving the column selection intact.";
-
-    this.isAlwaysEnabled = true;
   }
 
-  execute(e) {
+  execute() {
     const selectedRows = this._primativeCommands.getSelectedRowIds();
     this._primativeCommands.deSelectRowsById(selectedRows);
   }
