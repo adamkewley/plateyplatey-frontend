@@ -370,7 +370,7 @@ angular.module("plateyController", []).controller(
 	   hovered: false,
 	   x: well.x,
 	   y: well.y,
-           radius: well.radius
+           radius: well.radius || layout.defaultWellRadius
 	 };
 
 	 columnIds.forEach(id => {
