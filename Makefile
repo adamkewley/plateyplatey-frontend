@@ -1,5 +1,5 @@
 OUT_DIR=bin
-PLATE_DIR=plates
+PLATE_DIR=${OUT_DIR}/plates
 
 JS_FILES = $(wildcard src/*.js)
 CSS_FILES = $(patsubst src/%.scss,${OUT_DIR}/%.css,$(wildcard src/*.scss))
@@ -7,10 +7,10 @@ HTML_FILES = $(patsubst src/%.html,${OUT_DIR}/%.html,$(wildcard src/*.html))
 PLATES = $(patsubst src/plates/%.json,${OUT_DIR}/plates/%.json, $(wildcard src/plates/*.json))
 
 ${OUT_DIR}:
-	mkdir -p ${OUT_DIR}
+	mkdir -p $@
 
 ${PLATE_DIR}: | ${OUT_DIR}
-	mkdir -p ${OUT_DIR}/plates
+	mkdir -p $@
 
 ${OUT_DIR}/bower_components: bower_components | ${OUT_DIR}
 	cp -r $< $@
@@ -24,7 +24,7 @@ ${OUT_DIR}/%.css: src/%.scss | ${OUT_DIR}
 ${OUT_DIR}/platey.js: ${JS_FILES} | ${OUT_DIR}
 	babel $^ -o $@
 
-${OUT_DIR}/plates/%.json: src/plates/%.json | ${OUT_DIR} ${PLATE_DIR}
+${PLATE_DIR}/%.json: src/plates/%.json | ${OUT_DIR} ${PLATE_DIR}
 	cp $< $@
 
 ${OUT_DIR}/plates.txt: ${PLATES}
