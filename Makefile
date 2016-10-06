@@ -27,8 +27,8 @@ ${OUT_DIR}/platey.js: ${JS_FILES} | ${OUT_DIR}
 ${PLATE_DIR}/%.json: src/plates/%.json | ${OUT_DIR} ${PLATE_DIR}
 	cp $< $@
 
-${OUT_DIR}/plates.txt: ${PLATES}
-	echo $(patsubst bin/%,%, $^) > $@
+${OUT_DIR}/plates.json: ${PLATES}
+	ruby scripts/generate-plate-list.rb > $@
 
 ${OUT_DIR}/%.json: src/%.json | ${OUT_DIR}
 	cp $< $@
@@ -36,7 +36,7 @@ ${OUT_DIR}/%.json: src/%.json | ${OUT_DIR}
 ${OUT_DIR}/%.html: src/%.html | ${OUT_DIR}
 	cp $< $@
 
-all: ${OUT_DIR}/platey.js ${CSS_FILES} ${PLATES} ${HTML_FILES} ${OUT_DIR}/bower_components ${OUT_DIR}/plates.txt
+all: ${OUT_DIR}/platey.js ${CSS_FILES} ${PLATES} ${HTML_FILES} ${OUT_DIR}/bower_components ${OUT_DIR}/plates.json
 
 clean: | ${OUT_DIR}
 	rm -r ${OUT_DIR}

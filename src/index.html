@@ -42,8 +42,7 @@
       <button platey-command="copy-table-to-clipboard">
 	Copy Table
       </button>
-      <select ng-model="currentPlatePath" ng-change="loadPlateLayout(currentPlatePath);">
-	<option ng-repeat="platePath in platePaths" ng-value="platePath">{{ platePath }}</option>
+      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path" ng-model="currentPlateTemplate" ng-change="loadPlateLayout(currentPlateTemplate);">
       </select>
 
       <span class="column-selection">
@@ -55,7 +54,7 @@
 	      ng-keyup="setValueOfSelectedWells();"
 	      ng-disabled="noCellsSelected()" />
     </div>
-    
+
     <main>
 
       <svg class="plate"
@@ -63,15 +62,15 @@
 	      preserveAspectRatio="xMinYMin">
 
 	<!-- Wells -->
-	<circle ng-repeat="well in wells" 
-		ng-attr-cx="{{ well.x }}" 
+	<circle ng-repeat="well in wells"
+		ng-attr-cx="{{ well.x }}"
 		ng-attr-cy="{{ well.y }}"
 		r="0.3"
 		class="well"
 		ng-class="{ hovered: well.hovered, selected: well.selected }"
-	        ng-click="$parent.selectRowsById([well.id]);"
-	        ng-mouseover="hoverOverWell(well);"
-	        ng-mouseout="unHoverOverWell(well);"></circle>
+		ng-click="$parent.selectRowsById([well.id]);"
+		ng-mouseover="hoverOverWell(well);"
+		ng-mouseout="unHoverOverWell(well);"></circle>
 
 	<!-- Selectors -->
 	<text ng-repeat="selector in selectors"
@@ -99,7 +98,7 @@
 	      <input type="text"
 		      ng-model="column.header"
 		      style="display: inline"
-	              ng-keydown="$event.stopPropagation();"/>
+		      ng-keydown="$event.stopPropagation();"/>
 	      <button ng-click="removeColumn(column.id);">X</button>
 	    </th>
 
@@ -132,7 +131,7 @@
       </div>
 
     </main>
-    
+
     <script src="bower_components/es6-shim/es6-shim.min.js"></script>
     <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
