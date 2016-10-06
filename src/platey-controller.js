@@ -23,6 +23,9 @@ angular.module("plateyController", []).controller(
      $scope.currentValue = "";
      $scope.clickedWell = null;
 
+     $scope.platePaths = [];
+     $scope.currentPlatePath = null;
+
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
      // parts of the UI. They are also used by native
@@ -387,7 +390,7 @@ angular.module("plateyController", []).controller(
      };
 
      $scope.loadPlateLayout = (filePath) => {
-       // Initial plate population
+       $scope.currentPlatePath = filePath;
        performHttpGetRequest(filePath).then(response => setPlateLayout(response.data));
      };
 
@@ -465,8 +468,8 @@ angular.module("plateyController", []).controller(
      // text file so that we can load a list of them in one GET
      // request
      performHttpGetRequest("plates.txt").then(function(response) {
-       $scope.plates = response.data.split(" ");
-       $scope.loadPlateLayout($scope.plates[0]);
+       $scope.platePaths = response.data.split(" ");
+       $scope.loadPlateLayout($scope.platePaths[0]);
      });
 
      /**
