@@ -25,6 +25,7 @@ angular.module("plateyController", []).controller(
 
      $scope.platePaths = [];
      $scope.currentPlateTemplate = null;
+     $scope.DEFAULT_WELL_RADIUS = 0.3;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
@@ -369,6 +370,7 @@ angular.module("plateyController", []).controller(
 	   hovered: false,
 	   x: well.x,
 	   y: well.y,
+           radius: well.radius
 	 };
 
 	 columnIds.forEach(id => {
