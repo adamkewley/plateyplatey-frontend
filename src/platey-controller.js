@@ -23,6 +23,10 @@ angular.module("plateyController", []).controller(
      $scope.currentValue = "";
      $scope.clickedWell = null;
 
+     $scope.platePaths = [];
+     $scope.currentPlateTemplate = null;
+     $scope.DEFAULT_WELL_RADIUS = 0.3;
+
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
      // parts of the UI. They are also used by native
@@ -51,8 +55,8 @@ angular.module("plateyController", []).controller(
        $scope.$broadcast("before-column-added", null);
 
        const newColumn = {
-         header: "Column " + ($scope.columns.length + 1),
-         id: generateGuid()
+	 header: "Column " + ($scope.columns.length + 1),
+	 id: generateGuid()
        };
 
        $scope.columns.push(newColumn);
@@ -60,7 +64,7 @@ angular.module("plateyController", []).controller(
        // Populate the wells with null values
        // for this new column
        $scope.wells.forEach(well => {
-         well[newColumn.id] = null;
+	 well[newColumn.id] = null;
        });
 
        $scope.$broadcast("after-column-added", newColumn.id);
@@ -75,23 +79,23 @@ angular.module("plateyController", []).controller(
       */
      const moveColumn = (columnId, newIndex) => {
        const oldIndex =
-         $scope
-         .columns
-         .map(column => column.id)
-         .indexOf(columnId);
+	 $scope
+	 .columns
+	 .map(column => column.id)
+	 .indexOf(columnId);
 
        if (oldIndex === -1)
-         return; // The column wasn't in the table
+	 return; // The column wasn't in the table
        else if (oldIndex === newIndex)
-         return; // It doesn't need to move
+	 return; // It doesn't need to move
        else if (newIndex >= $scope.columns.length)
-         return; // The new index is out of bounds
+	 return; // The new index is out of bounds
        else {
-         $scope.$broadcast("before-column-moved", columnId);
+	 $scope.$broadcast("before-column-moved", columnId);
 
-         moveItemInArray($scope.columns, oldIndex, newIndex);
+	 moveItemInArray($scope.columns, oldIndex, newIndex);
 
-         $scope.$broadcast("after-column-moved", columnId);
+	 $scope.$broadcast("after-column-moved", columnId);
        }
      };
 
@@ -106,17 +110,17 @@ angular.module("plateyController", []).controller(
 
        if (column === undefined) return;
        else {
-         if (column === $scope.selectedColumn)
-           $scope.selectedColumn = null;
+	 if (column === $scope.selectedColumn)
+	   $scope.selectedColumn = null;
 
-         const idx = $scope.columns.indexOf(column);
-         $scope.columns.splice(idx, 1);
+	 const idx = $scope.columns.indexOf(column);
+	 $scope.columns.splice(idx, 1);
 
-         $scope.wells.forEach(well => {
-           delete well[columnId];
-         });
+	 $scope.wells.forEach(well => {
+	   delete well[columnId];
+	 });
 
-         $scope.$broadcast("after-column-removed", columnId);
+	 $scope.$broadcast("after-column-removed", columnId);
        }
      };
 
@@ -126,7 +130,7 @@ angular.module("plateyController", []).controller(
       */
      const getSelectedColumnId = () => {
        if ($scope.selectedColumn === null)
-         return null;
+	 return null;
        else return $scope.selectedColumn.id;
      };
 
@@ -136,21 +140,21 @@ angular.module("plateyController", []).controller(
       */
      $scope.selectColumn = (columnId) => {
        if (columnId === null) {
-         $scope.$broadcast("before-column-selection-changed", columnId);
+	 $scope.$broadcast("before-column-selection-changed", columnId);
 
-         $scope.selectedColumn = null;
+	 $scope.selectedColumn = null;
 
-         $scope.$broadcast("after-column-selection-changed", columnId);
+	 $scope.$broadcast("after-column-selection-changed", columnId);
        }
 
        const columnToSelect = $scope.columns.find(column => column.id === columnId);
 
        if (columnToSelect !== undefined) {
-         $scope.$broadcast("before-column-selection-changed", columnId);
+	 $scope.$broadcast("before-column-selection-changed", columnId);
 
-         $scope.selectedColumn = columnToSelect;
+	 $scope.selectedColumn = columnToSelect;
 
-         $scope.$broadcast("after-column-selection-changed", columnId);
+	 $scope.$broadcast("after-column-selection-changed", columnId);
        }
      };
 
@@ -238,22 +242,22 @@ angular.module("plateyController", []).controller(
       */
      const assignValueToCells = (columnId, rowIds, value) => {
        $scope.$broadcast("before-assigning-value-to-cells", {
-         columnId: columnId,
-         rowIds: rowIds,
-         value: value,
+	 columnId: columnId,
+	 rowIds: rowIds,
+	 value: value,
        });
 
        const columnExists = $scope.columns.find(column => column.id === columnId);
        const rows = $scope.wells.filter(well => rowIds.indexOf(well.id) !== -1);
 
        if (columnExists !== undefined && rows.length > 0) {
-         rows.forEach(row => row[columnId] = value);
+	 rows.forEach(row => row[columnId] = value);
        }
 
        $scope.$broadcast("after-assigning-value-to-cells", {
-         columnId: columnId,
-         rowIds: rowIds,
-         value: value,
+	 columnId: columnId,
+	 rowIds: rowIds,
+	 value: value,
        });
      };
 
@@ -269,18 +273,18 @@ angular.module("plateyController", []).controller(
 
        // If it's shitty IE
        if (window.navigator.msSaveOrOpenBlob) {
-         window.navigator.msSaveOrOpenBlob(blob, fileName);
+	 window.navigator.msSaveOrOpenBlob(blob, fileName);
        } else {
-         const blobUrl = URL.createObjectURL(blob);
+	 const blobUrl = URL.createObjectURL(blob);
 
-         const downloadLink = document.createElement("a");
-         downloadLink.href = blobUrl;
-         downloadLink.download = fileName;
-         downloadLink.visibility = "hidden";
+	 const downloadLink = document.createElement("a");
+	 downloadLink.href = blobUrl;
+	 downloadLink.download = fileName;
+	 downloadLink.visibility = "hidden";
 
-         document.body.appendChild(downloadLink);
-         downloadLink.click();
-         document.body.removeChild(downloadLink);
+	 document.body.appendChild(downloadLink);
+	 downloadLink.click();
+	 document.body.removeChild(downloadLink);
        }
      };
 
@@ -324,12 +328,12 @@ angular.module("plateyController", []).controller(
        const row = $scope.wells.find(well => well.id === rowId);
 
        if (row !== undefined) {
-         $scope.$broadcast("before-focus-row", rowId);
+	 $scope.$broadcast("before-focus-row", rowId);
 
-         $scope.clickedWell = row;
-         $scope.selectRowsById([rowId]);
+	 $scope.clickedWell = row;
+	 $scope.selectRowsById([rowId]);
 
-         $scope.$broadcast("after-focused-row", rowId);
+	 $scope.$broadcast("after-focused-row", rowId);
        }
      };
 
@@ -347,6 +351,49 @@ angular.module("plateyController", []).controller(
 
      $scope.unHoverOverWells = (wells) => {
        wells.forEach($scope.unHoverOverWell);
+     };
+
+     const performHttpGetRequest = (path) => {
+       return $http.get(path);
+     };
+
+     const setPlateLayout = (layout) => {
+       $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
+
+       const columnIds = $scope.columns.map(column => column.id);
+
+       $scope.wells = layout.wells.map(well => {
+	 const wellData = {
+	   id: well.id,
+	   columns: [],
+	   selected: false,
+	   hovered: false,
+	   x: well.x,
+	   y: well.y,
+           radius: well.radius
+	 };
+
+	 columnIds.forEach(id => {
+	   wellData[id] = null;
+	 });
+
+	 return wellData;
+       });
+
+       $scope.selectors = layout.selectors.map(selector => {
+	 return {
+	   x: selector.x,
+	   y: selector.y,
+	   label: selector.label,
+	   selectsIds: selector.selects,
+	   selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
+	 };
+       });
+     };
+
+     $scope.loadPlateLayout = (plateTemplate) => {
+       $scope.currentPlateTemplate = plateTemplate;
+       performHttpGetRequest(plateTemplate.path).then(response => setPlateLayout(response.data));
      };
 
      // Aggregate / co-dependant events.
@@ -387,6 +434,8 @@ angular.module("plateyController", []).controller(
        hoverOverWells: $scope.hoverOverWells, // TODO: Make more generic
        unHoverOverWell: $scope.unHoverOverWell, // TODO: Make more generic
        unHoverOverWells: $scope.unHoverOverWells, // TODO: Make more generic
+       performHttpGetRequest: performHttpGetRequest, // TODO: Make more generic
+       setPlateLayout: setPlateLayout, // TODO: Make more generic
      };
 
      // NATIVE COMMANDS - These commands use primatives, and any
@@ -416,32 +465,14 @@ angular.module("plateyController", []).controller(
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
 
-     // Load a plate layout
-     $http.get("96-well-plate.json")
-     .then(function(response) {
-       const data = response.data;
-       $scope.vbox = `0 0 ${data.gridWidth} ${data.gridHeight}`;
-
-       $scope.wells = data.wells.map(well => {
-         return {
-           id: well.id,
-           columns: [],
-           selected: false,
-           hovered: false,
-           x: well.x,
-           y: well.y,
-         };
-       });
-
-       $scope.selectors = data.selectors.map(selector => {
-         return {
-           x: selector.x,
-           y: selector.y,
-           label: selector.label,
-           selectsIds: selector.selects,
-           selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
-         };
-       });
+     // TODO: This is hacky, but works. The Makefile is currently
+     // concatenating all the plate filenames into a space-sparated
+     // text file so that we can load a list of them in one GET
+     // request
+     performHttpGetRequest("plates.json").then(function(response) {
+       const plateTemplates = response.data;
+       $scope.plateTemplates = plateTemplates;
+       $scope.loadPlateLayout(plateTemplates[0]);
      });
 
      /**
@@ -459,12 +490,12 @@ angular.module("plateyController", []).controller(
      function getSelectionValues() {
        if ($scope.selectedColumn === null) return [];
        else {
-         const columnId = $scope.selectedColumn.id;
+	 const columnId = $scope.selectedColumn.id;
 
-         const values =
-           getSelectedWells().map(selectedWell => selectedWell[columnId]);
+	 const values =
+	   getSelectedWells().map(selectedWell => selectedWell[columnId]);
 
-         return values;
+	 return values;
        }
      }
 
@@ -477,17 +508,17 @@ angular.module("plateyController", []).controller(
        const selectionValues = getSelectionValues();
 
        if (selectionValues.length === 0) {
-         return "";
+	 return "";
        } else {
-         const firstValue = selectionValues[0];
+	 const firstValue = selectionValues[0];
 
-         if (firstValue === null) return "";
+	 if (firstValue === null) return "";
 
-         const allWellsHaveSameValue =
-            selectionValues.every(selectedWell => selectedWell === firstValue);
+	 const allWellsHaveSameValue =
+	    selectionValues.every(selectedWell => selectedWell === firstValue);
 
-         if (allWellsHaveSameValue) return firstValue;
-         else return "";
+	 if (allWellsHaveSameValue) return firstValue;
+	 else return "";
        }
      }
 
@@ -499,11 +530,11 @@ angular.module("plateyController", []).controller(
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-         const selectedColumnId = selectedColumn.id;
+	 const selectedColumnId = selectedColumn.id;
 
-         getSelectedWells().forEach(selectedWell => {
-           selectedWell[selectedColumnId] = $scope.currentValue;
-         });
+	 getSelectedWells().forEach(selectedWell => {
+	   selectedWell[selectedColumnId] = $scope.currentValue;
+	 });
        }
      };
 
@@ -513,7 +544,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.noCellsSelected = () => {
        return $scope.selectedColumn === null ||
-              !$scope.wells.some(well => well.selected);
+	      !$scope.wells.some(well => well.selected);
      };
 
      // Extra Behaviors
@@ -580,16 +611,16 @@ angular.module("plateyController", []).controller(
        let modifiers = "";
 
        if ($event.ctrlKey)
-         modifiers += "C-";
+	 modifiers += "C-";
 
        if ($event.altKey)
-         modifiers += "M-";
+	 modifiers += "M-";
 
        const translatedKeyCode =
-         KEYCODES_OF_UNPRINTABLE_KEYPRESSES[$event.keyCode];
+	 KEYCODES_OF_UNPRINTABLE_KEYPRESSES[$event.keyCode];
 
        if (translatedKeyCode === undefined)
-         return modifiers + $event.key;
+	 return modifiers + $event.key;
        else return modifiers + translatedKeyCode;
      }
 
@@ -602,15 +633,15 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyKeydownHandler = ($event) => {
        if ($event.target.tagName.toLowerCase() === "input")
-         return;
+	 return;
 
        const keypressIdentifier = eventToKeybindKey($event);
        const commandIdentifier = keybinds[keypressIdentifier];
 
        if (commandIdentifier !== undefined) {
-         const command = $scope.exec(commandIdentifier);
-         $event.stopPropagation();
-         $event.preventDefault();
+	 const command = $scope.exec(commandIdentifier);
+	 $event.stopPropagation();
+	 $event.preventDefault();
        }
 
        // Prevent the backspace key from navigating back. This must be
@@ -618,13 +649,13 @@ angular.module("plateyController", []).controller(
        // backwards in its history before the keyPress handler gets a
        // chance to call.
        if ($event.keyCode === 8) {
-         const currentValue = $scope.currentValue;
-         const len = currentValue.length;
+	 const currentValue = $scope.currentValue;
+	 const len = currentValue.length;
 
-         $scope.currentValue = currentValue.substring(0, len - 1);
-         $scope.setValueOfSelectedWells();
-         $event.stopPropagation();
-         $event.preventDefault();
+	 $scope.currentValue = currentValue.substring(0, len - 1);
+	 $scope.setValueOfSelectedWells();
+	 $event.stopPropagation();
+	 $event.preventDefault();
        }
      };
 
@@ -635,28 +666,28 @@ angular.module("plateyController", []).controller(
      $scope.bodyKeypressHandler = ($event) => {
        const key = eventToKeybindKey($event);
        const inputIsFocused =
-         document.activeElement.tagName.toLowerCase() === "input";
+	 document.activeElement.tagName.toLowerCase() === "input";
 
        if (inputIsFocused) {
-         return;
+	 return;
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-         // The current focus could be a button, pressing a key while
-         // focused on a button can result in navigation.
-         if (document.activeElement.blur !== undefined) // In IE11, some elements don't have a .blur
-           document.activeElement.blur();
+	 // The current focus could be a button, pressing a key while
+	 // focused on a button can result in navigation.
+	 if (document.activeElement.blur !== undefined) // In IE11, some elements don't have a .blur
+	   document.activeElement.blur();
 
-         const charCode = $event.charCode;
-         const char = String.fromCharCode(charCode);
-         $scope.currentValue += char;
-         $scope.setValueOfSelectedWells();
-         $event.stopPropagation();
-         $event.preventDefault();
+	 const charCode = $event.charCode;
+	 const char = String.fromCharCode(charCode);
+	 $scope.currentValue += char;
+	 $scope.setValueOfSelectedWells();
+	 $event.stopPropagation();
+	 $event.preventDefault();
        }
        // Else, let it bubble up to the browser.
      };
 
      const sourcesWithClickHandlers =
-        ["button", "input", "td", "th", "circle", "text", "circle"];
+	["button", "input", "td", "th", "circle", "text", "circle", "option", "select"];
 
      /**
       * Handles clicks that have bubbled all the way upto the body.
@@ -664,7 +695,7 @@ angular.module("plateyController", []).controller(
      $scope.bodyClickEventHandler = function($event) {
        const sourceElement = $event.target.tagName.toLowerCase();
        const sourceHandled =
-        sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
+	sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
        else $scope.exec("clear-row-selection");
@@ -676,12 +707,12 @@ angular.module("plateyController", []).controller(
       */
      function generateGuid() {
        function s4() {
-         return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
+	 return Math.floor((1 + Math.random()) * 0x10000)
+		.toString(16)
+		.substring(1);
        }
        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-         s4() + '-' + s4() + s4() + s4();
+	 s4() + '-' + s4() + s4() + s4();
      }
 
      /**
@@ -689,10 +720,10 @@ angular.module("plateyController", []).controller(
       */
      function moveItemInArray(array, old_index, new_index) {
        if (new_index >= array.length) {
-         var k = new_index - array.length;
-         while ((k--) + 1) {
-           array.push(undefined);
-         }
+	 var k = new_index - array.length;
+	 while ((k--) + 1) {
+	   array.push(undefined);
+	 }
        }
        array.splice(new_index, 0, array.splice(old_index, 1)[0]);
        return array; // for testing purposes
