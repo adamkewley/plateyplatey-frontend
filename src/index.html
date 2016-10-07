@@ -18,6 +18,11 @@
 
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
+
+      <!-- Plate selector -->
+      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path" ng-model="currentPlateTemplate" ng-change="loadPlateLayout(currentPlateTemplate);">
+      </select>
+
       <button platey-command="new-plate">
 	New Plate
       </button>
@@ -42,8 +47,6 @@
       <button platey-command="copy-table-to-clipboard">
 	Copy Table
       </button>
-      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path" ng-model="currentPlateTemplate" ng-change="loadPlateLayout(currentPlateTemplate);">
-      </select>
 
       <span class="column-selection">
 	{{ selectedColumn === null ? "No column selected" : selectedColumn.header + ": " }}
