@@ -68,7 +68,7 @@
 	<circle ng-repeat="well in wells"
 		ng-attr-cx="{{ well.x }}"
 		ng-attr-cy="{{ well.y }}"
-		r="{{ well.radius || DEFAULT_WELL_RADIUS }}"
+		platey-radius="{{ well.radius || DEFAULT_WELL_RADIUS }}"
 		class="well"
 		ng-class="{ hovered: well.hovered, selected: well.selected }"
 		ng-click="$parent.selectRowsById([well.id]);"

@@ -4,9 +4,9 @@
     "gridHeight": 5,
 
     "selectors": [
-	{ "x": 1, "y": 2, "label": "A", "selects": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8"] },
-	{ "x": 1, "y": 3, "label": "B", "selects": ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"] },
-	{ "x": 1, "y": 4, "label": "C", "selects": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8"] },
+	{ "x": 1, "y": 2, "label": "A", "selects": ["A1", "A2", "A3", "A4"] },
+	{ "x": 1, "y": 3, "label": "B", "selects": ["B1", "B2", "B3", "B4"] },
+	{ "x": 1, "y": 4, "label": "C", "selects": ["C1", "C2", "C3", "C4"] },
 
 	{ "x": 2, "y": 1, "label": "1", "selects": ["A1", "B1", "C1"] },
 	{ "x": 3, "y": 1, "label": "2", "selects": ["A2", "B2", "C2"] },

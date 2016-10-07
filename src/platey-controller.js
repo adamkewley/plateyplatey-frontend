@@ -386,7 +386,10 @@ angular.module("plateyController", []).controller(
 	   y: selector.y,
 	   label: selector.label,
 	   selectsIds: selector.selects,
-	   selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
+	   selects: selector
+                    .selects
+                    .map(wellId => $scope.wells.find(well => well.id === wellId))
+                    .filter(well => well !== undefined) // e.g. if the selector has an invalid ID in it
 	 };
        });
      };
