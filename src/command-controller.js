@@ -10,15 +10,9 @@ class CommandController {
   /**
    * Attempt to execute the command string.
    */
-  exec(cmd) {
-    const command = this._commands.getCommandById(cmd);
-
-    if (command === undefined)
-      throw `Failed to exec ${cmd}: does not exist.`;
-    else {
-      command.execute();
-      this._onAfterExec.onNext(cmd);
-    }
+  exec(expr, ...scopes) {
+    plateyEval(expr, ...scopes);
+    this._onAfterExec.onNext(expr);
   }
 
   /**

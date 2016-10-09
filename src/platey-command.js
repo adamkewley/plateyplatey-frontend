@@ -26,7 +26,8 @@ angular
 
   function link(scope, element, attrs) {
     const el = element[0];
-    const commandId = attrs.plateyCommand;
+    const expr = attrs.plateyCommand;
+    const commandId = getFirstSymbolName(expr);
     const commandDetails = scope.getCommandDetails(commandId);
 
     const keybinds =
@@ -48,7 +49,7 @@ angular
 
     el.addEventListener("click", (e) => {
       scope.$apply(() => {
-        scope.exec(commandId);
+        scope.exec(expr, scope, scope.commands, { "e": e });
       });
     });
   }

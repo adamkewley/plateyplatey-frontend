@@ -456,6 +456,7 @@ angular.module("plateyController", []).controller(
      };
 
      const nativeCommands = new NativeCommands(primativeCommands, events);
+     $scope.commands = nativeCommands.commandsHash;
 
      // COMMANDS - Key, click, or otherwise, commands are executed
      // through a central command controller. This is so that disabled
@@ -463,7 +464,10 @@ angular.module("plateyController", []).controller(
      const commandController = new CommandController(nativeCommands);
 
      $scope.getCommandDetails = (cmd) => commandController.getCommandDetails(cmd);
-     $scope.exec = (cmd) => commandController.exec(cmd);
+
+     $scope.exec = (cmd, ...scopes) => {
+       commandController.exec(cmd, ...scopes);
+     };
 
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
