@@ -102,7 +102,7 @@
 		      ng-model="column.header"
 		      style="display: inline"
 		      ng-keydown="$event.stopPropagation();"/>
-	      <button ng-click="removeColumn(column.id);">X</button>
+	      <button platey-command="(remove-column column.id)">X</button>
 	    </th>
 
 	    <th>

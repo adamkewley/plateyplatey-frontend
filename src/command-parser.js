@@ -29,7 +29,7 @@ class PlateyLexer {
         this._readSymbol();
       else if (this._isWhitespace(ch))
         this.index++; // Discard
-      else throw `Unexpected character, ${this.ch}, enountered at index ${this.index}`;
+      else throw `Unexpected character, ${ch}, enountered at index ${this.index}`;
     }
 
     return this.tokens;
