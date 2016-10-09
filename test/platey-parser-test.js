@@ -135,6 +135,33 @@ describe("PlateyParser", function() {
         expect(ret.body[0].body.elements[1].body.elements[1].body.type).toBe(PlateyParser.SYMBOL);
         expect(ret.body[0].body.elements[1].body.elements[1].body.text).toBe("z");
       });
+
+      it("accepts a lone string token", function() {
+        const tokens = this.lexer.lex('"a lone string"');
+
+        const ret = this.parser.parse(tokens);
+
+        expect(ret.type).toBe(PlateyParser.PROGRAM);
+        expect(ret.body.length).toBe(1);
+        expect(ret.body[0].type).toBe(PlateyParser.SEXP);
+        expect(ret.body[0].body.type).toBe(PlateyParser.STRING);
+        expect(ret.body[0].body.text).toBe("a lone string");
+      });
+
+      it("accepts a string token within a list", function() {
+        const tokens = this.lexer.lex('(x y "str")');
+
+        const ret = this.parser.parse(tokens);
+
+        expect(ret.type).toBe(PlateyParser.PROGRAM);
+        expect(ret.body.length).toBe(1);
+        expect(ret.body[0].type).toBe(PlateyParser.SEXP);
+        expect(ret.body[0].body.type).toBe(PlateyParser.LIST);
+        expect(ret.body[0].body.elements.length).toBe(3);
+        expect(ret.body[0].body.elements[2].type).toBe(PlateyParser.SEXP);
+        expect(ret.body[0].body.elements[2].body.type).toBe(PlateyParser.STRING);
+        expect(ret.body[0].body.elements[2].body.text).toBe("str");
+      });
     });
   });
 });

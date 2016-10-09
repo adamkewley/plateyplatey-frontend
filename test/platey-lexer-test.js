@@ -141,6 +141,46 @@ describe("PlateyLexer", function() {
         expect(ret.length).toBe(1);
         expect(ret[0].text).toBe(symbol);
       });
+
+      it("accepts string literals", function() {
+        const symbol = '"foo"';
+
+        const ret = this.lexer.lex(symbol);
+
+        expect(ret.length).toBe(1);
+        expect(ret[0].index).toBe(0);
+        expect(ret[0].isString).toBe(true);
+        expect(ret[0].text).toBe("foo");
+      });
+
+      it("accepts string literals, even if they appear in lists", function() {
+        const expr = '(f "foo")';
+        const ret = this.lexer.lex(expr);
+
+        expect(ret.length).toBe(4);
+        expect(ret[2].isString).toBe(true);
+        expect(ret[2].text).toBe("foo");
+      });
+
+      it("allows for blank strings", function() {
+        const expr = '""';
+        const ret = this.lexer.lex(expr);
+
+        expect(ret.length).toBe(1);
+        expect(ret[0].isString).toBe(true);
+        expect(ret[0].index).toBe(0);
+        expect(ret[0].text).toBe("");
+      });
+
+      it("allows quote characters to be escaped with a backslash", function() {
+        const expr = '"\\" hello"';
+        const ret = this.lexer.lex(expr);
+
+        expect(ret.length).toBe(1);
+        expect(ret[0].isString).toBe(true);
+        expect(ret[0].index).toBe(0);
+        expect(ret[0].text).toBe('" hello');
+      });
     });
   });
 });

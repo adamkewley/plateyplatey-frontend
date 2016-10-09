@@ -133,4 +133,37 @@ describe("plateyEval", function() {
     expect(firstScopeWasCalled).toBe(false);
     expect(secondScopeWasCalled).toBe(true);
   });
+
+  it("supplies string literals to the function", function() {
+    const expr = '(f "foo")';
+
+    let wasCalled = false;
+
+    const scope = { f: (str) => {
+      wasCalled = true;
+      expect(str).toBe("foo");
+    }};
+
+    plateyEval(expr, scope);
+
+    expect(wasCalled).toBe(true);
+  });
+
+  it("supplies string literals to nested function calls", function() {
+    const expr = '(f (g "foo"))';
+
+    let gWasCalled = false;
+
+    const scope = {
+      f: () => {},
+      g: (str) => {
+        gWasCalled = true;
+        expect(str).toBe("foo");
+      }
+    };
+
+    plateyEval(expr, scope);
+
+    expect(gWasCalled).toBe(true);
+  });
 });

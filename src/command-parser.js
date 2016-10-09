@@ -3,11 +3,12 @@
  * rules are:
  *
  * program -> sexp* empty
- * sexp -> symbol | list
+ * sexp -> symbol | list | string
  * list -> '(' sexp* ')'
  * symbol -> letter rest
  * letter -> [A-Za-z]
  * rest -> letter | [1-9\-_+-*]
+ * string -> '"' ( ~'"' | '\' '"' ) '"'
  *
  * Only lists/symbols are supported. This is not a full lisp grammar
  * implementation.
@@ -27,6 +28,8 @@ class PlateyLexer {
         this.index++;
       } else if (this._isSymbolStart(ch))
         this._readSymbol();
+      else if (ch === '"')
+        this._readString();
       else if (this._isWhitespace(ch))
         this.index++; // Discard
       else throw `Unexpected character, ${ch}, enountered at index ${this.index}`;
@@ -40,6 +43,29 @@ class PlateyLexer {
   _isWhitespace(ch) { return ch.match(/[ \n\t]/); }
 
   _isSymbolCharacter(ch) { return ch.match(/[A-Za-z1-9\-\+\*_/]/); }
+
+  _readString() {
+    const tokenStart = this.index;
+    const stringStart = this.index + 1;
+
+    let previous = "";
+    let len = 0;
+
+    this.index++; // skip the opening quote
+
+    for (; this.index < this.text.length; this.index++, len++) {
+      const current = this.text.charAt(this.index);
+
+      if (current === '"' && previous !== "\\") {
+        this.index++; // skip closing quote
+        const stringContent = this.text.substring(stringStart, stringStart + len);
+        this.tokens.push({ index: tokenStart, text: stringContent, isString: true });
+        return;
+      }
+
+      previous = current;
+    }
+  }
 
   _readSymbol() {
     const start = this.index;
@@ -84,9 +110,24 @@ class PlateyParser {
   }
 
   _sexp() {
-    const body = this._peek("(") ? this._list() : this._symbol();
+    const nextToken = this._peekToken();
+    let body;
+
+    if (nextToken.isString) body = this._string();
+    else if (nextToken.text === "(") body = this._list();
+    else body = this._symbol();
 
     return { type: PlateyParser.SEXP, body: body };
+  }
+
+  _string() {
+    const token = this._peekToken();
+
+    if (token.isString) {
+      this._tokens.shift();
+      return { type: PlateyParser.STRING, text: token.text };
+    }
+    else throw "Parse error: Unexpected token encountered when parsing a string";
   }
 
   _list() {
@@ -140,6 +181,7 @@ PlateyParser.PROGRAM = "program";
 PlateyParser.SEXP = "sexp";
 PlateyParser.LIST = "list";
 PlateyParser.SYMBOL = "symbol";
+PlateyParser.STRING = "string";
 
 function plateyEval(text, ...scopes) {
   function evalAST(ast) {
@@ -179,6 +221,9 @@ function plateyEval(text, ...scopes) {
       if (symbolValue === undefined)
         throw "Symbol, " + symbolText + ", is void";
       else return symbolValue;
+
+      case PlateyParser.STRING:
+      return ast.text;
 
       default:
       throw "Unknown AST node encountered when walking an AST";
