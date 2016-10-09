@@ -23,7 +23,7 @@ class NativeCommands {
       commandClasses.map(CommandClass => new CommandClass(primativeCommands, events));
 
     this.commandsHash = {};
-    this._commands.forEach(cmd => this.commandsHash[cmd.id] = cmd.execute);
+    this._commands.forEach(cmd => this.commandsHash[cmd.id] = () => cmd.execute.apply(cmd, arguments));
   }
 
   getCommandById(id) {

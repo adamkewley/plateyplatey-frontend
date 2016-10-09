@@ -23,28 +23,28 @@
       <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path" ng-model="currentPlateTemplate" ng-change="loadPlateLayout(currentPlateTemplate);">
       </select>
 
-      <button platey-command="new-plate">
+      <button platey-command="(new-plate)">
 	New Plate
       </button>
-      <button platey-command="clear-plate">
+      <button platey-command="(clear-plate)">
 	Clear Plate
       </button>
-      <button platey-command="invert-selection">
+      <button platey-command="(invert-selection)">
 	Invert Selection
       </button>
-      <button platey-command="select-all">
+      <button platey-command="(select-all)">
 	Select All
       </button>
-      <button platey-command="move-selected-column-left">
+      <button platey-command="(move-selected-column-left)">
 	Move Selected Column Left
       </button>
-      <button platey-command="move-selected-column-right">
+      <button platey-command="(move-selected-column-right)">
 	Move Selected Column Right
       </button>
-      <button platey-command="export-table-to-csv">
+      <button platey-command="(export-table-to-csv)">
 	CSV Export
       </button>
-      <button platey-command="copy-table-to-clipboard">
+      <button platey-command="(copy-table-to-clipboard)">
 	Copy Table
       </button>
 
@@ -106,7 +106,7 @@
 	    </th>
 
 	    <th>
-	      <button class="btn btn-success" platey-command="add-column">
+	      <button class="btn btn-success" platey-command="(add-column)">
 		Add Column
 	      </button>
 	    </th>

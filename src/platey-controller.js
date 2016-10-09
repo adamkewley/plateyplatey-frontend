@@ -592,19 +592,19 @@ angular.module("plateyController", []).controller(
 
      // EMACS-style kbd representation
      const keybinds = {
-       "<escape>": "clear-selection",
-       "C-a": "select-all",
-       "C-n": "new-plate",
-       "<left>": "move-column-selection-left",
-       "<right>": "move-column-selection-right",
-       "<down>": "move-row-focus-down",
-       "<up>": "move-row-focus-up",
-       "<delete>": "clear-values-in-current-selection",
-       "C-i": "add-column",
-       "<return>": "move-row-focus-down",
-       "<tab>": "move-column-selection-right",
-       "M-<left>": "move-selected-column-left",
-       "M-<right>": "move-selected-column-right"
+       "<escape>": "(clear-selection)",
+       "C-a": "(select-all)",
+       "C-n": "(new-plate)",
+       "<left>": "(move-column-selection-left)",
+       "<right>": "(move-column-selection-right)",
+       "<down>": "(move-row-focus-down)",
+       "<up>": "(move-row-focus-up)",
+       "<delete>": "(clear-values-in-current-selection)",
+       "C-i": "(add-column)",
+       "<return>": "(move-row-focus-down)",
+       "<tab>": "(move-column-selection-right)",
+       "M-<left>": "(move-selected-column-left)",
+       "M-<right>": "(move-selected-column-right)"
      };
 
      // So that buttons etc. can see the current keybinds.
@@ -646,7 +646,7 @@ angular.module("plateyController", []).controller(
        const commandIdentifier = keybinds[keypressIdentifier];
 
        if (commandIdentifier !== undefined) {
-	 const command = $scope.exec(commandIdentifier);
+	 $scope.exec(commandIdentifier, $scope.commands);
 	 $event.stopPropagation();
 	 $event.preventDefault();
        }
@@ -672,6 +672,12 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyKeypressHandler = ($event) => {
        const key = eventToKeybindKey($event);
+
+       // Key combinations are handled here, because combinations such as
+       // C-a are two separate *key-downs* and one combined *keypress*
+       const keypress = eventToKeybindKey($event);
+       const command = keybinds[keypress];
+
        const inputIsFocused =
 	 document.activeElement.tagName.toLowerCase() === "input";
 
@@ -705,7 +711,7 @@ angular.module("plateyController", []).controller(
 	sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
-       else $scope.exec("clear-row-selection");
+       else $scope.exec("(clear-row-selection)", $scope.commands);
      };
 
      /**

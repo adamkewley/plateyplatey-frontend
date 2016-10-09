@@ -157,8 +157,9 @@ function plateyEval(text, ...scopes) {
       if (ast.elements.length === 0)
         return undefined;
       else {
+        let f, funcArgs;
         [f, ...funcArgs] = ast.elements.map(evalAST);
-        return f.apply(null, funcArgs);
+        return f.apply(f, funcArgs);
       }
 
       case PlateyParser.SYMBOL:
