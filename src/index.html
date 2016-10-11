@@ -27,6 +27,11 @@
 	      ng-change="loadPlateLayout(currentPlateTemplate);">
       </select>
 
+      <select ng-options="arrangement as arrangement.name for arrangement in plateArrangements track by arrangement.name"
+	      ng-model="currentPlateArrangement"
+	      ng-change="changePlateArrangement(currentPlateArrangement)">
+      </select>
+
       <button platey-command="(new-plate)">
         New Plate
       </button>
