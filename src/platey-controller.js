@@ -24,6 +24,9 @@ angular.module("plateyController", []).controller(
      $scope.platePaths = [];
      $scope.currentPlateTemplate = null;
 
+     $scope.plateArrangements = [];
+     $scope.currentPlateArrangement = null;
+
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
      // parts of the UI.
@@ -354,6 +357,30 @@ angular.module("plateyController", []).controller(
 
        const columnIds = $scope.columns.map(column => column.id);
 
+       // Supply random and default arrangements for all
+       // plates
+       const defaultArrangement = {
+         name: "Default",
+         order: layout.wells.map(well => well.id)
+       };
+
+       const defaultArrangements = [
+         defaultArrangement,
+         {
+           name: "Random",
+           order: shuffle(layout.wells.map(well => well.id))
+         },
+       ];
+
+       $scope.currentPlateArrangement = defaultArrangement;
+
+       // If the plate comes with custom arrangements, supply
+       // those as well
+       $scope.plateArrangements =
+         layout.arrangements ?
+         defaultArrangements.concat(layout.arrangements) :
+         defaultArrangements;
+
        $scope.wells = layout.wells.map(well => {
 	 const wellData = {
 	   id: well.id,
@@ -389,6 +416,20 @@ angular.module("plateyController", []).controller(
      $scope.loadPlateLayout = (plateTemplate) => {
        $scope.currentPlateTemplate = plateTemplate;
        performHttpGetRequest(plateTemplate.path).then(response => setPlateLayout(response.data));
+     };
+
+     $scope.changePlateArrangement = (arrangement) => {
+       const arrangementWells = arrangement.order;
+
+       const arrangedWells =
+         arrangementWells
+         .map(wellId => $scope.wells.find(well => well.id === wellId))
+         .filter(well => well !== undefined);
+
+       const remainingWells =
+         $scope.wells.filter(well => arrangement.order.indexOf(well.id) === -1);
+
+       $scope.wells = arrangedWells.concat(remainingWells);
      };
 
      // Aggregate / co-dependant events.
@@ -731,4 +772,16 @@ angular.module("plateyController", []).controller(
        array.splice(new_index, 0, array.splice(old_index, 1)[0]);
        return array; // for testing purposes
      };
+
+     function shuffle(a) {
+       var j, x, i;
+       for (i = a.length; i; i--) {
+         j = Math.floor(Math.random() * i);
+         x = a[i - 1];
+         a[i - 1] = a[j];
+         a[j] = x;
+       }
+
+       return a;
+     }
    }]);
