@@ -181,6 +181,17 @@ describe("PlateyLexer", function() {
         expect(ret[0].index).toBe(0);
         expect(ret[0].text).toBe('" hello');
       });
+
+      it("allows symbols beggining with a period", function() {
+        const expr = ".";
+        let ret;
+
+        expect(() => ret = this.lexer.lex(expr)).not.toThrow();
+
+        expect(ret.length).toBe(1);
+        expect(ret[0].index).toBe(0);
+        expect(ret[0].isSymbol).toBe(true);
+      });
     });
   });
 });

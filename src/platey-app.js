@@ -1,4 +1,4 @@
-const plateyModule = angular.module("plateyApp", ["plateyController", "plateyCommand"]);
+const plateyModule = angular.module("plateyApp", ["plateyController", "plateyCommand", "plateyKeyup"]);
 
 /**
  * Create a range from the supplied number.

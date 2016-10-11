@@ -58,7 +58,7 @@
 
       <input type="text"
               ng-model="currentValue"
-              ng-keyup="setValueOfSelectedWells();"
+	      platey-keyup="(set-value-of-selected-wells currentValue)"
               ng-disabled="noCellsSelected()" />
     </div>
 
@@ -72,10 +72,10 @@
         <circle ng-repeat="well in wells"
                 ng-attr-cx="{{ well.x }}"
                 ng-attr-cy="{{ well.y }}"
-                platey-radius="{{ well.radius || DEFAULT_WELL_RADIUS }}"
+                platey-radius="{{ well.radius }}"
                 class="well"
                 ng-class="{ hovered: well.hovered, selected: well.selected }"
-		platey-command='(select-row-by-id "{{ well.id }}")'
+		platey-command='(select-row-by-id (. well "id"))'
                 ng-mouseover="hoverOverWell(well);"
                 ng-mouseout="unHoverOverWell(well);"></circle>
 
@@ -84,7 +84,7 @@
                 ng-attr-x="{{ selector.x }}"
                 ng-attr-y="{{ selector.y }}"
                 class="selector"
-                ng-click="$parent.selectRowsById(selector.selectsIds);"
+		platey-command='(select-rows-by-id (. selector "selectsIds"))'
                 ng-mouseover="hoverOverWells(selector.selects);"
                 ng-mouseout="unHoverOverWells(selector.selects);">
           {{ selector.label }}

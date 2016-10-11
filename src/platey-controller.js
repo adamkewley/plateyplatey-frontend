@@ -13,9 +13,7 @@ angular.module("plateyController", []).controller(
   ["$scope", "$http",
    function($scope, $http) {
      // DATA - The underlying data structure. Only the UI and the
-     // primatives should be able to touch these. Native and
-     // non-native commands should access them indirectly via
-     // primatives.
+     // primatives should be able to touch these.
 
      $scope.columns = [];
      $scope.selectedColumn = null;
@@ -25,17 +23,11 @@ angular.module("plateyController", []).controller(
 
      $scope.platePaths = [];
      $scope.currentPlateTemplate = null;
-     $scope.DEFAULT_WELL_RADIUS = 0.3;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
-     // parts of the UI. They are also used by native
-     // commands. Because they're low-level, they may change as the
-     // application evolves.
+     // parts of the UI.
 
-     /**
-      * Create a new document.
-      */
      const newDocument = () => {
        $scope.$broadcast("before-new-document-created", null);
 
@@ -209,7 +201,7 @@ angular.module("plateyController", []).controller(
       * Select multiple rows in the table.
       * @param {Array.<RowId>} rowIds - The IDs of the rows to select.
       */
-     $scope.selectRowsById = (rowIds) => {
+     const selectRowsById = (rowIds) => {
        $scope.$broadcast("before-selecting-rows", rowIds);
 
        $scope
@@ -331,7 +323,7 @@ angular.module("plateyController", []).controller(
 	 $scope.$broadcast("before-focus-row", rowId);
 
 	 $scope.clickedWell = row;
-	 $scope.selectRowsById([rowId]);
+	 selectRowsById([rowId]);
 
 	 $scope.$broadcast("after-focused-row", rowId);
        }
@@ -370,7 +362,7 @@ angular.module("plateyController", []).controller(
 	   hovered: false,
 	   x: well.x,
 	   y: well.y,
-           radius: well.radius || layout.defaultWellRadius
+           radius: well.radius || layout.defaultWellRadius || 0.3,
 	 };
 
 	 columnIds.forEach(id => {
@@ -424,7 +416,7 @@ angular.module("plateyController", []).controller(
        getColumnIds: getColumnIds,
        getRowIds: getRowIds,
        getSelectedRowIds: getSelectedRowIds,
-       selectRowsById: $scope.selectRowsById,
+       selectRowsById: selectRowsById,
        deSelectRowsById: deSelectRowsById,
        assignValueToCells: assignValueToCells,
        promptUserToSaveData: promptUserToSaveData,
@@ -441,13 +433,8 @@ angular.module("plateyController", []).controller(
        setPlateLayout: setPlateLayout, // TODO: Make more generic
      };
 
-     // NATIVE COMMANDS - These commands use primatives, and any
-     // standard javascript / library functionality to do higher-level
-     // stuff such as inverting a selection or exporting the plate's
-     // data. They offer a high degree of control over platey but may
-     // need patching as the primatives evolve. The outer interface of
-     // native commands should not change much over time. Because they
-     // use primatives, they are the least encapsulated command.
+     // NATIVE COMMANDS - Use primative commands, but expose themselves
+     // as expression-compatible functions
 
      // Native commands hook into the core's events.
      const events = {
@@ -472,10 +459,7 @@ angular.module("plateyController", []).controller(
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
 
-     // TODO: This is hacky, but works. The Makefile is currently
-     // concatenating all the plate filenames into a space-sparated
-     // text file so that we can load a list of them in one GET
-     // request
+     // Populate initial plate
      performHttpGetRequest("plates.json").then(function(response) {
        const plateTemplates = response.data;
        $scope.plateTemplates = plateTemplates;

@@ -5,9 +5,9 @@
  * program -> sexp* empty
  * sexp -> symbol | list | string
  * list -> '(' sexp* ')'
- * symbol -> letter rest
- * letter -> [A-Za-z]
- * rest -> letter | [1-9\-_+-*]
+ * symbol -> start rest
+ * start -> [A-Za-z\.]
+ * rest -> start | [1-9\-_+-*]
  * string -> '"' ( ~'"' | '\' '"' ) '"'
  *
  * Only lists/symbols are supported. This is not a full lisp grammar
@@ -38,11 +38,11 @@ class PlateyLexer {
     return this.tokens;
   }
 
-  _isSymbolStart(ch) { return ch.match(/[A-Za-z]/); }
+  _isSymbolStart(ch) { return ch.match(/[A-Za-z\.]/); }
 
   _isWhitespace(ch) { return ch.match(/[ \n\t]/); }
 
-  _isSymbolCharacter(ch) { return ch.match(/[A-Za-z1-9\-\+\*_/]/); }
+  _isSymbolCharacter(ch) { return ch.match(/[A-Za-z\.1-9\-\+\*_/]/); }
 
   _readString() {
     const tokenStart = this.index;

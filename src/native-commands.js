@@ -19,9 +19,12 @@ class NativeCommands {
       ClearRowSelectionCommand,
       RemoveColumnCommand,
       SelectRowById,
+      SelectRowsById,
       SelectColumn,
       FocusRow,
       HoverOverRow,
+      ObjectAccessor,
+      SetValueOfSelectedWells,
     ];
 
     this._commands =
