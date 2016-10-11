@@ -13,9 +13,7 @@ angular.module("plateyController", []).controller(
   ["$scope", "$http",
    function($scope, $http) {
      // DATA - The underlying data structure. Only the UI and the
-     // primatives should be able to touch these. Native and
-     // non-native commands should access them indirectly via
-     // primatives.
+     // primatives should be able to touch these.
 
      $scope.columns = [];
      $scope.selectedColumn = null;
@@ -25,17 +23,11 @@ angular.module("plateyController", []).controller(
 
      $scope.platePaths = [];
      $scope.currentPlateTemplate = null;
-     $scope.DEFAULT_WELL_RADIUS = 0.3;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
-     // parts of the UI. They are also used by native
-     // commands. Because they're low-level, they may change as the
-     // application evolves.
+     // parts of the UI.
 
-     /**
-      * Create a new document.
-      */
      const newDocument = () => {
        $scope.$broadcast("before-new-document-created", null);
 
@@ -49,7 +41,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Add a new column to the platey table.
-      * @return {ColumnId} The ID of the new column.
+      * @return {Column} A handle to the column.
       */
      const addColumn = () => {
        $scope.$broadcast("before-column-added", null);
@@ -74,7 +66,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Move a column in the table to a different index.
-      * @param {ColumnId} columnId - The id of the column to move.
+      * @param {Column} column - The column to move.
       * @param {integer} newIndex - The new index of the column.
       */
      const moveColumn = (columnId, newIndex) => {
@@ -101,9 +93,9 @@ angular.module("plateyController", []).controller(
 
      /**
       * Remove a column from the table.
-      * @param {ColumnId} column - ID of the column to remove.
+      * @param {Column} column - The column to remove.
       */
-     $scope.removeColumn = function(columnId) {
+     const removeColumn = function(columnId) {
        $scope.$broadcast("before-column-removed", columnId);
 
        const column = $scope.columns.find(col => col.id === columnId);
@@ -126,7 +118,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Get the currently selected column.
-      * @return {ColumnId} The currently selected column.
+      * @return {Column} The currently selected column.
       */
      const getSelectedColumnId = () => {
        if ($scope.selectedColumn === null)
@@ -138,7 +130,7 @@ angular.module("plateyController", []).controller(
       * Set the currently selected column.
       * @param {ColumnId} columnId - The ID of the column to select (nullable).
       */
-     $scope.selectColumn = (columnId) => {
+     const selectColumn = (columnId) => {
        if (columnId === null) {
 	 $scope.$broadcast("before-column-selection-changed", columnId);
 
@@ -209,7 +201,7 @@ angular.module("plateyController", []).controller(
       * Select multiple rows in the table.
       * @param {Array.<RowId>} rowIds - The IDs of the rows to select.
       */
-     $scope.selectRowsById = (rowIds) => {
+     const selectRowsById = (rowIds) => {
        $scope.$broadcast("before-selecting-rows", rowIds);
 
        $scope
@@ -324,14 +316,14 @@ angular.module("plateyController", []).controller(
       * Set a row as focused.
       * @param {RowId} rowId - The ID of the row to focus.
       */
-     $scope.focusRow = (rowId) => {
+     const focusRow = (rowId) => {
        const row = $scope.wells.find(well => well.id === rowId);
 
        if (row !== undefined) {
 	 $scope.$broadcast("before-focus-row", rowId);
 
 	 $scope.clickedWell = row;
-	 $scope.selectRowsById([rowId]);
+	 selectRowsById([rowId]);
 
 	 $scope.$broadcast("after-focused-row", rowId);
        }
@@ -370,7 +362,7 @@ angular.module("plateyController", []).controller(
 	   hovered: false,
 	   x: well.x,
 	   y: well.y,
-           radius: well.radius || layout.defaultWellRadius
+           radius: well.radius || layout.defaultWellRadius || 0.3,
 	 };
 
 	 columnIds.forEach(id => {
@@ -386,7 +378,10 @@ angular.module("plateyController", []).controller(
 	   y: selector.y,
 	   label: selector.label,
 	   selectsIds: selector.selects,
-	   selects: selector.selects.map(wellId => $scope.wells.find(well => well.id === wellId))
+	   selects: selector
+                    .selects
+                    .map(wellId => $scope.wells.find(well => well.id === wellId))
+                    .filter(well => well !== undefined) // e.g. if the selector has an invalid ID in it
 	 };
        });
      };
@@ -414,14 +409,14 @@ angular.module("plateyController", []).controller(
        newDocument: newDocument,
        addColumn: addColumn,
        moveColumn: moveColumn,
-       removeColumn: $scope.removeColumn,
+       removeColumn: removeColumn,
        getSelectedColumnId: getSelectedColumnId,
-       selectColumn: $scope.selectColumn,
+       selectColumn: selectColumn,
        clearDataInColumn: clearDataInColumn,
        getColumnIds: getColumnIds,
        getRowIds: getRowIds,
        getSelectedRowIds: getSelectedRowIds,
-       selectRowsById: $scope.selectRowsById,
+       selectRowsById: selectRowsById,
        deSelectRowsById: deSelectRowsById,
        assignValueToCells: assignValueToCells,
        promptUserToSaveData: promptUserToSaveData,
@@ -429,7 +424,7 @@ angular.module("plateyController", []).controller(
        getTableData: getTableData,
        copyTextToClipboard: copyTextToClipboard,
        getFocusedRowId: getFocusedRowId,
-       focusRow: $scope.focusRow,
+       focusRow: focusRow,
        hoverOverWell: $scope.hoverOverWell, // TODO: Make more generic
        hoverOverWells: $scope.hoverOverWells, // TODO: Make more generic
        unHoverOverWell: $scope.unHoverOverWell, // TODO: Make more generic
@@ -438,13 +433,8 @@ angular.module("plateyController", []).controller(
        setPlateLayout: setPlateLayout, // TODO: Make more generic
      };
 
-     // NATIVE COMMANDS - These commands use primatives, and any
-     // standard javascript / library functionality to do higher-level
-     // stuff such as inverting a selection or exporting the plate's
-     // data. They offer a high degree of control over platey but may
-     // need patching as the primatives evolve. The outer interface of
-     // native commands should not change much over time. Because they
-     // use primatives, they are the least encapsulated command.
+     // NATIVE COMMANDS - Use primative commands, but expose themselves
+     // as expression-compatible functions
 
      // Native commands hook into the core's events.
      const events = {
@@ -453,6 +443,7 @@ angular.module("plateyController", []).controller(
      };
 
      const nativeCommands = new NativeCommands(primativeCommands, events);
+     $scope.commands = nativeCommands.commandsHash;
 
      // COMMANDS - Key, click, or otherwise, commands are executed
      // through a central command controller. This is so that disabled
@@ -460,15 +451,15 @@ angular.module("plateyController", []).controller(
      const commandController = new CommandController(nativeCommands);
 
      $scope.getCommandDetails = (cmd) => commandController.getCommandDetails(cmd);
-     $scope.exec = (cmd) => commandController.exec(cmd);
+
+     $scope.exec = (cmd, ...scopes) => {
+       commandController.exec(cmd, ...scopes);
+     };
 
      // for debugging
      commandController.onAfterExec.subscribe((cmdName) => console.log(cmdName));
 
-     // TODO: This is hacky, but works. The Makefile is currently
-     // concatenating all the plate filenames into a space-sparated
-     // text file so that we can load a list of them in one GET
-     // request
+     // Populate initial plate
      performHttpGetRequest("plates.json").then(function(response) {
        const plateTemplates = response.data;
        $scope.plateTemplates = plateTemplates;
@@ -549,7 +540,7 @@ angular.module("plateyController", []).controller(
 
      // Extra Behaviors
      $scope.$on("after-column-added", (_, columnId) => {
-       $scope.selectColumn(columnId);
+       selectColumn(columnId);
      });
 
      $scope.$on("after-table-selection-changed", () => {
@@ -585,23 +576,29 @@ angular.module("plateyController", []).controller(
 
      // EMACS-style kbd representation
      const keybinds = {
-       "<escape>": "clear-selection",
-       "C-a": "select-all",
-       "C-n": "new-plate",
-       "<left>": "move-column-selection-left",
-       "<right>": "move-column-selection-right",
-       "<down>": "move-row-focus-down",
-       "<up>": "move-row-focus-up",
-       "<delete>": "clear-values-in-current-selection",
-       "C-i": "add-column",
-       "<return>": "move-row-focus-down",
-       "<tab>": "move-column-selection-right",
-       "M-<left>": "move-selected-column-left",
-       "M-<right>": "move-selected-column-right"
+       "<escape>": "(clear-selection)",
+       "C-a": "(select-all)",
+       "C-n": "(new-plate)",
+       "<left>": "(move-column-selection-left)",
+       "<right>": "(move-column-selection-right)",
+       "<down>": "(move-row-focus-down)",
+       "<up>": "(move-row-focus-up)",
+       "<delete>": "(clear-values-in-current-selection)",
+       "C-i": "(add-column)",
+       "<return>": "(move-row-focus-down)",
+       "<tab>": "(move-column-selection-right)",
+       "M-<left>": "(move-selected-column-left)",
+       "M-<right>": "(move-selected-column-right)"
      };
 
-     // So that buttons etc. can see the current keybinds.
-     $scope.keybinds = keybinds;
+     $scope.getKeybindsAssociatedWith = (expr) => {
+       return Object.keys(keybinds)
+       .filter(key => {
+         const keyboundCommandId = keybinds[key];
+
+         return keyboundCommandId === expr;
+       });
+     };
 
      /**
       * Transforms a jQueryLite keyboard event into the
@@ -639,7 +636,7 @@ angular.module("plateyController", []).controller(
        const commandIdentifier = keybinds[keypressIdentifier];
 
        if (commandIdentifier !== undefined) {
-	 const command = $scope.exec(commandIdentifier);
+	 $scope.exec(commandIdentifier, $scope.commands);
 	 $event.stopPropagation();
 	 $event.preventDefault();
        }
@@ -665,6 +662,12 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyKeypressHandler = ($event) => {
        const key = eventToKeybindKey($event);
+
+       // Key combinations are handled here, because combinations such as
+       // C-a are two separate *key-downs* and one combined *keypress*
+       const keypress = eventToKeybindKey($event);
+       const command = keybinds[keypress];
+
        const inputIsFocused =
 	 document.activeElement.tagName.toLowerCase() === "input";
 
@@ -698,7 +701,7 @@ angular.module("plateyController", []).controller(
 	sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
-       else $scope.exec("clear-row-selection");
+       else $scope.exec("(clear-row-selection)", $scope.commands);
      };
 
      /**

@@ -26,29 +26,23 @@ angular
 
   function link(scope, element, attrs) {
     const el = element[0];
-    const commandId = attrs.plateyCommand;
+    const expr = attrs.plateyCommand;
+    const commandId = getFirstSymbolName(expr);
     const commandDetails = scope.getCommandDetails(commandId);
 
-    const keybinds =
-      Object
-      .keys(scope.keybinds)
-      .filter(key => {
-        const keyboundCommandId = scope.keybinds[key];
-
-        return keyboundCommandId === commandId;
-      })
-      .join(", ");
-
-    const hasKeybinds = keybinds.length > 0;
-
     commandDetails.disabledSubject.subscribe(e => {
+      const keybinds =
+        scope.getKeybindsAssociatedWith(expr).join(", ");
+
+      const hasKeybinds = keybinds.length > 0;
+
       el.disabled = e.isDisabled;
       el.title = (e.isDisabled && e.hasReason) ? e.reason : commandDetails.description + (hasKeybinds ? " (" + keybinds + ")" : "");
     });
 
     el.addEventListener("click", (e) => {
       scope.$apply(() => {
-        scope.exec(commandId);
+        scope.exec(expr, scope, scope.commands, { "e": e });
       });
     });
   }
