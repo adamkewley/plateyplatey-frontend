@@ -49,7 +49,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Add a new column to the platey table.
-      * @return {ColumnId} The ID of the new column.
+      * @return {Column} A handle to the column.
       */
      const addColumn = () => {
        $scope.$broadcast("before-column-added", null);
@@ -74,7 +74,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Move a column in the table to a different index.
-      * @param {ColumnId} columnId - The id of the column to move.
+      * @param {Column} column - The column to move.
       * @param {integer} newIndex - The new index of the column.
       */
      const moveColumn = (columnId, newIndex) => {
@@ -101,9 +101,9 @@ angular.module("plateyController", []).controller(
 
      /**
       * Remove a column from the table.
-      * @param {ColumnId} column - ID of the column to remove.
+      * @param {Column} column - The column to remove.
       */
-     $scope.removeColumn = function(columnId) {
+     const removeColumn = function(columnId) {
        $scope.$broadcast("before-column-removed", columnId);
 
        const column = $scope.columns.find(col => col.id === columnId);
@@ -126,7 +126,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Get the currently selected column.
-      * @return {ColumnId} The currently selected column.
+      * @return {Column} The currently selected column.
       */
      const getSelectedColumnId = () => {
        if ($scope.selectedColumn === null)
@@ -138,7 +138,7 @@ angular.module("plateyController", []).controller(
       * Set the currently selected column.
       * @param {ColumnId} columnId - The ID of the column to select (nullable).
       */
-     $scope.selectColumn = (columnId) => {
+     const selectColumn = (columnId) => {
        if (columnId === null) {
 	 $scope.$broadcast("before-column-selection-changed", columnId);
 
@@ -324,7 +324,7 @@ angular.module("plateyController", []).controller(
       * Set a row as focused.
       * @param {RowId} rowId - The ID of the row to focus.
       */
-     $scope.focusRow = (rowId) => {
+     const focusRow = (rowId) => {
        const row = $scope.wells.find(well => well.id === rowId);
 
        if (row !== undefined) {
@@ -417,9 +417,9 @@ angular.module("plateyController", []).controller(
        newDocument: newDocument,
        addColumn: addColumn,
        moveColumn: moveColumn,
-       removeColumn: $scope.removeColumn,
+       removeColumn: removeColumn,
        getSelectedColumnId: getSelectedColumnId,
-       selectColumn: $scope.selectColumn,
+       selectColumn: selectColumn,
        clearDataInColumn: clearDataInColumn,
        getColumnIds: getColumnIds,
        getRowIds: getRowIds,
@@ -432,7 +432,7 @@ angular.module("plateyController", []).controller(
        getTableData: getTableData,
        copyTextToClipboard: copyTextToClipboard,
        getFocusedRowId: getFocusedRowId,
-       focusRow: $scope.focusRow,
+       focusRow: focusRow,
        hoverOverWell: $scope.hoverOverWell, // TODO: Make more generic
        hoverOverWells: $scope.hoverOverWells, // TODO: Make more generic
        unHoverOverWell: $scope.unHoverOverWell, // TODO: Make more generic
@@ -556,7 +556,7 @@ angular.module("plateyController", []).controller(
 
      // Extra Behaviors
      $scope.$on("after-column-added", (_, columnId) => {
-       $scope.selectColumn(columnId);
+       selectColumn(columnId);
      });
 
      $scope.$on("after-table-selection-changed", () => {
@@ -607,8 +607,14 @@ angular.module("plateyController", []).controller(
        "M-<right>": "(move-selected-column-right)"
      };
 
-     // So that buttons etc. can see the current keybinds.
-     $scope.keybinds = keybinds;
+     $scope.getKeybindsAssociatedWith = (expr) => {
+       return Object.keys(keybinds)
+       .filter(key => {
+         const keyboundCommandId = keybinds[key];
+
+         return keyboundCommandId === expr;
+       });
+     };
 
      /**
       * Transforms a jQueryLite keyboard event into the

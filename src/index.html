@@ -22,7 +22,9 @@
       <span class="site-title">PlateyPlatey</span>
 
       <!-- Plate selector -->
-      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path" ng-model="currentPlateTemplate" ng-change="loadPlateLayout(currentPlateTemplate);">
+      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path"
+	      ng-model="currentPlateTemplate"
+	      ng-change="loadPlateLayout(currentPlateTemplate);">
       </select>
 
       <button platey-command="(new-plate)">
@@ -73,7 +75,7 @@
                 platey-radius="{{ well.radius || DEFAULT_WELL_RADIUS }}"
                 class="well"
                 ng-class="{ hovered: well.hovered, selected: well.selected }"
-                ng-click="$parent.selectRowsById([well.id]);"
+		platey-command='(select-row-by-id "{{ well.id }}")'
                 ng-mouseover="hoverOverWell(well);"
                 ng-mouseout="unHoverOverWell(well);"></circle>
 
@@ -97,8 +99,7 @@
             <th>Well ID</th>
 
             <th ng-repeat="column in columns"
-                    ng-class="{'selected-column': column === $parent.selectedColumn }"
-                    ng-click="$parent.selectColumn(column.id);">
+		    platey-command='(select-column "{{ column.id }}")'>
 
               <input type="text"
                       ng-model="column.header"
@@ -118,11 +119,11 @@
           <tbody>
 
             <tr ng-repeat="well in wells"
-                    ng-click="$parent.focusRow(well.id);">
+		platey-command='(focus-row "{{ well.id }}")'>
               <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
               <td ng-repeat="column in columns"
                       ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
-                      ng-click="$parent.selectColumn(column.id);"
+		      platey-command='(select-column "{{ column.id }}")'
                       ng-mouseover="hoverOverWell(well);"
                       ng-mouseout="unHoverOverWell(well);">
                 {{ well[column.id] }}
