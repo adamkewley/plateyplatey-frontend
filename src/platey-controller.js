@@ -13,7 +13,7 @@ angular.module("plateyController", []).controller(
   ["$scope", "$http",
    function($scope, $http) {
      // DATA - The underlying data structure. Only the UI and the
-     // primatives should be able to touch these.
+     // primatives should touch these.
 
      $scope.columns = [];
      $scope.selectedColumn = null;
@@ -29,7 +29,7 @@ angular.module("plateyController", []).controller(
 
      // PRIMATIVES - The lowest-level platey commands that expose all
      // platey functionality. These are used by the **DATABINDING**
-     // parts of the UI.
+     // and scripting parts of the UI.
 
      /**
       * Set the currently selected column.
