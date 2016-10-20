@@ -3,11 +3,15 @@ html, body {
     height: 100%;
     position: relative;
     overflow: hidden;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
 }
 
+main {
+    background-color: #f9f9f9;
+}
+
 .control-bar {
+    padding: 0.5em 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -32,7 +36,6 @@ html, body {
 }
 
 .control-bar .site-title {
-    font-family: "Georgia";
     padding: 0 20px 0 5px;
     font-weight: bold;
 }
@@ -81,6 +84,7 @@ main {
     stroke-width: 0.2%;
     stroke: black;
     cursor: pointer;
+    transition: fill .1s ease; 
 }
 
 .plate .well.selected {
@@ -119,6 +123,16 @@ main {
     user-select: none;
 }
 
+.main-table {
+    padding: 0;
+    margin: 0;
+}
+
+.main-table > tbody td {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
 .main-table thead {
     text-align: left;
     border-width: 0 0 1px 0;
@@ -132,6 +146,23 @@ td.selected-well {
 
 .hovered-well {
     background-color: #eee;
+}
+
+.add-column-btn {
+    color: white;
+    background-color: green;
+    border-width: 0;
+    border-radius: 5px;
+}
+
+.remove-column-btn {
+    background-color: transparent;
+    border-width: 0;
+    color: grey;
+}
+
+.remove-column-btn:hover {
+    color: red;
 }
 
 /* The end row/column, to show the user
@@ -153,4 +184,28 @@ td.selected-well {
 .main-table td.well-id {
     min-width: auto;
     width: 1em;
+}
+
+.form-control {
+    display: inline;
+    width: auto;
+}
+
+.platey-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.platey-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 300px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 12px 16px;
+    z-index: 1;
+}
+
+.platey-dropdown:hover .platey-dropdown-content {
+    display: block;
 }

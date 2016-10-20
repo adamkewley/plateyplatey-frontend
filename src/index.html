@@ -8,7 +8,13 @@
           content="A simple UI for translating between laboratory plate layouts and standard tables." />
 
     <link rel="stylesheet" type="text/css" href="bower_components/normalize-css/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
+    <script src="bower_components/es6-shim/es6-shim.min.js"></script>
+    <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
+    <script src="bower_components/papaparse/papaparse.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="platey.js"></script>
 
     <title>PlateyPlatey</title>
   </head>
@@ -24,12 +30,14 @@
       <!-- Plate selector -->
       <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path"
 	      ng-model="currentPlateTemplate"
-	      ng-change="loadPlateLayout(currentPlateTemplate);">
+	      ng-change="loadPlateLayout(currentPlateTemplate);"
+	      class="form-control">
       </select>
 
       <select ng-options="arrangement as arrangement.name for arrangement in plateArrangements track by arrangement.name"
 	      ng-model="currentPlateArrangement"
-	      ng-change="changePlateArrangement(currentPlateArrangement)">
+	      ng-change="changePlateArrangement(currentPlateArrangement)"
+	      class="form-control">
       </select>
 
       <button platey-command="(new-plate)">
@@ -64,7 +72,8 @@
       <input type="text"
               ng-model="currentValue"
 	      platey-keyup="(set-value-of-selected-wells currentValue)"
-              ng-disabled="noCellsSelected()" />
+              ng-disabled="noCellsSelected()"
+              class="form-control" />
     </div>
 
     <main>
@@ -98,7 +107,7 @@
 
       <div class="main-panel">
 
-        <table class="main-table">
+        <table class="table-condensed main-table">
 
           <thead>
             <th>Well ID</th>
@@ -109,14 +118,13 @@
               <input type="text"
                       ng-model="column.header"
                       style="display: inline"
+		      class="form-control"
                       ng-keydown="$event.stopPropagation();"/>
-              <button platey-command='(remove-column "{{ column.id }}")'>X</button>
+              <button class="remove-column-btn" platey-command='(remove-column "{{ column.id }}")'>x</button>
             </th>
 
             <th>
-              <button class="btn btn-success" platey-command="(add-column)">
-                Add Column
-              </button>
+              <button class="btn btn-success" platey-command="(add-column)">Add Column</button>
             </th>
           </thead>
 
@@ -142,11 +150,5 @@
       </div>
 
     </main>
-
-    <script src="bower_components/es6-shim/es6-shim.min.js"></script>
-    <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
-    <script src="bower_components/papaparse/papaparse.min.js"></script>
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="platey.js"></script>
   </body>
 </html>

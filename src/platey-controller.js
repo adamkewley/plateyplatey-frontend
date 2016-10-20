@@ -31,10 +31,34 @@ angular.module("plateyController", []).controller(
      // platey functionality. These are used by the **DATABINDING**
      // parts of the UI.
 
+     /**
+      * Set the currently selected column.
+      * @param {ColumnId} columnId - The ID of the column to select (nullable).
+      */
+     const selectColumn = (columnId) => {
+       if (columnId === null) {
+	 $scope.$broadcast("before-column-selection-changed", columnId);
+
+	 $scope.selectedColumn = null;
+
+	 $scope.$broadcast("after-column-selection-changed", columnId);
+       }
+
+       const columnToSelect = $scope.columns.find(column => column.id === columnId);
+
+       if (columnToSelect !== undefined) {
+	 $scope.$broadcast("before-column-selection-changed", columnId);
+
+	 $scope.selectedColumn = columnToSelect;
+
+	 $scope.$broadcast("after-column-selection-changed", columnId);
+       }
+     };
+
      const newDocument = () => {
        $scope.$broadcast("before-new-document-created", null);
 
-       $scope.selectColumn(null);
+       selectColumn(null);
        $scope.currentValue = "";
        $scope.columns = [];
        $scope.clickedWell = null;
@@ -127,30 +151,6 @@ angular.module("plateyController", []).controller(
        if ($scope.selectedColumn === null)
 	 return null;
        else return $scope.selectedColumn.id;
-     };
-
-     /**
-      * Set the currently selected column.
-      * @param {ColumnId} columnId - The ID of the column to select (nullable).
-      */
-     const selectColumn = (columnId) => {
-       if (columnId === null) {
-	 $scope.$broadcast("before-column-selection-changed", columnId);
-
-	 $scope.selectedColumn = null;
-
-	 $scope.$broadcast("after-column-selection-changed", columnId);
-       }
-
-       const columnToSelect = $scope.columns.find(column => column.id === columnId);
-
-       if (columnToSelect !== undefined) {
-	 $scope.$broadcast("before-column-selection-changed", columnId);
-
-	 $scope.selectedColumn = columnToSelect;
-
-	 $scope.$broadcast("after-column-selection-changed", columnId);
-       }
      };
 
      /**
