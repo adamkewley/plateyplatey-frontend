@@ -25,6 +25,8 @@ class NativeCommands {
       HoverOverRow,
       ObjectAccessor,
       SetValueOfSelectedWells,
+      PromptUserForFile,
+      PromptUserForFiles,
     ];
 
     this._commands =
