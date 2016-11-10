@@ -6,3 +6,4 @@ bower_components
 bin
 .sass-cache/
 obj
+npm-debug.log
