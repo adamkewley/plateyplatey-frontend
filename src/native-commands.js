@@ -27,6 +27,7 @@ class NativeCommands {
       SetValueOfSelectedWells,
       PromptUserForFile,
       PromptUserForFiles,
+      ImportCsvFile,
     ];
 
     this._commands =

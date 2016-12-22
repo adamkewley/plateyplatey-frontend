@@ -10,8 +10,8 @@
  */
 angular.module("plateyController", []).controller(
   "plateyController",
-  ["$scope", "$http",
-   function($scope, $http) {
+  ["$scope", "$http", "$q",
+   function($scope, $http, $q) {
      // DATA - The underlying data structure. Only the UI and the
      // primatives should touch these.
 
@@ -184,6 +184,16 @@ angular.module("plateyController", []).controller(
      };
 
      /**
+      * Set the header of a column.
+      */
+     const setColumnHeader = (header, columnId) => {
+       const column = $scope.columns.find(column => column.id === columnId);
+
+       if (column === undefined) return undefined;
+       else column.header = header;
+     };
+
+     /**
       * Get the IDs of rows in the table.
       * @return {Array.<WellId>}
       */
@@ -298,44 +308,79 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Prompt the user to browse for files on their local
-      * filesystem. Returns null if the user cancels out of the
+      * Prompt the user to browse for files on their filesystem.
+      * @param {string} mimeTypes - A comma-delimited list of MIME
+      * types the file dialog should filter against.
+      * @param {boolean} multipleFiles - If the dialog should allow
+      * the user to select multiple files.
+      * @return {Promise.<Array.<File>>} A promise that will resolve
+      * with the selected files after the user clicks OK in the file
+      * dialog. The promise will reject if the user cancels out of the
       * dialog.
-      * @param {string} mimeTypes - A comma-separated list of MIME
-      * types that the file browser should filter to
-      * @return {Array.<File>}
       */
-     const promptUserForFiles = (mimeTypes = "") => {
-       const fileInputEl = document.createElement("input");
-       fileInputEl.multiple = "multiple";
+     const promptUserForFiles = (mimeTypes = "", allowMultipleFiles = true) => {
+       return $q((resolve, reject) => {
+         const fileInputEl = document.createElement("input");
+         if (allowMultipleFiles) fileInputEl.multiple = "multiple";
+         fileInputEl.visibility = "hidden";
+         fileInputEl.type = "file";
+         fileInputEl.accept = mimeTypes;
 
-       fileInputEl.type = "file";
-       fileInputEl.accept = mimeTypes;
-       fileInputEl.click();
+         const onBodyFocus = () => {
+           fileInputEl.removeEventListener("change", onChange);
 
-       if (fileInputEl.files.length > 0)
-         return fileInputEl.files;
-       else return null;
+           reject("User cancelled out of dialog");
+         };
+
+         const onChange = () => {
+           document.removeEventListener("focus", onBodyFocus);
+
+           if (fileInputEl.files.length === 1)
+             resolve(fileInputEl.files);
+           else reject("User did not select a file");
+         };
+
+         fileInputEl.addEventListener("change", onChange, false, true);
+         document.addEventListener("focus", onBodyFocus, false, true);
+
+         // Otherwise, the click will propagate upto the root click
+         // handler and angular will cry
+         fileInputEl.onclick = (e) => e.stopPropagation();
+
+         document.body.appendChild(fileInputEl);
+
+         fileInputEl.click();
+
+         document.body.removeChild(fileInputEl);
+       });
      };
 
      /**
-      * Prompt the user to browse for a single file on their
-      * filesystem. Returns null if the user cancels out of the
-      * operation.
+      * Prompt the user to browse for a single file on their filesystem.
       * @param {string} mimeTypes - A comma-delimited list of MIME
       * types the file dialog should filter against
-      * @return {File} The file object for the browsed file. Null if
-      * the user cancels out of the file dialog.
+      * @return {Promise.<File>} A promise that will resolve with the
+      * selected file after the user clicks OK in the file dialog. The
+      * promise will reject if the user cancels out of the dialog.
       */
      const promptUserForFile = (mimeTypes = "") => {
-       const fileInputEl = document.createElement("input");
-       fileInputEl.type = "file";
-       fileInputEl.accept = mimeTypes;
-       fileInputEl.click();
+       return promptUserForFiles(mimeTypes, false)
+              .then(files => files[0]);
+     };
 
-       if (fileInputEl.files.length === 1)
-         return fileInputEl.files[0];
-       else return null;
+     /**
+      * Reads a file's content as text.
+      * @param {File} file - The File object to read
+      * @return {Promise.<string>} A promise that will resolve with
+      * the file's content as text.
+      */
+     const readFileAsText = (file) => {
+       return $q((resolve, reject) => {
+         const textReader = new FileReader();
+         textReader.onload = (e) => resolve(e.target.result);
+         textReader.onerror = (e) => reject(e.target.error);
+         textReader.readAsText(file);
+       });
      };
 
      /**
@@ -503,6 +548,7 @@ angular.module("plateyController", []).controller(
        assignValueToCells: assignValueToCells,
        promptUserToSaveData: promptUserToSaveData,
        getColumnHeader: getColumnHeader,
+       setColumnHeader: setColumnHeader,
        getTableData: getTableData,
        copyTextToClipboard: copyTextToClipboard,
        getFocusedRowId: getFocusedRowId,
@@ -515,6 +561,7 @@ angular.module("plateyController", []).controller(
        setPlateLayout: setPlateLayout, // TODO: Make more generic
        promptUserForFiles: promptUserForFiles,
        promptUserForFile: promptUserForFile,
+       readFileAsText: readFileAsText,
      };
 
      // NATIVE COMMANDS - Use primative commands, but expose themselves
