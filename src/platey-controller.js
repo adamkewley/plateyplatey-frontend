@@ -13,7 +13,7 @@ angular.module("plateyController", []).controller(
   ["$scope", "$http", "$q",
    function($scope, $http, $q) {
      // DATA - The underlying data structure. Only the UI and the
-     // primatives should touch these.
+     // primative commands should mutate these.
 
      $scope.columns = [];
      $scope.selectedColumn = null;
@@ -28,11 +28,12 @@ angular.module("plateyController", []).controller(
      $scope.currentPlateArrangement = null;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
-     // platey functionality. These are used by the **DATABINDING**
-     // and scripting parts of the UI.
+     // platey functionality. The scripting engine and higher-level
+     // commands use these.
 
      /**
       * Set the currently selected column.
+      *
       * @param {ColumnId} columnId - The ID of the column to select (nullable).
       */
      const selectColumn = (columnId) => {
@@ -68,6 +69,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Add a new column to the platey table.
+      *
       * @return {Column} A handle to the column.
       */
      const addColumn = () => {
@@ -93,6 +95,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Move a column in the table to a different index.
+      *
       * @param {Column} column - The column to move.
       * @param {integer} newIndex - The new index of the column.
       */
@@ -120,6 +123,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Remove a column from the table.
+      *
       * @param {Column} column - The column to remove.
       */
      const removeColumn = function(columnId) {
@@ -145,6 +149,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Get the currently selected column.
+      *
       * @return {Column} The currently selected column.
       */
      const getSelectedColumnId = () => {
@@ -155,6 +160,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Clear all data in a column.
+      *
       * @param {ColumnId} columnId - The ID of the column to clear data from.
       */
      const clearDataInColumn = (columnId) => {
@@ -168,12 +174,14 @@ angular.module("plateyController", []).controller(
      /**
       * Get ids of columns in the table. The order of IDs is
       * guaranteed to reflect the order of columns in the table.
+      *
       * @return {Array.<ColumnId>}
       */
      const getColumnIds = () => $scope.columns.map(column => column.id);
 
      /**
       * Get the header text of a column.
+      *
       * @return {string}
       */
      const getColumnHeader = (columnId) => {
@@ -195,12 +203,14 @@ angular.module("plateyController", []).controller(
 
      /**
       * Get the IDs of rows in the table.
+      *
       * @return {Array.<WellId>}
       */
      const getRowIds = () => $scope.wells.map(well => well.id);
 
      /**
       * Gets selected rows in the table.
+      *
       * @return {Array.<RowId>}
       */
      const getSelectedRowIds = () => {
@@ -212,6 +222,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Select multiple rows in the table.
+      *
       * @param {Array.<RowId>} rowIds - The IDs of the rows to select.
       */
      const selectRowsById = (rowIds) => {
@@ -241,6 +252,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Assign a column value to multiple rows of the table.
+      *
       * @param {ColumnId} columnId
       * @param {Array.<RowId>} rowIds
       * @param {string} value
@@ -269,6 +281,7 @@ angular.module("plateyController", []).controller(
      /**
       * Create a prompt that allows the user to save the data to a
       * location on their disk.
+      *
       * @param {string} fileName - Proposed name of the file to save.
       * @param {string} contentType - The content-type of the data (e.g. "text/csv;charset=utf-8;".
       * @param {byte} data - The data to save.
@@ -295,6 +308,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Copy text to the user's clipboard.
+      *
       * @param {string} text - The text to copy.
       */
      const copyTextToClipboard = (text) => {
@@ -309,6 +323,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Prompt the user to browse for files on their filesystem.
+      *
       * @param {string} mimeTypes - A comma-delimited list of MIME
       * types the file dialog should filter against.
       * @param {boolean} multipleFiles - If the dialog should allow
@@ -357,6 +372,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Prompt the user to browse for a single file on their filesystem.
+      *
       * @param {string} mimeTypes - A comma-delimited list of MIME
       * types the file dialog should filter against
       * @return {Promise.<File>} A promise that will resolve with the
@@ -370,6 +386,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Reads a file's content as text.
+      *
       * @param {File} file - The File object to read
       * @return {Promise.<string>} A promise that will resolve with
       * the file's content as text.
@@ -384,7 +401,8 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Returns the table's data in a row-by-row format
+      * Returns the table's data in a row-by-row format.
+      *
       * @return {Array.<Array.<TableDataValue>>}
       */
      const getTableData = () => {
@@ -439,6 +457,8 @@ angular.module("plateyController", []).controller(
      };
 
      const setPlateLayout = (layout) => {
+       // vbox is used by <svg> elements to calculate
+       // aspect ratios
        $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
 
        const columnIds = $scope.columns.map(column => column.id);
@@ -643,7 +663,6 @@ angular.module("plateyController", []).controller(
          else return "";
        }
      }
-
 
      /**
       * Sets the currently selected wells to currentValue.
