@@ -3,7 +3,7 @@ OBJ_DIR=obj
 PLATE_IN_DIR = src/plates
 PLATE_OUT_DIR=${OUT_DIR}/plates
 
-NATIVE_COMMANDS = $(wildcard src/native-commands/*.js)
+NATIVE_COMMANDS = $(filter-out $(wildcard src/native-commands/flycheck*.js),$(wildcard src/native-commands/*.js))
 NATIVE_COMMANDS_FACTORY = src/native-commands.js
 
 JS_FILES := $(filter-out src/native-commands.js,$(wildcard src/*.js))

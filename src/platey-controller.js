@@ -10,10 +10,10 @@
  */
 angular.module("plateyController", []).controller(
   "plateyController",
-  ["$scope", "$http",
-   function($scope, $http) {
+  ["$scope", "$http", "$q",
+   function($scope, $http, $q) {
      // DATA - The underlying data structure. Only the UI and the
-     // primatives should be able to touch these.
+     // primative commands should mutate these.
 
      $scope.columns = [];
      $scope.selectedColumn = null;
@@ -28,30 +28,31 @@ angular.module("plateyController", []).controller(
      $scope.currentPlateArrangement = null;
 
      // PRIMATIVES - The lowest-level platey commands that expose all
-     // platey functionality. These are used by the **DATABINDING**
-     // parts of the UI.
+     // platey functionality. The scripting engine and higher-level
+     // commands use these.
 
      /**
       * Set the currently selected column.
+      *
       * @param {ColumnId} columnId - The ID of the column to select (nullable).
       */
      const selectColumn = (columnId) => {
        if (columnId === null) {
-	 $scope.$broadcast("before-column-selection-changed", columnId);
+         $scope.$broadcast("before-column-selection-changed", columnId);
 
-	 $scope.selectedColumn = null;
+         $scope.selectedColumn = null;
 
-	 $scope.$broadcast("after-column-selection-changed", columnId);
+         $scope.$broadcast("after-column-selection-changed", columnId);
        }
 
        const columnToSelect = $scope.columns.find(column => column.id === columnId);
 
        if (columnToSelect !== undefined) {
-	 $scope.$broadcast("before-column-selection-changed", columnId);
+         $scope.$broadcast("before-column-selection-changed", columnId);
 
-	 $scope.selectedColumn = columnToSelect;
+         $scope.selectedColumn = columnToSelect;
 
-	 $scope.$broadcast("after-column-selection-changed", columnId);
+         $scope.$broadcast("after-column-selection-changed", columnId);
        }
      };
 
@@ -68,14 +69,15 @@ angular.module("plateyController", []).controller(
 
      /**
       * Add a new column to the platey table.
+      *
       * @return {Column} A handle to the column.
       */
      const addColumn = () => {
        $scope.$broadcast("before-column-added", null);
 
        const newColumn = {
-	 header: "Column " + ($scope.columns.length + 1),
-	 id: generateGuid()
+         header: "Column " + ($scope.columns.length + 1),
+         id: generateGuid()
        };
 
        $scope.columns.push(newColumn);
@@ -83,7 +85,7 @@ angular.module("plateyController", []).controller(
        // Populate the wells with null values
        // for this new column
        $scope.wells.forEach(well => {
-	 well[newColumn.id] = null;
+         well[newColumn.id] = null;
        });
 
        $scope.$broadcast("after-column-added", newColumn.id);
@@ -93,33 +95,35 @@ angular.module("plateyController", []).controller(
 
      /**
       * Move a column in the table to a different index.
+      *
       * @param {Column} column - The column to move.
       * @param {integer} newIndex - The new index of the column.
       */
      const moveColumn = (columnId, newIndex) => {
        const oldIndex =
-	 $scope
-	 .columns
-	 .map(column => column.id)
-	 .indexOf(columnId);
+         $scope
+         .columns
+         .map(column => column.id)
+         .indexOf(columnId);
 
        if (oldIndex === -1)
-	 return; // The column wasn't in the table
+         return; // The column wasn't in the table
        else if (oldIndex === newIndex)
-	 return; // It doesn't need to move
+         return; // It doesn't need to move
        else if (newIndex >= $scope.columns.length)
-	 return; // The new index is out of bounds
+         return; // The new index is out of bounds
        else {
-	 $scope.$broadcast("before-column-moved", columnId);
+         $scope.$broadcast("before-column-moved", columnId);
 
-	 moveItemInArray($scope.columns, oldIndex, newIndex);
+         moveItemInArray($scope.columns, oldIndex, newIndex);
 
-	 $scope.$broadcast("after-column-moved", columnId);
+         $scope.$broadcast("after-column-moved", columnId);
        }
      };
 
      /**
       * Remove a column from the table.
+      *
       * @param {Column} column - The column to remove.
       */
      const removeColumn = function(columnId) {
@@ -129,32 +133,34 @@ angular.module("plateyController", []).controller(
 
        if (column === undefined) return;
        else {
-	 if (column === $scope.selectedColumn)
-	   $scope.selectedColumn = null;
+         if (column === $scope.selectedColumn)
+           $scope.selectedColumn = null;
 
-	 const idx = $scope.columns.indexOf(column);
-	 $scope.columns.splice(idx, 1);
+         const idx = $scope.columns.indexOf(column);
+         $scope.columns.splice(idx, 1);
 
-	 $scope.wells.forEach(well => {
-	   delete well[columnId];
-	 });
+         $scope.wells.forEach(well => {
+           delete well[columnId];
+         });
 
-	 $scope.$broadcast("after-column-removed", columnId);
+         $scope.$broadcast("after-column-removed", columnId);
        }
      };
 
      /**
       * Get the currently selected column.
+      *
       * @return {Column} The currently selected column.
       */
      const getSelectedColumnId = () => {
        if ($scope.selectedColumn === null)
-	 return null;
+         return null;
        else return $scope.selectedColumn.id;
      };
 
      /**
       * Clear all data in a column.
+      *
       * @param {ColumnId} columnId - The ID of the column to clear data from.
       */
      const clearDataInColumn = (columnId) => {
@@ -168,12 +174,14 @@ angular.module("plateyController", []).controller(
      /**
       * Get ids of columns in the table. The order of IDs is
       * guaranteed to reflect the order of columns in the table.
+      *
       * @return {Array.<ColumnId>}
       */
      const getColumnIds = () => $scope.columns.map(column => column.id);
 
      /**
       * Get the header text of a column.
+      *
       * @return {string}
       */
      const getColumnHeader = (columnId) => {
@@ -184,13 +192,25 @@ angular.module("plateyController", []).controller(
      };
 
      /**
+      * Set the header of a column.
+      */
+     const setColumnHeader = (header, columnId) => {
+       const column = $scope.columns.find(column => column.id === columnId);
+
+       if (column === undefined) return undefined;
+       else column.header = header;
+     };
+
+     /**
       * Get the IDs of rows in the table.
+      *
       * @return {Array.<WellId>}
       */
      const getRowIds = () => $scope.wells.map(well => well.id);
 
      /**
       * Gets selected rows in the table.
+      *
       * @return {Array.<RowId>}
       */
      const getSelectedRowIds = () => {
@@ -202,6 +222,7 @@ angular.module("plateyController", []).controller(
 
      /**
       * Select multiple rows in the table.
+      *
       * @param {Array.<RowId>} rowIds - The IDs of the rows to select.
       */
      const selectRowsById = (rowIds) => {
@@ -231,34 +252,36 @@ angular.module("plateyController", []).controller(
 
      /**
       * Assign a column value to multiple rows of the table.
+      *
       * @param {ColumnId} columnId
       * @param {Array.<RowId>} rowIds
       * @param {string} value
       */
      const assignValueToCells = (columnId, rowIds, value) => {
        $scope.$broadcast("before-assigning-value-to-cells", {
-	 columnId: columnId,
-	 rowIds: rowIds,
-	 value: value,
+         columnId: columnId,
+         rowIds: rowIds,
+         value: value,
        });
 
        const columnExists = $scope.columns.find(column => column.id === columnId);
        const rows = $scope.wells.filter(well => rowIds.indexOf(well.id) !== -1);
 
        if (columnExists !== undefined && rows.length > 0) {
-	 rows.forEach(row => row[columnId] = value);
+         rows.forEach(row => row[columnId] = value);
        }
 
        $scope.$broadcast("after-assigning-value-to-cells", {
-	 columnId: columnId,
-	 rowIds: rowIds,
-	 value: value,
+         columnId: columnId,
+         rowIds: rowIds,
+         value: value,
        });
      };
 
      /**
       * Create a prompt that allows the user to save the data to a
       * location on their disk.
+      *
       * @param {string} fileName - Proposed name of the file to save.
       * @param {string} contentType - The content-type of the data (e.g. "text/csv;charset=utf-8;".
       * @param {byte} data - The data to save.
@@ -268,23 +291,24 @@ angular.module("plateyController", []).controller(
 
        // If it's shitty IE
        if (window.navigator.msSaveOrOpenBlob) {
-	 window.navigator.msSaveOrOpenBlob(blob, fileName);
+         window.navigator.msSaveOrOpenBlob(blob, fileName);
        } else {
-	 const blobUrl = URL.createObjectURL(blob);
+         const blobUrl = URL.createObjectURL(blob);
 
-	 const downloadLink = document.createElement("a");
-	 downloadLink.href = blobUrl;
-	 downloadLink.download = fileName;
-	 downloadLink.visibility = "hidden";
+         const downloadLink = document.createElement("a");
+         downloadLink.href = blobUrl;
+         downloadLink.download = fileName;
+         downloadLink.visibility = "hidden";
 
-	 document.body.appendChild(downloadLink);
-	 downloadLink.click();
-	 document.body.removeChild(downloadLink);
+         document.body.appendChild(downloadLink);
+         downloadLink.click();
+         document.body.removeChild(downloadLink);
        }
      };
 
      /**
       * Copy text to the user's clipboard.
+      *
       * @param {string} text - The text to copy.
       */
      const copyTextToClipboard = (text) => {
@@ -298,7 +322,87 @@ angular.module("plateyController", []).controller(
      };
 
      /**
-      * Returns the table's data in a row-by-row format
+      * Prompt the user to browse for files on their filesystem.
+      *
+      * @param {string} mimeTypes - A comma-delimited list of MIME
+      * types the file dialog should filter against.
+      * @param {boolean} multipleFiles - If the dialog should allow
+      * the user to select multiple files.
+      * @return {Promise.<Array.<File>>} A promise that will resolve
+      * with the selected files after the user clicks OK in the file
+      * dialog. The promise will reject if the user cancels out of the
+      * dialog.
+      */
+     const promptUserForFiles = (mimeTypes = "", allowMultipleFiles = true) => {
+       return $q((resolve, reject) => {
+         const fileInputEl = document.createElement("input");
+         if (allowMultipleFiles) fileInputEl.multiple = "multiple";
+         fileInputEl.visibility = "hidden";
+         fileInputEl.type = "file";
+         fileInputEl.accept = mimeTypes;
+
+         const onBodyFocus = () => {
+           fileInputEl.removeEventListener("change", onChange);
+
+           reject("User cancelled out of dialog");
+         };
+
+         const onChange = () => {
+           document.removeEventListener("focus", onBodyFocus);
+
+           if (fileInputEl.files.length === 1)
+             resolve(fileInputEl.files);
+           else reject("User did not select a file");
+         };
+
+         fileInputEl.addEventListener("change", onChange, false, true);
+         document.addEventListener("focus", onBodyFocus, false, true);
+
+         // Otherwise, the click will propagate upto the root click
+         // handler and angular will cry
+         fileInputEl.onclick = (e) => e.stopPropagation();
+
+         document.body.appendChild(fileInputEl);
+
+         fileInputEl.click();
+
+         document.body.removeChild(fileInputEl);
+       });
+     };
+
+     /**
+      * Prompt the user to browse for a single file on their filesystem.
+      *
+      * @param {string} mimeTypes - A comma-delimited list of MIME
+      * types the file dialog should filter against
+      * @return {Promise.<File>} A promise that will resolve with the
+      * selected file after the user clicks OK in the file dialog. The
+      * promise will reject if the user cancels out of the dialog.
+      */
+     const promptUserForFile = (mimeTypes = "") => {
+       return promptUserForFiles(mimeTypes, false)
+              .then(files => files[0]);
+     };
+
+     /**
+      * Reads a file's content as text.
+      *
+      * @param {File} file - The File object to read
+      * @return {Promise.<string>} A promise that will resolve with
+      * the file's content as text.
+      */
+     const readFileAsText = (file) => {
+       return $q((resolve, reject) => {
+         const textReader = new FileReader();
+         textReader.onload = (e) => resolve(e.target.result);
+         textReader.onerror = (e) => reject(e.target.error);
+         textReader.readAsText(file);
+       });
+     };
+
+     /**
+      * Returns the table's data in a row-by-row format.
+      *
       * @return {Array.<Array.<TableDataValue>>}
       */
      const getTableData = () => {
@@ -323,12 +427,12 @@ angular.module("plateyController", []).controller(
        const row = $scope.wells.find(well => well.id === rowId);
 
        if (row !== undefined) {
-	 $scope.$broadcast("before-focus-row", rowId);
+         $scope.$broadcast("before-focus-row", rowId);
 
-	 $scope.clickedWell = row;
-	 selectRowsById([rowId]);
+         $scope.clickedWell = row;
+         selectRowsById([rowId]);
 
-	 $scope.$broadcast("after-focused-row", rowId);
+         $scope.$broadcast("after-focused-row", rowId);
        }
      };
 
@@ -353,6 +457,8 @@ angular.module("plateyController", []).controller(
      };
 
      const setPlateLayout = (layout) => {
+       // vbox is used by <svg> elements to calculate
+       // aspect ratios
        $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
 
        const columnIds = $scope.columns.map(column => column.id);
@@ -382,34 +488,34 @@ angular.module("plateyController", []).controller(
          defaultArrangements;
 
        $scope.wells = layout.wells.map(well => {
-	 const wellData = {
-	   id: well.id,
-	   columns: [],
-	   selected: false,
-	   hovered: false,
-	   x: well.x,
-	   y: well.y,
+         const wellData = {
+           id: well.id,
+           columns: [],
+           selected: false,
+           hovered: false,
+           x: well.x,
+           y: well.y,
            radius: well.radius || layout.defaultWellRadius || 0.3,
-	 };
+         };
 
-	 columnIds.forEach(id => {
-	   wellData[id] = null;
-	 });
+         columnIds.forEach(id => {
+           wellData[id] = null;
+         });
 
-	 return wellData;
+         return wellData;
        });
 
        $scope.selectors = layout.selectors.map(selector => {
-	 return {
-	   x: selector.x,
-	   y: selector.y,
-	   label: selector.label,
-	   selectsIds: selector.selects,
-	   selects: selector
+         return {
+           x: selector.x,
+           y: selector.y,
+           label: selector.label,
+           selectsIds: selector.selects,
+           selects: selector
                     .selects
                     .map(wellId => $scope.wells.find(well => well.id === wellId))
                     .filter(well => well !== undefined) // e.g. if the selector has an invalid ID in it
-	 };
+         };
        });
      };
 
@@ -462,6 +568,7 @@ angular.module("plateyController", []).controller(
        assignValueToCells: assignValueToCells,
        promptUserToSaveData: promptUserToSaveData,
        getColumnHeader: getColumnHeader,
+       setColumnHeader: setColumnHeader,
        getTableData: getTableData,
        copyTextToClipboard: copyTextToClipboard,
        getFocusedRowId: getFocusedRowId,
@@ -472,6 +579,9 @@ angular.module("plateyController", []).controller(
        unHoverOverWells: $scope.unHoverOverWells, // TODO: Make more generic
        performHttpGetRequest: performHttpGetRequest, // TODO: Make more generic
        setPlateLayout: setPlateLayout, // TODO: Make more generic
+       promptUserForFiles: promptUserForFiles,
+       promptUserForFile: promptUserForFile,
+       readFileAsText: readFileAsText,
      };
 
      // NATIVE COMMANDS - Use primative commands, but expose themselves
@@ -522,12 +632,12 @@ angular.module("plateyController", []).controller(
      function getSelectionValues() {
        if ($scope.selectedColumn === null) return [];
        else {
-	 const columnId = $scope.selectedColumn.id;
+         const columnId = $scope.selectedColumn.id;
 
-	 const values =
-	   getSelectedWells().map(selectedWell => selectedWell[columnId]);
+         const values =
+           getSelectedWells().map(selectedWell => selectedWell[columnId]);
 
-	 return values;
+         return values;
        }
      }
 
@@ -540,20 +650,19 @@ angular.module("plateyController", []).controller(
        const selectionValues = getSelectionValues();
 
        if (selectionValues.length === 0) {
-	 return "";
+         return "";
        } else {
-	 const firstValue = selectionValues[0];
+         const firstValue = selectionValues[0];
 
-	 if (firstValue === null) return "";
+         if (firstValue === null) return "";
 
-	 const allWellsHaveSameValue =
-	    selectionValues.every(selectedWell => selectedWell === firstValue);
+         const allWellsHaveSameValue =
+            selectionValues.every(selectedWell => selectedWell === firstValue);
 
-	 if (allWellsHaveSameValue) return firstValue;
-	 else return "";
+         if (allWellsHaveSameValue) return firstValue;
+         else return "";
        }
      }
-
 
      /**
       * Sets the currently selected wells to currentValue.
@@ -562,11 +671,11 @@ angular.module("plateyController", []).controller(
        const selectedColumn = $scope.selectedColumn;
 
        if (selectedColumn !== null) {
-	 const selectedColumnId = selectedColumn.id;
+         const selectedColumnId = selectedColumn.id;
 
-	 getSelectedWells().forEach(selectedWell => {
-	   selectedWell[selectedColumnId] = $scope.currentValue;
-	 });
+         getSelectedWells().forEach(selectedWell => {
+           selectedWell[selectedColumnId] = $scope.currentValue;
+         });
        }
      };
 
@@ -576,7 +685,7 @@ angular.module("plateyController", []).controller(
       */
      $scope.noCellsSelected = () => {
        return $scope.selectedColumn === null ||
-	      !$scope.wells.some(well => well.selected);
+              !$scope.wells.some(well => well.selected);
      };
 
      // Extra Behaviors
@@ -649,16 +758,16 @@ angular.module("plateyController", []).controller(
        let modifiers = "";
 
        if ($event.ctrlKey)
-	 modifiers += "C-";
+         modifiers += "C-";
 
        if ($event.altKey)
-	 modifiers += "M-";
+         modifiers += "M-";
 
        const translatedKeyCode =
-	 KEYCODES_OF_UNPRINTABLE_KEYPRESSES[$event.keyCode];
+         KEYCODES_OF_UNPRINTABLE_KEYPRESSES[$event.keyCode];
 
        if (translatedKeyCode === undefined)
-	 return modifiers + $event.key;
+         return modifiers + $event.key;
        else return modifiers + translatedKeyCode;
      }
 
@@ -671,15 +780,15 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyKeydownHandler = ($event) => {
        if ($event.target.tagName.toLowerCase() === "input")
-	 return;
+         return;
 
        const keypressIdentifier = eventToKeybindKey($event);
        const commandIdentifier = keybinds[keypressIdentifier];
 
        if (commandIdentifier !== undefined) {
-	 $scope.exec(commandIdentifier, $scope.commands);
-	 $event.stopPropagation();
-	 $event.preventDefault();
+         $scope.exec(commandIdentifier, $scope.commands);
+         $event.stopPropagation();
+         $event.preventDefault();
        }
 
        // Prevent the backspace key from navigating back. This must be
@@ -687,13 +796,13 @@ angular.module("plateyController", []).controller(
        // backwards in its history before the keyPress handler gets a
        // chance to call.
        if ($event.keyCode === 8) {
-	 const currentValue = $scope.currentValue;
-	 const len = currentValue.length;
+         const currentValue = $scope.currentValue;
+         const len = currentValue.length;
 
-	 $scope.currentValue = currentValue.substring(0, len - 1);
-	 $scope.setValueOfSelectedWells();
-	 $event.stopPropagation();
-	 $event.preventDefault();
+         $scope.currentValue = currentValue.substring(0, len - 1);
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
        }
      };
 
@@ -710,28 +819,28 @@ angular.module("plateyController", []).controller(
        const command = keybinds[keypress];
 
        const inputIsFocused =
-	 document.activeElement.tagName.toLowerCase() === "input";
+         document.activeElement.tagName.toLowerCase() === "input";
 
        if (inputIsFocused) {
-	 return;
+         return;
        } else if ($event.which !== 0 && !$event.ctrlKey) {
-	 // The current focus could be a button, pressing a key while
-	 // focused on a button can result in navigation.
-	 if (document.activeElement.blur !== undefined) // In IE11, some elements don't have a .blur
-	   document.activeElement.blur();
+         // The current focus could be a button, pressing a key while
+         // focused on a button can result in navigation.
+         if (document.activeElement.blur !== undefined) // In IE11, some elements don't have a .blur
+           document.activeElement.blur();
 
-	 const charCode = $event.charCode;
-	 const char = String.fromCharCode(charCode);
-	 $scope.currentValue += char;
-	 $scope.setValueOfSelectedWells();
-	 $event.stopPropagation();
-	 $event.preventDefault();
+         const charCode = $event.charCode;
+         const char = String.fromCharCode(charCode);
+         $scope.currentValue += char;
+         $scope.setValueOfSelectedWells();
+         $event.stopPropagation();
+         $event.preventDefault();
        }
        // Else, let it bubble up to the browser.
      };
 
      const sourcesWithClickHandlers =
-	["button", "input", "td", "th", "circle", "text", "circle", "option", "select"];
+        ["button", "input", "td", "th", "circle", "text", "circle", "option", "select"];
 
      /**
       * Handles clicks that have bubbled all the way upto the body.
@@ -739,7 +848,7 @@ angular.module("plateyController", []).controller(
      $scope.bodyClickEventHandler = function($event) {
        const sourceElement = $event.target.tagName.toLowerCase();
        const sourceHandled =
-	sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
+        sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
        if (sourceHandled) return;
        else $scope.exec("(clear-row-selection)", $scope.commands);
@@ -751,12 +860,12 @@ angular.module("plateyController", []).controller(
       */
      function generateGuid() {
        function s4() {
-	 return Math.floor((1 + Math.random()) * 0x10000)
-		.toString(16)
-		.substring(1);
+         return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
        }
        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-	 s4() + '-' + s4() + s4() + s4();
+         s4() + '-' + s4() + s4() + s4();
      }
 
      /**
@@ -764,10 +873,10 @@ angular.module("plateyController", []).controller(
       */
      function moveItemInArray(array, old_index, new_index) {
        if (new_index >= array.length) {
-	 var k = new_index - array.length;
-	 while ((k--) + 1) {
-	   array.push(undefined);
-	 }
+         var k = new_index - array.length;
+         while ((k--) + 1) {
+           array.push(undefined);
+         }
        }
        array.splice(new_index, 0, array.splice(old_index, 1)[0]);
        return array; // for testing purposes

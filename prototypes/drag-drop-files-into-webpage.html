@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+  </head>
+  <body>
+    <div id="drop-area" style="width: 500px; height: 500px; background-color: #000;">
+      
+    </div>
+    <div id="file-details">
+      Name: $name
+      Last Modified: $lastModified
+      Last Modified (date): $lastModifiedDate
+      Date: $Date
+      Size: $size
+      Type: $type
+    </div>
+
+    <div id="text-preview">
+      
+    </div>"
+
+    <img id="img-preview" />
+
+    <script>
+    const imgPreviewEl = document.getElementById("img-preview");
+    const textPreviewEl = document.getElementById("text-preview");
+
+    const fileDetailsEl = document.getElementById("file-details");
+    const fileDetailsTemplate = fileDetailsEl.innerText;
+    fileDetailsEl.innerText = "";
+
+    const dropTarget = document.body;
+    
+    dropTarget.addEventListener("dragenter", (e) => {
+	    debugger;
+	    e.stopPropagation();
+	    e.preventDefault();
+    }, false);
+    
+    dropTarget.addEventListener("dragover", (e) => {
+	    e.stopPropagation();
+	    e.preventDefault();
+    }, false);
+    
+    dropTarget.addEventListener("drop", (e) => {
+	    e.stopPropagation();
+	    e.preventDefault();
+	    
+	    const file = e.dataTransfer.files[0];
+
+	    console.log(file);
+	    const text = fileDetailsTemplate.replace(/\$[a-z]+/ig, (id) => file[id.slice(1)]);
+	    fileDetailsEl.innerText = text;
+
+	    const urlReader = new FileReader();
+	    urlReader.onload = (e) => { 
+		    imgPreviewEl.src = e.target.result;
+	    };
+	    urlReader.readAsDataURL(file);
+
+	    const textReader = new FileReader();
+	    textReader.onload = (e) => {
+		    textPreviewEl.innerText = e.target.result;
+	    };
+	    textReader.readAsText(file);
+    }, false);
+    </script>
+  </body>
+</html>
