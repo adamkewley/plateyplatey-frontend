@@ -5,11 +5,12 @@
     <meta http-equiv="Content-Type"
           content="text/html; charset=utf-8" />
     <meta name="description"
-          content="A simple UI for translating between laboratory plate layouts and standard tables." />
+          content="A UI for translating between laboratory plate layouts and data tables." />
 
     <link rel="stylesheet" type="text/css" href="bower_components/normalize-css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="platey-style.css" />
+
     <script src="bower_components/es6-shim/es6-shim.min.js"></script>
     <script src="bower_components/rxjs/dist/rx.all.min.js"></script>
     <script src="bower_components/papaparse/papaparse.min.js"></script>
@@ -89,8 +90,8 @@
                 ng-attr-cy="{{ well.y }}"
                 platey-radius="{{ well.radius }}"
                 class="well"
-                ng-class="{ hovered: well.hovered, selected: well.selected }"
-		platey-command='(select-row-by-id (. well "id"))'
+                ng-class="{ hovered: well.hovered, selected: well.selected, focused: well.id === getFocusedRowId() }"
+		platey-command='(focus-row (. well "id") e)'
                 ng-mouseover="hoverOverWell(well);"
                 ng-mouseout="unHoverOverWell(well);"></circle>
 
@@ -99,7 +100,7 @@
                 ng-attr-x="{{ selector.x }}"
                 ng-attr-y="{{ selector.y }}"
                 class="selector"
-		platey-command='(select-rows-by-id (. selector "selectsIds"))'
+		platey-command='(select-rows-by-id (. selector "selectsIds") e)'
                 ng-mouseover="hoverOverWells(selector.selects);"
                 ng-mouseout="unHoverOverWells(selector.selects);">
           {{ selector.label }}
@@ -133,10 +134,10 @@
           <tbody>
 
             <tr ng-repeat="well in wells"
-		platey-command='(focus-row "{{ well.id }}")'>
+		platey-command='(focus-row "{{ well.id }}" e)'>
               <td class="well-id" ng-class="{'selected-row': well.selected }">{{ well.id }}</td>
               <td ng-repeat="column in columns"
-                      ng-class="{'selected-well': well.selected && $parent.selectedColumn == column, 'hovered-well': well.hovered && $parent.selectedColumn == column }"
+                      ng-class="{'hovered-well': well.hovered && $parent.selectedColumn == column, 'selected-well': well.selected && $parent.selectedColumn == column, 'focused-well': $parent.getFocusedRowId() === well.id && $parent.selectedColumn === column }"
 		      platey-command='(select-column "{{ column.id }}")'
                       ng-mouseover="hoverOverWell(well);"
                       ng-mouseout="unHoverOverWell(well);">

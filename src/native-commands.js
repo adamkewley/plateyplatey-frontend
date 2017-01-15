@@ -40,4 +40,5 @@ class NativeCommands {
   getCommandById(id) {
     return this._commands.find(command => command.id === id);
   }
+
 }

@@ -1,14 +1,16 @@
 OUT_DIR=bin
 OBJ_DIR=obj
-PLATE_IN_DIR = src/plates
+PLATE_IN_DIR = src/plate-layouts
 PLATE_OUT_DIR=${OUT_DIR}/plates
 
-NATIVE_COMMANDS = $(filter-out $(wildcard src/native-commands/flycheck*.js),$(wildcard src/native-commands/*.js))
+NATIVE_COMMANDS = $(filter-out $(wildcard src/commands/flycheck*.js),$(wildcard src/commands/*.js))
 NATIVE_COMMANDS_FACTORY = src/native-commands.js
 
-JS_FILES := $(filter-out src/native-commands.js,$(wildcard src/*.js))
+JS_FILES := $(wildcard src/platey-lang/*.js) $(filter-out src/commands.js,$(wildcard src/*.js))
 
-CSS_FILES = $(patsubst src/%.scss,${OUT_DIR}/%.css,$(wildcard src/*.scss))
+SCSS_FILES_PATTERN = src/stylesheets/*.scss
+SCSS_FILES = $(wildcard ${SCSS_FILES_PATTERN})
+CSS_FILES = $(patsubst src/stylesheets/%.scss,${OUT_DIR}/%.css,${SCSS_FILES})
 HTML_FILES = $(patsubst src/%.html,${OUT_DIR}/%.html,$(wildcard src/*.html))
 PLATES = $(patsubst ${PLATE_IN_DIR}/%.json,${PLATE_OUT_DIR}/%.json, $(wildcard ${PLATE_IN_DIR}/*.json))
 
@@ -25,7 +27,7 @@ ${OUT_DIR}/bower_components: bower_components | ${OUT_DIR}
 	cp -r $< $@
 
 # Map scss to css via sass
-${OUT_DIR}/%.css: src/%.scss | ${OUT_DIR}
+${CSS_FILES}: ${SCSS_FILES} | ${OUT_DIR}
 	sass $< $@
 
 ${OBJ_DIR}/native-commands.js: ${NATIVE_COMMANDS} ${NATIVE_COMMANDS_FACTORY} | ${OBJ_DIR}
@@ -40,7 +42,7 @@ ${PLATE_OUT_DIR}/%.json: ${PLATE_IN_DIR}/%.json | ${OUT_DIR} ${PLATE_OUT_DIR}
 	cp $< $@
 
 ${OUT_DIR}/plates.json: ${PLATES}
-	ruby scripts/generate-plate-list.rb > $@
+	ruby scripts/generate-plate-list.rb $^ > $@
 
 ${OUT_DIR}/%.html: src/%.html | ${OUT_DIR}
 	cp $< $@
