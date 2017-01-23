@@ -21,7 +21,8 @@
     "normalize-css": "~4.2.0",
     "es6-shim": "~0.35.1",
     "rxjs": "~4.1.0",
-    "requirejs": "~2.3.2"
+    "requirejs": "~2.3.2",
+    "bootstrap": "^3.3.7"
   },
   "devDependencies": {
     "angular-mocks": "~1.5.8"

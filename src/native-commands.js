@@ -28,6 +28,7 @@ class NativeCommands {
       PromptUserForFile,
       PromptUserForFiles,
       ImportCsvFile,
+      RemoveSelectedColumnCommand,
     ];
 
     this._commands =

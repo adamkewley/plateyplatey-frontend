@@ -1,76 +1,92 @@
 $selected-well-color: #ccefff;
+$main-area-background-color: #f9f9f9;
+$base-font-size: 14px;
+$control-bar-background-color: #fff;
+$control-bar-button-hover-background-color: #eee;
+$disabled-text-color: #ccc;
+$non-selected-well-stroke: #666;
+$selected-well-stroke: #000;
 
 html, body {
+    
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden;
-    font-size: 14px;
+    font-size: $base-font-size;
 }
 
 main {
-    background-color: #f9f9f9;
-}
-
-.control-bar {
-    padding: 0.5em 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    box-shadow: 0 1px 5px #999;
-    width: 100%;
-}
-
-.control-bar > * {
-    flex: none;
-    display: inline-block;
-}
-
-.control-bar .column-selection {
-    padding-left: 20px;
-    padding-right: 10px;
-    font-style: italic;
-}
-
-.control-bar > *:last-child {
-    flex: auto;
-    border-radius: 0;
-}
-
-.control-bar .site-title {
-    padding: 0 20px 0 5px;
-    font-weight: bold;
-}
-
-/* Make the control buttons match the control
-   bar */
-.control-bar button {
-    margin: 0 5px;
-    border-width: 0;
-    background-color: #fff;
-}
-
-.control-bar button:hover {
-    background-color: #eee;
-}
-
-.control-bar .input-bar input {
-    vertical-align: middle;
-    background-color: #eee;
-}
-
-main {
+    
+    background-color: $main-area-background-color;
     padding-top: 1em;
     height: 95%;
 }
 
+.control-bar {
+    
+    padding: 0.2em 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    background-color: $control-bar-background-color;
 
-.plate {
+    > * {
+	flex: none;
+	display: inline-block;
+    }
+
+    > *:last-child {
+	flex: auto;
+	border-radius: 0;
+    }
+
+    .site-title {
+	padding: 0 20px 0 5px;
+	font-weight: bold;
+    }
+
+    button {
+	margin: 0 5px;
+	border-width: 0;
+	background-color: $control-bar-background-color;
+
+	&:hover {
+	    background-color: $control-bar-button-hover-background-color;
+	}
+
+	&[disabled] {
+	    color: $disabled-text-color;
+	}
+
+	&[disabled]:hover {
+	    background-color: $control-bar-background-color;
+	    cursor: not-allowed;
+	}
+    }
+
+    .column-selection {
+	padding-left: 20px;
+	padding-right: 10px;
+	font-style: italic;
+    }
+
+    .input-bar input {
+	vertical-align: middle;
+	background-color: #eee;
+    }
+}
+
+.plate-panel {
     width: 30%;
     max-height: 100%;
     float: left;
+    align: center;
+    text-align: center;
+}
 
-
+.plate {
     /* Prevent normal selection behavior because
        we handle selection behavior in the javascript */
     -webkit-touch-callout: none;
@@ -79,32 +95,33 @@ main {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
 
-.plate .well {
-    fill: transparent;
-    stroke-width: 0.2%;
-    stroke: black;
-    cursor: pointer;
-    transition: fill .1s ease; 
-}
+    .well {
+	fill: transparent;
+	stroke-width: 0.2%;
+	stroke: $non-selected-well-stroke;
+	cursor: pointer;
+	transition: fill .1s ease; 
+    }
 
-.plate .well.selected {
-    fill: $selected-well-color;
-}
+    .selected {
+	fill: $selected-well-color;
+	stroke: $selected-well-stroke;
+    }
 
-.plate .well.focused {
-    stroke-width: 0.5%;
-}
+    .focused {
+	stroke-width: 0.4%;
+    }
 
-.plate .hovered {
-    fill: #eee;
-}
+    .hovered {
+	fill: #eee;
+    }
 
-.plate .selector {
-    font-size: 0.4px; /* px in unscaled svg coordinate system */
-    text-anchor: middle;
-    cursor: pointer;
+    .selector {
+	font-size: 0.4px; /* px in unscaled svg coordinate system */
+	text-anchor: middle;
+	cursor: pointer;
+    }
 }
 
 .main-panel {
@@ -137,9 +154,20 @@ main {
 
     thead {
 	text-align: left;
+    }
+
+    th {
 	border-width: 0 0 1px 0;
 	border-style: solid;
 	border-color: grey;
+    }
+
+    th.selected {
+	border-width: 0 0 3px 0;
+    }
+
+    th > input {
+	width: 100%;
     }
 
     td.selected-well {
@@ -165,7 +193,7 @@ main {
 	text-align: center;
 	padding: 0em 1em;
 	min-width: 200px;
-	cursor: pointer;
+	cursor: cell;
     }
 
     td.well-id {

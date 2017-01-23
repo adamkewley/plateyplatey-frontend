@@ -14,6 +14,9 @@ class SelectRowsById {
       this._primativeCommands.deSelectRowsById(selectedRowIds);
     }
 
+    if (ids.length > 0)
+      this._primativeCommands.focusRow(ids[0]);
+      
     this._primativeCommands.selectRowsById(ids);
   }
 

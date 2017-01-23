@@ -6,7 +6,7 @@ PLATE_OUT_DIR=${OUT_DIR}/plates
 NATIVE_COMMANDS = $(filter-out $(wildcard src/commands/flycheck*.js),$(wildcard src/commands/*.js))
 NATIVE_COMMANDS_FACTORY = src/native-commands.js
 
-JS_FILES := $(wildcard src/platey-lang/*.js) $(filter-out src/commands.js,$(wildcard src/*.js))
+JS_FILES := $(wildcard src/platey-lang/*.js) $(filter-out ${NATIVE_COMMANDS_FACTORY}, $(filter-out src/commands.js,$(wildcard src/*.js)))
 
 SCSS_FILES_PATTERN = src/stylesheets/*.scss
 SCSS_FILES = $(wildcard ${SCSS_FILES_PATTERN})

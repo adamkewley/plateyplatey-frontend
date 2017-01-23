@@ -28,20 +28,9 @@
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
 
-      <!-- Plate selector -->
-      <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path"
-	      ng-model="currentPlateTemplate"
-	      ng-change="loadPlateLayout(currentPlateTemplate);"
-	      class="form-control">
-      </select>
-
-      <select ng-options="arrangement as arrangement.name for arrangement in plateArrangements track by arrangement.name"
-	      ng-model="currentPlateArrangement"
-	      ng-change="changePlateArrangement(currentPlateArrangement)"
-	      class="form-control">
-      </select>
-
-      <button platey-command="(import-csv-file)">Import</button>
+      <button platey-command="(import-csv-file)">
+	Import CSV
+      </button>
       <button platey-command="(new-plate)">
         New Plate
       </button>
@@ -64,49 +53,78 @@
         CSV Export
       </button>
       <button platey-command="(copy-table-to-clipboard)">
-        Copy Table
+        Copy Table To Clipboard
+      </button>
+      <button platey-command="(remove-selected-column)">
+	Delete Column
       </button>
 
-      <span class="column-selection">
-        {{ selectedColumn === null ? "No column selected" : selectedColumn.header + ": " }}
-      </span>
-
-      <input type="text"
-              ng-model="currentValue"
-	      platey-keyup="(set-value-of-selected-wells currentValue)"
-              ng-disabled="noCellsSelected()"
-              class="form-control" />
+      <div>
+	<span class="column-selection">
+          {{ selectedColumn === null ? "No column selected" : selectedColumn.header + ": " }}
+	</span>
+	
+	<input type="text"
+		placeholder="Value"
+		ng-model="currentValue"
+		platey-keyup="(set-value-of-selected-wells currentValue)"
+		ng-disabled="noCellsSelected()" />
+      </div>
+      
     </div>
 
     <main>
 
-      <svg class="plate"
-           vbox="{{ vbox }}"
-           preserveAspectRatio="xMinYMin">
+      <div class="plate-panel">
+	
+	<svg class="plate"
+		vbox="{{ vbox }}"
+		preserveAspectRatio="xMinYMin">
+	  
+          <!-- Wells -->
+          <circle ng-repeat="well in wells"
+                  ng-attr-cx="{{ well.x }}"
+                  ng-attr-cy="{{ well.y }}"
+                  platey-radius="{{ well.radius }}"
+                  class="well"
+                  ng-class="{ hovered: well.hovered, selected: well.selected, focused: well.id === getFocusedRowId() }"
+		  platey-command='(focus-row (. well "id") e)'
+                  ng-mouseover="hoverOverWell(well);"
+                  ng-mouseout="unHoverOverWell(well);"></circle>
+	  
+          <!-- Selectors -->
+          <text ng-repeat="selector in selectors"
+                  ng-attr-x="{{ selector.x }}"
+                  ng-attr-y="{{ selector.y }}"
+                  class="selector"
+		  platey-command='(select-rows-by-id (. selector "selectsIds") e)'
+                  ng-mouseover="hoverOverWells(selector.selects);"
+                  ng-mouseout="unHoverOverWells(selector.selects);">
+            {{ selector.label }}
+          </text>
+	</svg>
 
-        <!-- Wells -->
-        <circle ng-repeat="well in wells"
-                ng-attr-cx="{{ well.x }}"
-                ng-attr-cy="{{ well.y }}"
-                platey-radius="{{ well.radius }}"
-                class="well"
-                ng-class="{ hovered: well.hovered, selected: well.selected, focused: well.id === getFocusedRowId() }"
-		platey-command='(focus-row (. well "id") e)'
-                ng-mouseover="hoverOverWell(well);"
-                ng-mouseout="unHoverOverWell(well);"></circle>
+	<!-- Plate selector -->
+	<div>
+	  Plate Layout:
+	  <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.path"
+		  ng-model="currentPlateTemplate"
+		  ng-change="loadPlateLayout(currentPlateTemplate);"
+		  class="form-control">
+	  </select>
+	</div>
 
-        <!-- Selectors -->
-        <text ng-repeat="selector in selectors"
-                ng-attr-x="{{ selector.x }}"
-                ng-attr-y="{{ selector.y }}"
-                class="selector"
-		platey-command='(select-rows-by-id (. selector "selectsIds") e)'
-                ng-mouseover="hoverOverWells(selector.selects);"
-                ng-mouseout="unHoverOverWells(selector.selects);">
-          {{ selector.label }}
-        </text>
-      </svg>
-
+	<div>
+	  Table Layout:
+	
+	  <select ng-options="arrangement as arrangement.name for arrangement in plateArrangements track by arrangement.name"
+		  ng-model="currentPlateArrangement"
+		  ng-change="changePlateArrangement(currentPlateArrangement)"
+		  class="form-control">
+	  </select>
+	</div>
+      </div>
+      
       <div class="main-panel">
 
         <table class="table-condensed main-table">
@@ -115,14 +133,14 @@
             <th>Well ID</th>
 
             <th ng-repeat="column in columns"
-		    platey-command='(select-column "{{ column.id }}")'>
+		    platey-command='(select-column "{{ column.id }}")'
+		    ng-class="{ selected: selectedColumn.id === column.id }">
 
               <input type="text"
                       ng-model="column.header"
                       style="display: inline"
 		      class="form-control"
                       ng-keydown="$event.stopPropagation();"/>
-              <button class="remove-column-btn" platey-command='(remove-column "{{ column.id }}")'>x</button>
             </th>
 
             <th>
