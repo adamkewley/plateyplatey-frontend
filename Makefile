@@ -52,3 +52,7 @@ all: ${OUT_DIR}/platey.js ${CSS_FILES} ${PLATES} ${HTML_FILES} ${OUT_DIR}/bower_
 clean: | ${OUT_DIR} ${OBJ_DIR}
 	rm -r ${OUT_DIR}
 	rm -r ${OBJ_DIR}
+
+.PHONY: install
+install:
+	bower install

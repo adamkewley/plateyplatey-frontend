@@ -6,4 +6,5 @@ angular.module("plateyApp", [
   "vbox",
   "rangeFilter",
   "plateyCommandController",
+  "plateyPersistence",
 ]);

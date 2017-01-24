@@ -10,8 +10,8 @@
  */
 angular.module("plateyController", []).controller(
   "plateyController",
-  ["$scope", "$http", "$q", "plateyCommandController",
-   function($scope, $http, $q, plateyCommandController) {
+  ["$scope", "$http", "$q", "plateyCommandController", "plateyPersistence",
+   function($scope, $http, $q, plateyCommandController, plateyPersistence) {
      // DATA - The underlying data structure. Only the UI and the
      // primative commands should mutate these.
 
@@ -533,7 +533,12 @@ angular.module("plateyController", []).controller(
 
      $scope.loadPlateLayout = (plateTemplate) => {
        $scope.currentPlateTemplate = plateTemplate;
-       performHttpGetRequest(plateTemplate.path).then(response => setPlateLayout(response.data));
+
+       $scope.$broadcast("before-plate-layout-loaded", plateTemplate);
+       performHttpGetRequest(plateTemplate.path).then(response => {
+	 setPlateLayout(response.data);
+	 $scope.$broadcast("after-plate-layout-loaded", response.data);
+       });
      };
 
      $scope.changePlateArrangement = (arrangement) => {
@@ -631,13 +636,6 @@ angular.module("plateyController", []).controller(
      // for debugging
      commandController.onAfterExecutingPlateyExpression.subscribe((cmdName) => console.log(cmdName));
 
-     // Populate initial plate
-     performHttpGetRequest("plates.json").then(function(response) {
-       const plateTemplates = response.data;
-       $scope.plateTemplates = plateTemplates;
-       $scope.loadPlateLayout(plateTemplates[0]);
-     });
-
      /**
       * Returns an array of the currently selected wells.
       * @returns {Array.<Well>}
@@ -722,6 +720,20 @@ angular.module("plateyController", []).controller(
        $scope.currentValue = determineCurrentValueFromSelection();
      });
 
+     $scope.$on("after-plate-layout-loaded", () => {
+       const columnIds = getColumnIds();
+
+       if (columnIds.length === 0) {
+	 const newColumn = addColumn();
+	 selectColumn(newColumn);
+
+	 const rows = getRowIds();
+	 const firstRow = rows[0];
+
+	 focusRow(firstRow);
+       }
+     });
+
      // BUG: keyboard command callers don't check the disabled state
      // of a command.
 
@@ -746,21 +758,7 @@ angular.module("plateyController", []).controller(
      };
 
      // EMACS-style kbd representation
-     const keybinds = {
-       "<escape>": "(clear-selection)",
-       "C-a": "(select-all)",
-       "C-n": "(new-plate)",
-       "<left>": "(move-column-selection-left)",
-       "<right>": "(move-column-selection-right)",
-       "<down>": "(move-row-focus-down e)",
-       "<up>": "(move-row-focus-up e)",
-       "<delete>": "(clear-values-in-current-selection)",
-       "C-i": "(add-column)",
-       "<return>": "(move-row-focus-down e)",
-       "<tab>": "(move-column-selection-right)",
-       "M-<left>": "(move-selected-column-left)",
-       "M-<right>": "(move-selected-column-right)"
-     };
+     let keybinds = {};
 
      $scope.getKeybindsAssociatedWith = (expr) => {
        return Object.keys(keybinds)
@@ -868,12 +866,43 @@ angular.module("plateyController", []).controller(
       */
      $scope.bodyClickEventHandler = function($event) {
        const sourceElement = $event.target.tagName.toLowerCase();
-       const sourceHandled =
+       const sourceHandledByStandardHtmlElement =
         sourcesWithClickHandlers.indexOf(sourceElement) !== -1;
 
-       if (sourceHandled) return;
+       if (sourceHandledByStandardHtmlElement) return;
        else $scope.exec("(clear-row-selection)", $scope.commands);
      };
+
+     // INIT
+     const configurationPromise = plateyPersistence.fetchConfiguration();
+     const platesPromise = performHttpGetRequest("plates.json");
+
+     Promise
+       .all([configurationPromise, platesPromise])
+       .then(responses => {
+	 const configuration = responses[0];
+	 const plates = responses[1];
+
+	 // Initialize plates
+	 const plateTemplates = plates.data;
+	 $scope.plateTemplates = Object.keys(plateTemplates).map(key => plateTemplates[key]);
+
+	 const defaultPlateTemplateId = configuration.defaultPlateTemplateId;
+
+	 const plateTemplateIdToLoad =
+		 (defaultPlateTemplateId !== undefined &&
+		  plateTemplates[defaultPlateTemplateId] !== undefined) ?
+		 defaultPlateTemplateId :
+		 Object.keys(plateTemplates)[0];
+
+	 const plateTemplate = plateTemplates[plateTemplateIdToLoad];
+	 $scope.loadPlateLayout(plateTemplate);
+
+	 // Initialize keybinds
+	 if (configuration.keybinds !== undefined) {
+	   keybinds = configuration.keybinds;
+	 }
+       });
 
      /**
       * Internal guid generator - used for IDing columns in the table.
