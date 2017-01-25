@@ -1,58 +1,104 @@
-OUT_DIR=bin
-OBJ_DIR=obj
-PLATE_IN_DIR = src/plate-layouts
-PLATE_OUT_DIR=${OUT_DIR}/plates
+OUT_DIR = bin
+INTERMEDIATE_DIR = .build-cache
+SRC_DIR = src
 
-NATIVE_COMMANDS = $(filter-out $(wildcard src/commands/flycheck*.js),$(wildcard src/commands/*.js))
-NATIVE_COMMANDS_FACTORY = src/native-commands.js
+BUILD_TYPE = 'debug'
 
-JS_FILES := $(wildcard src/platey-lang/*.js) $(filter-out ${NATIVE_COMMANDS_FACTORY}, $(filter-out src/commands.js,$(wildcard src/*.js)))
+JS_LIB_INPUT_DIR = lib
+JS_LIB_OUTPUT_DIR = ${OUT_DIR}/lib
 
-SCSS_FILES_PATTERN = src/stylesheets/*.scss
-SCSS_FILES = $(wildcard ${SCSS_FILES_PATTERN})
-CSS_FILES = $(patsubst src/stylesheets/%.scss,${OUT_DIR}/%.css,${SCSS_FILES})
-HTML_FILES = $(patsubst src/%.html,${OUT_DIR}/%.html,$(wildcard src/*.html))
-PLATES = $(patsubst ${PLATE_IN_DIR}/%.json,${PLATE_OUT_DIR}/%.json, $(wildcard ${PLATE_IN_DIR}/*.json))
+PLATE_IN_DIR = ${SRC_DIR}/plates
+PLATE_OUT_DIR = ${OUT_DIR}/plates
+PLATE_INPUT_FILES = $(wildcard ${PLATE_IN_DIR}/*.json)
+PLATE_OUTPUT_FILES = $(patsubst ${PLATE_IN_DIR}/%.json, ${PLATE_OUT_DIR}/%.json, ${PLATE_INPUT_FILES})
+PLATE_REGISTRY_OUTPUT = ${OUT_DIR}/plates.json
 
-${OUT_DIR}:
+STYLESHEET_DIR = ${SRC_DIR}/stylesheets
+SCSS_INPUT_STYLESHEETS = $(wildcard ${STYLESHEET_DIR}/*.scss)
+CSS_OUTPUT_FILES = $(patsubst ${STYLESHEET_DIR}/%.scss, ${OUT_DIR}/stylesheets/%.css, ${SCSS_INPUT_STYLESHEETS})
+
+HTML_INPUT_FILES = $(wildcard ${SRC_DIR}/*.html)
+HTML_OUTPUT_FILES = $(patsubst ${SRC_DIR}/%.html, ${OUT_DIR}/%.html, ${HTML_INPUT_FILES})
+
+ALL_JS_FILES = $(shell find ${SRC_DIR} -type f -name '*.js')
+EXCLUDED_JS_FILES = $(shell find ${SRC_DIR} -type f -name '*flycheck*.js')
+JS_INPUT_FILES = $(filter-out ${EXCLUDED_JS_FILES}, ${ALL_JS_FILES})
+JS_TRANSPILED_INPUT_FILES = $(patsubst ${SRC_DIR}/%.js, ${INTERMEDIATE_DIR}/%.js, ${JS_INPUT_FILES})
+
+COMMANDS_DIR = ${INTERMEDIATE_DIR}/commands
+COMMANDS_REGISTRY = ${INTERMEDIATE_DIR}/native-commands.js
+NATIVE_COMMANDS = $(filter ${COMMANDS_DIR}/%, ${JS_TRANSPILED_INPUT_FILES})
+CONCATENATED_NATIVE_COMMANDS = ${INTERMEDIATE_DIR}/all-native-commands.js
+NON_COMMAND_JS_FILES = $(filter-out ${NATIVE_COMMANDS} ${COMMANDS_REGISTRY}, ${JS_TRANSPILED_INPUT_FILES})
+
+JS_OUTPUT_FILES = ${OUT_DIR}/platey.js
+
+
+
+${OUT_DIR} ${INTERMEDIATE_DIR}:
 	mkdir -p $@
 
-${OBJ_DIR}:
-	mkdir -p $@
 
+# Libs
+${JS_LIB_OUTPUT_DIR}: ${JS_LIB_INPUT_DIR} | ${OUT_DIR}
+	cp -r $< $@
+
+
+# Plates
 ${PLATE_OUT_DIR}: | ${OUT_DIR}
 	mkdir -p $@
 
-${OUT_DIR}/bower_components: bower_components | ${OUT_DIR}
-	cp -r $< $@
-
-# Map scss to css via sass
-${CSS_FILES}: ${SCSS_FILES} | ${OUT_DIR}
-	sass $< $@
-
-${OBJ_DIR}/native-commands.js: ${NATIVE_COMMANDS} ${NATIVE_COMMANDS_FACTORY} | ${OBJ_DIR}
-	cat ${NATIVE_COMMANDS} ${NATIVE_COMMANDS_FACTORY} > $@
-
-# Concatenate the platey source javascript and 
-# adapt it to es5.
-${OUT_DIR}/platey.js: ${JS_FILES} ${OBJ_DIR}/native-commands.js | ${OUT_DIR}
-	babel $^ -o $@
-
-${PLATE_OUT_DIR}/%.json: ${PLATE_IN_DIR}/%.json | ${OUT_DIR} ${PLATE_OUT_DIR}
+${PLATE_OUT_DIR}/%.json: ${PLATE_IN_DIR}/%.json | ${PLATE_OUT_DIR}
 	cp $< $@
 
-${OUT_DIR}/plates.json: ${PLATES}
+${PLATE_REGISTRY_OUTPUT}: ${PLATE_INPUT_FILES} | ${OUT_DIR}
 	ruby scripts/generate-plate-list.rb $^ > $@
 
-${OUT_DIR}/%.html: src/%.html | ${OUT_DIR}
+
+# Stylesheets
+${INTERMEDIATE_DIR}/%.css: ${SRC_DIR}/%.scss | ${INTERMEDIATE_DIR}
+	mkdir -p $(dir $@)
+	sass $< $@
+
+${OUT_DIR}/%.css: ${INTERMEDIATE_DIR}/%.css | ${OUT_DIR}
+	mkdir -p $(dir $@)
 	cp $< $@
 
-all: ${OUT_DIR}/platey.js ${CSS_FILES} ${PLATES} ${HTML_FILES} ${OUT_DIR}/bower_components ${OUT_DIR}/plates.json
 
-clean: | ${OUT_DIR} ${OBJ_DIR}
+# Javascript
+${INTERMEDIATE_DIR}/%.js: ${SRC_DIR}/%.js | ${INTERMEDIATE_DIR}
+	mkdir -p $(dir $@)
+ifeq ('${BUILD_TYPE}', 'release') # TODO: Impl as shell conditional for runtime target-specific variable
+	babel $^ -o $@
+else
+	cp $^ $@
+endif
+
+${CONCATENATED_NATIVE_COMMANDS}: ${NATIVE_COMMANDS} ${COMMANDS_REGISTRY} | ${INTERMEDIATE_DIR}
+	cat ${NATIVE_COMMANDS} ${COMMANDS_REGISTRY} > $@
+
+${INTERMEDIATE_DIR}/platey.js: ${NON_COMMAND_JS_FILES} ${CONCATENATED_NATIVE_COMMANDS} | ${INTERMEDIATE_DIR}
+	cat $^ > $@
+
+${OUT_DIR}/%.js: ${INTERMEDIATE_DIR}/%.js
+	cp -r $< $@
+
+
+
+# HTML
+${OUT_DIR}/%.html: ${SRC_DIR}/%.html | ${OUT_DIR}
+	cp $< $@
+
+
+
+
+.PHONY: install clean all
+
+all: ${HTML_OUTPUT_FILES} ${JS_OUTPUT_FILES} ${CSS_OUTPUT_FILES} ${PLATE_OUTPUT_FILES} ${JS_LIB_OUTPUT_DIR} ${PLATE_REGISTRY_OUTPUT}
+
+clean: | ${OUT_DIR} ${INTERMEDIATE_DIR}
 	rm -r ${OUT_DIR}
-	rm -r ${OBJ_DIR}
+	rm -r ${INTERMEDIATE_DIR}
 
-.PHONY: install
 install:
 	bower install
