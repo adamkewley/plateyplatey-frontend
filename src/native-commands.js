@@ -25,6 +25,10 @@ class NativeCommands {
       HoverOverRow,
       ObjectAccessor,
       SetValueOfSelectedWells,
+      PromptUserForFile,
+      PromptUserForFiles,
+      ImportCsvFile,
+      RemoveSelectedColumnCommand,
     ];
 
     this._commands =
@@ -37,4 +41,5 @@ class NativeCommands {
   getCommandById(id) {
     return this._commands.find(command => command.id === id);
   }
+
 }

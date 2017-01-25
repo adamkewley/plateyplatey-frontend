@@ -1,15 +1,22 @@
 require 'json'
 require 'pathname'
 
-plate_folder = File.expand_path "../../src/plates", __FILE__
-json_file_wildcard = File.join(plate_folder, "*.json")
-plate_files = Dir.glob(json_file_wildcard)
+plate_files = ARGV
 
-plates = plate_files.map do |path|
-  file_content = File.read path
-  plate_details = JSON.parse file_content
+plates =
+  plate_files.map do |path|
+    file_content = File.read path
+    plate_details = JSON.parse file_content
 
-  { name: plate_details["name"], path: "plates/#{File.basename path}" }
-end
+    filename = File.basename(path)
+    file_name_without_extension = filename.sub(/\.[^.]+$/, "")
+    plate_id = file_name_without_extension
+    
+    [plate_id, { name: plate_details["name"], path: "plates/#{filename}" }]
+  end.
+  reduce({}) do |hash, (plate_id, plate_data)|
+    hash[plate_id] = plate_data
+    hash
+  end  
 
 puts JSON.pretty_generate(plates)
