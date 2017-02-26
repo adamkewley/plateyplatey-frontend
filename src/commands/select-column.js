@@ -1,4 +1,6 @@
-class SelectColumn {
+import Rx from "lib/rxjs/Rx";
+
+export default class SelectColumn {
 
   constructor(primativeCommands) {
     this.id = "select-column";

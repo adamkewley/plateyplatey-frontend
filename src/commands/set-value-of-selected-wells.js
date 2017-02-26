@@ -1,4 +1,6 @@
-class SetValueOfSelectedWells {
+import Rx from "lib/rxjs/Rx";
+
+export default class SetValueOfSelectedWells {
 
   constructor(primativeCommands) {
     this.id = "set-value-of-selected-wells";

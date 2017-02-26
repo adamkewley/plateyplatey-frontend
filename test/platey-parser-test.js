@@ -1,4 +1,8 @@
+import PlateyLexer from "platey-lang/platey-lexer";
+import PlateyParser from "platey-lang/platey-parser";
+
 describe("PlateyParser", function() {
+
   describe("constructor", function() {
     it("exists", function() {
       expect(PlateyParser).toBeDefined();
@@ -27,7 +31,7 @@ describe("PlateyParser", function() {
       expect(typeof this.parser.parse).toBe("function");
     });
 
-    it("accepts an array of tokens", function() {;
+    it("accepts an array of tokens", function() {
       const tokens = this.lexer.lex("(f x)");
 
       expect(() => this.parser.parse(tokens)).not.toThrow();

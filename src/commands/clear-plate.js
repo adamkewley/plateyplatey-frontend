@@ -1,4 +1,6 @@
-class ClearPlateCommand {
+import Rx from "lib/rxjs/Rx";
+
+export default class ClearPlateCommand {
   constructor(primativeCommands) {
     this.id = "clear-plate";
     this.title = "Clear Plate";

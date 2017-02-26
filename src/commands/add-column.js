@@ -1,4 +1,7 @@
-class AddColumnCommand {
+import Rx from "lib/rxjs/Rx";
+
+export default class AddColumnCommand {
+
   constructor(primativeCommands) {
     this._addColumn = primativeCommands.addColumn;
     this.id = "add-column";

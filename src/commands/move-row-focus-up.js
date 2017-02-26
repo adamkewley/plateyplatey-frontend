@@ -1,4 +1,6 @@
-class MoveRowFocusUpCommand {
+import Rx from "lib/rxjs/Rx";
+
+export default class MoveRowFocusUpCommand {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

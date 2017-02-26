@@ -1,3 +1,5 @@
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+
 // Karma configuration
 // Generated on Fri Aug 05 2016 21:37:05 GMT+0100 (BST)
 
@@ -10,16 +12,11 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine', 'browserify', 'fixture'],
+    frameworks: ['jasmine', 'fixture'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      "bower_components/angular/angular.js",
-      "bower_components/angular-mocks/angular-mocks.js",
-      "bower_components/rxjs/dist/rx.all.min.js",
-      "node_modules/jsonschema/lib/validator.js",
-      'src/**/*.js',
       'test/**/*.js',
       "src/schemas/*.json",
       "src/documents/*.json",
@@ -30,16 +27,43 @@ module.exports = function(config) {
     // list of files to exclude
     exclude: [
       'test/flycheck*',
-      'src/flycheck*',
+      '**/flycheck*',
     ],
 
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      "node_modules/jsonschema/lib/validator.js": ["browserify"],
-      "test/**/*.js": ["browserify"],
+      "test/**/*.js": ["webpack"],
       "**/*.json": ["json_fixtures"]
+    },
+
+    webpack: {
+      resolve: {
+        modules: ["src", "."],
+        alias: { "lib": "node_modules" }
+      },
+
+      module: {
+        loaders: [
+          {
+            test: /\.scss$/,
+            loader: ExtractTextPlugin.extract('css-loader!sass-loader')
+          },
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: "babel-loader",
+            query: {
+              presets: ["es2015"]
+            }
+          }
+        ]
+      },
+
+      plugins: [
+        new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
+      ]
     },
 
     jsonFixturesPreprocessor: {
@@ -84,5 +108,5 @@ module.exports = function(config) {
     // Concurrency level
     // how many browser should be started simultaneous
     concurrency: Infinity
-  })
-}
+  });
+};

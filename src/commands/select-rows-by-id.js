@@ -1,4 +1,6 @@
-class SelectRowsById {
+import Rx from "lib/rxjs/Rx";
+
+export default class SelectRowsById {
 
   constructor(primativeCommands) {
     this.id = "select-rows-by-id";
@@ -16,7 +18,7 @@ class SelectRowsById {
 
     if (ids.length > 0)
       this._primativeCommands.focusRow(ids[0]);
-      
+
     this._primativeCommands.selectRowsById(ids);
   }
 

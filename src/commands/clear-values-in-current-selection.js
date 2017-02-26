@@ -1,4 +1,6 @@
-class ClearValuesInCurrentSelectionCommand {
+import Rx from "lib/rxjs/Rx";
+
+export default class ClearValuesInCurrentSelectionCommand {
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;
     this.id = "clear-values-in-current-selection";

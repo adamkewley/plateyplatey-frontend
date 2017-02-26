@@ -4,26 +4,43 @@
   "description": "Map well-plate layouts to standard tables",
   "main": "platey.js",
   "dependencies": {
+    "angular": "^1.6.2",
+    "angular-mocks": "^1.6.2",
+    "bootstrap": "^3.3.7",
+    "dev": "~0.1.3",
+    "es6-shim": "^0.35.3",
     "karma": "~1.1.2",
     "karma-cli": "~1.0.1",
-    "dev": "~0.1.3"
+    "normalize-css": "^2.3.1",
+    "papaparse": "^4.1.4",
+    "requirejs": "^2.3.3",
+    "rxjs": "^5.2.0",
+    "webpack": "^2.2.1"
   },
   "devDependencies": {
-    "karma": "~1.1.2",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-preset-es2015": "^6.22.0",
+    "css-loader": "^0.26.2",
+    "extract-text-webpack-plugin": "^2.0.0",
+    "jasmine": "^2.5.3",
     "jasmine-core": "~2.4.1",
-    "karma-jasmine": "~1.0.2",
-    "karma-firefox-launcher": "~1.0.0",
-    "karma-jasmine-html-reporter": "~0.2.1",
     "jsonschema": "~1.1.1",
-    "watchify": "~3.9.0",
-    "browserify": "~14.1.0",
-    "karma-browserify": "~5.1.1",
+    "karma": "~1.1.2",
+    "karma-firefox-launcher": "~1.0.0",
     "karma-fixture": "~0.2.6",
     "karma-html2js-preprocessor": "~1.1.0",
-    "karma-json-fixtures-preprocessor": "0.0.6"
+    "karma-jasmine": "~1.0.2",
+    "karma-jasmine-html-reporter": "~0.2.1",
+    "karma-json-fixtures-preprocessor": "0.0.6",
+    "karma-webpack": "^2.0.2",
+    "sass-loader": "^6.0.2",
+    "style-loader": "^0.13.2",
+    "webpack": "^2.2.1"
   },
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start"
+    "test": "./node_modules/karma/bin/karma start",
+    "build": "./node_modules/.bin/webpack"
   },
   "repository": {
     "type": "git",
@@ -32,6 +49,9 @@
   "keywords": [
     "plate"
   ],
+  "engines": {
+    "node": "6.10.0"
+  },
   "author": "Adam Kewley",
   "license": "BSD-2-Clause"
 }

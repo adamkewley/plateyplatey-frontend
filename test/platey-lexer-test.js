@@ -1,3 +1,5 @@
+import PlateyLexer from "platey-lang/platey-lexer";
+
 describe("PlateyLexer", function() {
   it("Exists", function() {
     expect(PlateyLexer).toBeDefined();
@@ -35,7 +37,7 @@ describe("PlateyLexer", function() {
       });
 
       it("throws if the text input is malformed", function() {
-        const malformedText = "$" // the $ symbol isn't supported
+        const malformedText = "$"; // the $ symbol isn't supported
 
         expect(() => this.lexer.lex(malformedText)).toThrow();
       });

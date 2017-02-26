@@ -1,4 +1,6 @@
-class ObjectAccessor {
+import Rx from "lib/rxjs/Rx";
+
+export default class ObjectAccessor {
 
   constructor() {
     this.id = ".";

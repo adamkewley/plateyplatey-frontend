@@ -1,4 +1,5 @@
-class PlateyLexer {
+export default class PlateyLexer {
+
   lex(text) {
     this.text = text;
     this.index = 0;

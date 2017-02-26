@@ -1,4 +1,7 @@
-class ExportTableToCSVCommand {
+import Rx from "lib/rxjs/Rx";
+import Papa from "lib/papaparse";
+
+export default class ExportTableToCSVCommand {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

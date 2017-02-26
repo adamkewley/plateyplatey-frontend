@@ -1,3 +1,5 @@
+import getFirstSymbolName from "platey-lang/get-first-symbol";
+
 describe("getFirstSymbolName", function() {
   it("exists", function() {
     expect(getFirstSymbolName).toBeDefined();
