@@ -1,4 +1,4 @@
-import Rx from "rxjs/Rx";
+import Rx from "lib/rxjs/Rx";
 
 export default class InvertSelectionCommand {
   constructor(primativeCommands, applicationEvents) {

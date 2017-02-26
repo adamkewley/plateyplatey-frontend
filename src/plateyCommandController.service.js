@@ -1,4 +1,4 @@
-import Rx from "rxjs";
+import Rx from "lib/rxjs";
 import plateyEval from "platey-lang/platey-eval";
 
 export default [

@@ -1,4 +1,4 @@
-import Rx from "rxjs/Rx";
+import Rx from "lib/rxjs/Rx";
 
 export default class ClearValuesInCurrentSelectionCommand {
   constructor(primativeCommands) {

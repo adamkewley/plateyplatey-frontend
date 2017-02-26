@@ -1,4 +1,5 @@
 var path = require('path');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
   entry: './src/platey.js',
@@ -9,11 +10,16 @@ module.exports = {
   },
 
   resolve: {
-    modules: ["src", "node_modules"]
+    modules: ["src", "."],
+    alias: { "lib": "node_modules" }
   },
 
   module: {
     loaders: [
+      {
+        test: /\.scss$/,
+        loader: ExtractTextPlugin.extract('css-loader!sass-loader')
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,
@@ -23,5 +29,9 @@ module.exports = {
         }
       }
     ]
-  }
+  },
+
+  plugins: [
+    new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
+  ]
 };

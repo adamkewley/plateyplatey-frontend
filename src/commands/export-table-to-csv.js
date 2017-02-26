@@ -1,5 +1,5 @@
-import Rx from "rxjs/Rx";
-import Papa from "papaparse";
+import Rx from "lib/rxjs/Rx";
+import Papa from "lib/papaparse";
 
 export default class ExportTableToCSVCommand {
 

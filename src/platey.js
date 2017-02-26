@@ -1,4 +1,6 @@
-import angular from "angular";
+import angular from "lib/angular";
+
+require("stylesheets/platey-style.scss");
 
 import plateyController from "plateyController.controller";
 import plateyCommand from "plateyCommand.directive";

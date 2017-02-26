@@ -1,6 +1,7 @@
-import angular from "angular";
+import angular from "lib/angular";
+import "lib/angular-mocks";
+import { Validator } from "lib/jsonschema";
 import "platey";
-import "angular-mocks";
 
 describe("plateyPersistence", function() {
   let plateyPersistence, $httpBackend;
@@ -120,7 +121,6 @@ describe("plateyPersistence", function() {
     });
 
     it("the object follows the platey document schema", function(done) {
-      const Validator = require("jsonschema").Validator;
       const validator = new Validator();
 
       const promise = plateyPersistence.fetchDocument(EXAMPLE_DOCUMENT_ID);

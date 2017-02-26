@@ -1,3 +1,5 @@
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+
 // Karma configuration
 // Generated on Fri Aug 05 2016 21:37:05 GMT+0100 (BST)
 
@@ -38,8 +40,30 @@ module.exports = function(config) {
 
     webpack: {
       resolve: {
-        modules: ["src", "node_modules"]
-      }
+        modules: ["src", "."],
+        alias: { "lib": "node_modules" }
+      },
+
+      module: {
+        loaders: [
+          {
+            test: /\.scss$/,
+            loader: ExtractTextPlugin.extract('css-loader!sass-loader')
+          },
+          {
+            test: /\.js$/,
+            exclude: /node_modules/,
+            loader: "babel-loader",
+            query: {
+              presets: ["es2015"]
+            }
+          }
+        ]
+      },
+
+      plugins: [
+        new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
+      ]
     },
 
     jsonFixturesPreprocessor: {
