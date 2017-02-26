@@ -1,3 +1,5 @@
+import plateyEval from "platey-lang/platey-eval";
+
 describe("plateyEval", function() {
   it("exists", function() {
     expect(plateyEval).toBeDefined();

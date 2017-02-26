@@ -1,3 +1,7 @@
+import angular from "angular";
+import "platey";
+import "angular-mocks";
+
 describe("plateyPersistence", function() {
   let plateyPersistence, $httpBackend;
 
@@ -61,7 +65,7 @@ describe("plateyPersistence", function() {
     });
 
     function assertHasConfigurationSchema(configurationObj) {
-      expectations = [
+      const expectations = [
         { key: "keybinds", type: "object" },
         { key: "defaultPlateTemplateId", type: "string" },
         { key: "defaultDocument", type: "string" }
