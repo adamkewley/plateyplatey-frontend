@@ -26,4 +26,4 @@ export default function() {
   }
 
   return { link: link };
-};
+}
