@@ -1,4 +1,6 @@
-class CopyTableToClipboardCommand {
+import Rx from "rxjs/Rx";
+
+export default class CopyTableToClipboardCommand {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

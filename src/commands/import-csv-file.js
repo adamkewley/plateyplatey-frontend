@@ -1,4 +1,7 @@
-class ImportCsvFile {
+import Rx from "rxjs/Rx";
+import Papa from "papaparse";
+
+export default class ImportCsvFile {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

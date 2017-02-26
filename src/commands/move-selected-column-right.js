@@ -1,4 +1,6 @@
-class MoveSelectedColumnRightCommand {
+import Rx from "rxjs/Rx";
+
+export default class MoveSelectedColumnRightCommand {
 
   constructor(primativeCommands, applicationEvents) {
     this._primativeCommands = primativeCommands;

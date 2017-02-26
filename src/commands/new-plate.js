@@ -1,4 +1,6 @@
-class NewPlateCommand {
+import Rx from "rxjs/Rx";
+
+export default class NewPlateCommand {
 
   constructor(primativeCommands) {
     this.id = "new-plate";
@@ -14,4 +16,5 @@ class NewPlateCommand {
   get disabledSubject() {
     return new Rx.BehaviorSubject(false);
   }
+
 }

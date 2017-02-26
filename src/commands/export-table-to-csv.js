@@ -1,4 +1,6 @@
-class ExportTableToCSVCommand {
+import Rx from "rxjs/Rx";
+
+export default class ExportTableToCSVCommand {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

@@ -1,4 +1,6 @@
-class ClearRowSelectionCommand {
+import Rx from "rxjs/Rx";
+
+export default class ClearRowSelectionCommand {
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;
     this.id = "clear-row-selection";

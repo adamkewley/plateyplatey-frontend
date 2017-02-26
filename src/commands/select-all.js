@@ -1,4 +1,6 @@
-class SelectAllCommand {
+import Rx from "rxjs/Rx";
+
+export default class SelectAllCommand {
 
   constructor(primativeCommands) {
     this._primativeCommands = primativeCommands;

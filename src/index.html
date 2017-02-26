@@ -2,6 +2,8 @@
 <html ng-app="plateyApp">
 
   <head>
+    <title>PlateyPlatey</title>
+
     <meta http-equiv="Content-Type"
           content="text/html; charset=utf-8" />
     <meta name="description"
@@ -10,14 +12,6 @@
     <link rel="stylesheet" type="text/css" href="lib/normalize-css/normalize.css" />
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="stylesheets/platey-style.css" />
-
-    <script src="lib/es6-shim/es6-shim.min.js"></script>
-    <script src="lib/rxjs/dist/rx.all.min.js"></script>
-    <script src="lib/papaparse/papaparse.min.js"></script>
-    <script src="lib/angular/angular.js"></script>
-    <script src="platey.js"></script>
-
-    <title>PlateyPlatey</title>
   </head>
 
   <body ng-controller="plateyController"
@@ -176,5 +170,11 @@
       </div>
 
     </main>
+
+    <!-- Compatability libs -->
+    <script src="lib/es6-shim/es6-shim.min.js"></script>
+    <script src="lib/requirejs/require.js"></script>
+
+    <script src="platey.js"></script>
   </body>
 </html>

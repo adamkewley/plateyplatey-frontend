@@ -1,6 +1,7 @@
-angular
-.module("plateyCommandController", [])
-.service("plateyCommandController", [
+import Rx from "rxjs";
+import plateyEval from "platey-lang/platey-eval";
+
+export default [
   function() {
     const afterExecPlateyExpressionSubject = new Rx.Subject();
 
@@ -11,4 +12,4 @@ angular
     };
 
     this.onAfterExecutingPlateyExpression = afterExecPlateyExpressionSubject;
-  }]);
+  }];

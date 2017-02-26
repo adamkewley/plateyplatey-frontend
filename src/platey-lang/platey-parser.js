@@ -1,4 +1,7 @@
-class PlateyParser {
+/**
+ * Resursive-descent LR(1) parser.
+ */
+export default class PlateyParser {
   parse(tokens) {
     this._tokens = tokens;
 

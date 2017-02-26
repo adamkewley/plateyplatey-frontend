@@ -1,4 +1,6 @@
-class RemoveSelectedColumnCommand {
+import Rx from "rxjs/Rx";
+
+export default class RemoveSelectedColumnCommand {
 
   constructor(primativeCommands, applicationEvents) {
     this._primativeCommands = primativeCommands;

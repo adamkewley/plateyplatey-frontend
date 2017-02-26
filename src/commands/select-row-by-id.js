@@ -1,4 +1,6 @@
-class SelectRowById {
+import Rx from "rxjs/Rx";
+
+export default class SelectRowById {
 
   constructor(primativeCommands) {
     this.id = "select-row-by-id";

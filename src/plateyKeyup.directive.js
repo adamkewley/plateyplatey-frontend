@@ -1,5 +1,4 @@
 export default [function() {
-
   function link(scope, element, attrs) {
     const el = element[0];
     const expr = attrs.plateyKeyup;
@@ -12,5 +11,4 @@ export default [function() {
   }
 
   return { link: link };
-
 }];

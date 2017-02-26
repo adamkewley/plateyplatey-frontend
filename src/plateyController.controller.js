@@ -1,16 +1,7 @@
-/**
- * A column in the platey table.
- * @typedef {Object} Column
- * @property {String} id The unique ID of the column.
- * @property {String} header The header text for the column.
- */
+import NativeCommands from "native-commands";
 
-/**
- * Main platey application controller.
- */
-angular.module("plateyController", []).controller(
-  "plateyController",
-  ["$scope", "$http", "$q", "plateyCommandController", "plateyPersistence",
+export default ["$scope", "$http", "$q", "plateyCommandController", "plateyPersistence",
+
    function($scope, $http, $q, plateyCommandController, plateyPersistence) {
      // DATA - The underlying data structure. Only the UI and the
      // primative commands should mutate these.
@@ -928,8 +919,6 @@ angular.module("plateyController", []).controller(
        const plateLayoutId = focusedPlate.plateTemplate;
        const plateLayout = document.plateLayouts[plateLayoutId];
 
-       debugger;
-
        newDocument();
        getColumnIds().forEach(removeColumn);
 
@@ -990,4 +979,4 @@ angular.module("plateyController", []).controller(
 
        return a;
      }
-   }]);
+   }];

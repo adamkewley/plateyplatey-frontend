@@ -1,4 +1,4 @@
-angular.module("plateyRadius", []).directive("plateyRadius", () => {
+export default [() => {
   return {
     link: (scope, el, attrs) => {
       attrs.$observe("plateyRadius", (val) => {
@@ -6,4 +6,4 @@ angular.module("plateyRadius", []).directive("plateyRadius", () => {
       });
     }
   };
-});
+}];
