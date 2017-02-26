@@ -13,7 +13,14 @@
     "jasmine-core": "~2.4.1",
     "karma-jasmine": "~1.0.2",
     "karma-firefox-launcher": "~1.0.0",
-    "karma-jasmine-html-reporter": "~0.2.1"
+    "karma-jasmine-html-reporter": "~0.2.1",
+    "jsonschema": "~1.1.1",
+    "watchify": "~3.9.0",
+    "browserify": "~14.1.0",
+    "karma-browserify": "~5.1.1",
+    "karma-fixture": "~0.2.6",
+    "karma-html2js-preprocessor": "~1.1.0",
+    "karma-json-fixtures-preprocessor": "0.0.6"
   },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start"

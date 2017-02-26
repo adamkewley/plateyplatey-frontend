@@ -14,7 +14,7 @@
     <script src="lib/es6-shim/es6-shim.min.js"></script>
     <script src="lib/rxjs/dist/rx.all.min.js"></script>
     <script src="lib/papaparse/papaparse.min.js"></script>
-    <script src="lib/angular/angular.min.js"></script>
+    <script src="lib/angular/angular.js"></script>
     <script src="platey.js"></script>
 
     <title>PlateyPlatey</title>
@@ -28,20 +28,29 @@
     <div class="control-bar">
       <span class="site-title">PlateyPlatey</span>
 
-      <button platey-command="(import-csv-file)">
-	Import CSV
-      </button>
       <button platey-command="(new-plate)">
         New Plate
       </button>
+      <button platey-command="(import-csv-file)">
+	Import CSV
+      </button>
+      <button platey-command="(export-table-to-csv)">
+        Export CSV
+      </button>
+
+      <button platey-command="(copy-table-to-clipboard)">
+        Copy Table To Clipboard
+      </button>
+
       <button platey-command="(clear-plate)">
-        Clear Plate
+        Clear Plate Data
+      </button>
+
+      <button platey-command="(select-all)">
+        Select All
       </button>
       <button platey-command="(invert-selection)">
         Invert Selection
-      </button>
-      <button platey-command="(select-all)">
-        Select All
       </button>
       <button platey-command="(move-selected-column-left)">
         Move Selected Column Left
@@ -49,12 +58,7 @@
       <button platey-command="(move-selected-column-right)">
         Move Selected Column Right
       </button>
-      <button platey-command="(export-table-to-csv)">
-        CSV Export
-      </button>
-      <button platey-command="(copy-table-to-clipboard)">
-        Copy Table To Clipboard
-      </button>
+
       <button platey-command="(remove-selected-column)">
 	Delete Column
       </button>

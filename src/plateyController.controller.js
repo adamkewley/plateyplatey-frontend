@@ -73,11 +73,16 @@ angular.module("plateyController", []).controller(
       * @return {Column} A handle to the column.
       */
      const addColumn = () => {
+       const randomId = generateGuid();
+       addColumnWithId(randomId);
+     };
+
+     const addColumnWithId = (id) => {
        $scope.$broadcast("before-column-added", null);
 
        const newColumn = {
          header: "Column " + ($scope.columns.length + 1),
-         id: generateGuid()
+         id: id
        };
 
        $scope.columns.push(newColumn);
@@ -902,7 +907,49 @@ angular.module("plateyController", []).controller(
 	 if (configuration.keybinds !== undefined) {
 	   keybinds = configuration.keybinds;
 	 }
+
+         // Try to load default document
+         const defaultDocument = configuration.defaultDocument;
+         plateyPersistence.fetchDocument(defaultDocument).then(loadDocument);
        });
+
+     function loadDocument(document) {
+       if (document.fileSchema.version !== "1")
+         throw "Unsupported document version: " + document.fileSchema.version;
+
+       if (document.workspace.plates.length > 1)
+         console.log("Multiple workspaces found in document. Platey can only load the first");
+
+       const focusedPlateId = document.workspace.focusedPlate;
+       const focusedPlate = document.plates[focusedPlateId];
+       const tableSchemaId = focusedPlate.tableSchema;
+       const tableSchema = document.tableSchemas[tableSchemaId];
+       const plateData = focusedPlate.data;
+       const plateLayoutId = focusedPlate.plateTemplate;
+       const plateLayout = document.plateLayouts[plateLayoutId];
+
+       debugger;
+
+       newDocument();
+       getColumnIds().forEach(removeColumn);
+
+       setPlateLayout(plateLayout);
+
+       tableSchema.columns.forEach(column => {
+         addColumnWithId(column.id);
+         setColumnHeader(column.header, column.id);
+       });
+
+       Object.keys(plateData).forEach(rowId => {
+         const rowData = plateData[rowId];
+
+         Object.keys(rowData).forEach(columnId => {
+           const cellValue = rowData[columnId].value;
+
+           assignValueToCells(columnId, rowId, cellValue);
+         });
+       });
+     }
 
      /**
       * Internal guid generator - used for IDing columns in the table.

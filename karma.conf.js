@@ -10,15 +10,20 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine'],
+    frameworks: ['jasmine', 'browserify', 'fixture'],
 
 
     // list of files / patterns to load in the browser
     files: [
       "bower_components/angular/angular.js",
+      "bower_components/angular-mocks/angular-mocks.js",
       "bower_components/rxjs/dist/rx.all.min.js",
-      'src/*.js',
-      'test/*.js',
+      "node_modules/jsonschema/lib/validator.js",
+      'src/**/*.js',
+      'test/**/*.js',
+      "src/schemas/*.json",
+      "src/documents/*.json",
+      "src/configurations/*.json"
     ],
 
 
@@ -32,6 +37,13 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      "node_modules/jsonschema/lib/validator.js": ["browserify"],
+      "test/**/*.js": ["browserify"],
+      "**/*.json": ["json_fixtures"]
+    },
+
+    jsonFixturesPreprocessor: {
+      variableName: '__json__'
     },
 
 
@@ -56,6 +68,8 @@ module.exports = function(config) {
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,
+
+    usePolling: false,
 
 
     // start these browsers
