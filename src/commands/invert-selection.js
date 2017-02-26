@@ -9,7 +9,7 @@ export default class InvertSelectionCommand {
       "Invert the current selection, which de-selects anything that is currently selected and selects anything that is not currently selected.";
 
     this.disabledSubject = new Rx.BehaviorSubject(this._calculateDisabled());
-    const callback = () => this.disabledSubject.onNext(this._calculateDisabled());
+    const callback = () => this.disabledSubject.next(this._calculateDisabled());
 
     applicationEvents.subscribeTo("after-row-selection-changed", callback);
   }

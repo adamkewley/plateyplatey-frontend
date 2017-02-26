@@ -8,7 +8,7 @@ export default [
     this.executePlateyExpression = function(plateyExpression, ...scopes) {
       plateyEval(plateyExpression, ...scopes);
 
-      afterExecPlateyExpressionSubject.onNext(plateyExpression);
+      afterExecPlateyExpressionSubject.next(plateyExpression);
     };
 
     this.onAfterExecutingPlateyExpression = afterExecPlateyExpressionSubject;
