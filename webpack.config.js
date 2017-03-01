@@ -6,7 +6,7 @@ module.exports = {
 
   output: {
     filename: 'platey.js',
-    path: path.resolve(__dirname, 'bin')
+    path: path.resolve(__dirname, 'dist')
   },
 
   resolve: {
@@ -27,6 +27,14 @@ module.exports = {
         query: {
           presets: ["es2015"]
         }
+      },
+      {
+        test: /\.css$/,
+        loader: ExtractTextPlugin.extract("css-loader")
+      },
+      {
+        test: /\.(otf|eot|svg|ttf|woff|woff2)$/,
+        loader: "url-loader"
       }
     ]
   },

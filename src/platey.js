@@ -1,6 +1,13 @@
 import angular from "lib/angular";
 
-require("stylesheets/platey-style.scss");
+require("file-loader?name=[name].[ext]!index.html");
+require("file-loader?name=lib/requirejs/[name].[ext]!lib/requirejs/require.js");
+
+import "stylesheets/platey-style.scss";
+import "lib/normalize-css/normalize.css";
+import "lib/bootstrap/dist/css/bootstrap.css";
+
+import "lib/es6-shim/es6-shim";
 
 import plateyController from "plateyController.controller";
 import plateyCommand from "plateyCommand.directive";
@@ -28,5 +35,5 @@ angular.module("plateyApp", [
   "vbox",
   "rangeFilter",
   "plateyCommandController",
-  "plateyPersistence",
+  "plateyPersistence"
 ]);

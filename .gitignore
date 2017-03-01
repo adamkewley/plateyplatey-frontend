@@ -9,3 +9,4 @@ obj
 npm-debug.log
 .build-cache/
 lib/
+dist
