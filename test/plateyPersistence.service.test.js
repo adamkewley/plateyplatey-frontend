@@ -3,10 +3,10 @@ import "lib/angular-mocks";
 import { Validator } from "lib/jsonschema";
 import "platey";
 
-describe("plateyPersistence", function() {
+describe("plateyAPI", function() {
   let plateyPersistence, $httpBackend;
 
-  beforeEach(angular.mock.module("plateyPersistence"));
+  beforeEach(angular.mock.module("plateyAPI"));
 
   beforeEach(inject(function($injector) {
     fixture.setBase("src/documents");

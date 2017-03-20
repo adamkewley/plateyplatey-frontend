@@ -1,6 +1,6 @@
-import getFirstSymbolName from "platey-lang/get-first-symbol";
+import getFirstSymbolName from "getFirstSymbolName";
 
-export default function() {
+export function plateyCommand() {
 
   function link(scope, element, attrs) {
     const el = element[0];

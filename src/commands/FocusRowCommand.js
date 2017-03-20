@@ -1,6 +1,6 @@
 import Rx from "lib/rxjs/Rx";
 
-export default class FocusRow {
+export default class FocusRowCommand {
 
   constructor(primativeCommands) {
     this.id = "focus-row";

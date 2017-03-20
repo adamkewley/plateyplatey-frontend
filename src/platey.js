@@ -9,20 +9,18 @@ import "lib/bootstrap/dist/css/bootstrap.css";
 
 import "lib/es6-shim/es6-shim";
 
-import plateyController from "plateyController.controller";
-import plateyCommand from "plateyCommand.directive";
-import plateyCommandController from "plateyCommandController.service";
-import plateyKeyup from "plateyKeyup.directive";
-import plateyPersistence from "plateyPersistence.service";
-import plateyRadius from "plateyRadius.directive";
-import rangeFilter from "rangeFilter.directive";
-import vbox from "vbox.directive";
+import { plateyController } from "plateyController.controller";
+import { plateyCommand } from "scripting/plateyCommand.directive";
+import { plateyKeyup } from "scripting/plateyKeyup.directive";
+import { plateyAPI } from "plateyAPI/plateyAPI.service";
+import { plateyRadius } from "helpers/plateyRadius.directive";
+import { rangeFilter } from "helpers/rangeFilter.directive";
+import { vbox } from "helpers/vbox.directive";
 
-angular.module("plateyCommand", []).directive("plateyCommand", plateyCommand);
 angular.module("plateyController", []).controller("plateyController", plateyController);
-angular.module("plateyCommandController", []).service("plateyCommandController", plateyCommandController);
+angular.module("plateyCommand", []).directive("plateyCommand", plateyCommand);
 angular.module("plateyKeyup", []).directive("plateyKeyup", plateyKeyup);
-angular.module("plateyPersistence", []).service("plateyPersistence", plateyPersistence);
+angular.module("plateyPersistence", []).service("plateyPersistence", plateyAPI);
 angular.module("plateyRadius", []).directive("plateyRadius", plateyRadius);
 angular.module("rangeFilter", []).filter("range", rangeFilter);
 angular.module("vbox", []).directive("vbox", vbox);
@@ -34,6 +32,5 @@ angular.module("plateyApp", [
   "plateyRadius",
   "vbox",
   "rangeFilter",
-  "plateyCommandController",
-  "plateyPersistence"
+  "plateyAPI"
 ]);

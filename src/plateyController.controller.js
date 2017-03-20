@@ -1,507 +1,138 @@
-import NativeCommands from "native-commands";
-import { shuffle, moveItemInArray, generateGuid, eventToKeybindKey } from "helpers";
+import NativeCommands from "AllCommands";
+import { eventToKeybindKey, promptUserToSaveData, copyTextToClipboard, promptUserForFile, promptUserForFiles, readFileAsText } from "helpers";
+import { PlateyDocument } from "PlateyDocument";
+import { PlateyCommandController } from "PlateyCommandController";
 
-export default [
-  "$scope", "$http", "$q", "plateyCommandController", "plateyPersistence",
-  function($scope, $http, $q, plateyCommandController, plateyPersistence) {
-    // DATA - The underlying data structure. Only the UI and the
-    // primative commands should mutate these.
+export const plateyController = ["$scope", "plateyAPI", function($scope, plateyAPI) {
 
-    $scope.columns = [];
-    $scope.selectedColumn = null;
-    $scope.wells = [];
+    $scope.document = new PlateyDocument();
+
     $scope.currentValue = "";
-    $scope.clickedWell = null;
-
-    $scope.platePaths = [];
     $scope.currentPlateTemplate = null;
-
-    $scope.plateArrangements = [];
-    $scope.currentPlateArrangement = null;
-
-    // PRIMATIVES - The lowest-level platey commands that expose all
-    // platey functionality. The scripting engine and higher-level
-    // commands use these.
+    $scope.plateTemplates = [];
 
     const selectColumn = (columnId) => {
-      if (columnId === null) {
-        $scope.$broadcast("before-column-selection-changed", columnId);
-
-        $scope.selectedColumn = null;
-
-        $scope.$broadcast("after-column-selection-changed", columnId);
-      }
-
-      const columnToSelect = $scope.columns.find(column => column.id === columnId);
-
-      if (columnToSelect !== undefined) {
-        $scope.$broadcast("before-column-selection-changed", columnId);
-
-        $scope.selectedColumn = columnToSelect;
-
-        $scope.$broadcast("after-column-selection-changed", columnId);
-      }
+      $scope.document.selectColumn(columnId);
     };
 
     const newDocument = () => {
       $scope.$broadcast("before-new-document-created", null);
 
-      selectColumn(null);
-      $scope.currentValue = "";
-      $scope.columns = [];
-      $scope.clickedWell = null;
-
-      $scope.$broadcast("after-new-document-created", null);
+      $scope.document = new PlateyDocument();
     };
 
     const addColumn = () => {
-      const randomId = generateGuid();
-      addColumnWithId(randomId);
+      return $scope.document.addColumn();
     };
 
     const addColumnWithId = (id) => {
-      $scope.$broadcast("before-column-added", null);
-
-      const newColumn = {
-        header: "Column " + ($scope.columns.length + 1),
-        id: id
-      };
-
-      $scope.columns.push(newColumn);
-
-      // Populate the wells with null values
-      // for this new column
-      $scope.wells.forEach(well => {
-        well[newColumn.id] = null;
-      });
-
-      $scope.$broadcast("after-column-added", newColumn.id);
-
-      return newColumn.id;
+      return $scope.document.addColumnWithId(id);
     };
 
     const moveColumn = (columnId, newIndex) => {
-      const oldIndex =
-              $scope
-              .columns
-              .map(column => column.id)
-              .indexOf(columnId);
-
-      if (oldIndex === -1)
-        return; // The column wasn't in the table
-      else if (oldIndex === newIndex)
-        return; // It doesn't need to move
-      else if (newIndex >= $scope.columns.length)
-        return; // The new index is out of bounds
-      else {
-        $scope.$broadcast("before-column-moved", columnId);
-
-        moveItemInArray($scope.columns, oldIndex, newIndex);
-
-        $scope.$broadcast("after-column-moved", columnId);
-      }
+      $scope.document.moveColumn(columnId, newIndex);
     };
 
     const removeColumn = function(columnId) {
-      $scope.$broadcast("before-column-removed", columnId);
-
-      const column = $scope.columns.find(col => col.id === columnId);
-
-      if (column === undefined) return;
-      else {
-        if (column === $scope.selectedColumn)
-          $scope.selectedColumn = null;
-
-        const idx = $scope.columns.indexOf(column);
-        $scope.columns.splice(idx, 1);
-
-        $scope.wells.forEach(well => {
-          delete well[columnId];
-        });
-
-        $scope.$broadcast("after-column-removed", columnId);
-      }
+      $scope.document.removeColumn(columnId);
     };
 
     const getSelectedColumnId = () => {
-      if ($scope.selectedColumn === null)
-        return null;
-      else return $scope.selectedColumn.id;
+      return $scope.document.getSelectedColumnId();
     };
 
     const clearDataInColumn = (columnId) => {
-      $scope.$broadcast("before-column-data-cleared", columnId);
-
-      $scope.wells.forEach(well => well[columnId] = null);
-
-      $scope.$broadcast("after-column-data-cleared", columnId);
+      $scope.document.clearDataInColumn(columnId);
     };
 
-    const getColumnIds = () => $scope.columns.map(column => column.id);
+    const getColumnIds = () => {
+      return $scope.document.getColumnIds();
+    };
 
     const getColumnHeader = (columnId) => {
-      const column = $scope.columns.find(column => column.id === columnId);
-
-      if (column === undefined) return undefined;
-      else return column.header;
+      return $scope.document.getColumnHeader(columnId);
     };
 
     const setColumnHeader = (header, columnId) => {
-      const column = $scope.columns.find(column => column.id === columnId);
-
-      if (column === undefined) return undefined;
-      else column.header = header;
+      return $scope.document.setColumnHeader(header, columnId);
     };
 
-    const getRowIds = () => $scope.wells.map(well => well.id);
+    const getRowIds = () => {
+      return $scope.document.getRowIds();
+    };
 
     const getSelectedRowIds = () => {
-      return $scope
-        .wells
-        .filter(well => well.selected === true)
-        .map(well => well.id);
+      return $scope.document.getSelectedRowIds();
     };
 
     const selectRowsById = (rowIds) => {
-      $scope.$broadcast("before-selecting-rows", rowIds);
-
-      $scope
-        .wells
-        .filter(well => rowIds.indexOf(well.id) !== -1)
-        .forEach(well => well.selected = true);
-
-      $scope.$broadcast("after-selecting-rows", rowIds);
+      return $scope.document.selectRowsById(rowIds);
     };
 
     const deSelectRowsById = (rowIds) => {
-      $scope.$broadcast("before-deselecting-rows", rowIds);
-
-      $scope
-        .wells
-        .filter(well => rowIds.indexOf(well.id) !== -1)
-        .forEach(well => well.selected = false);
-
-      $scope.$broadcast("after-deselecting-rows", rowIds);
+      return $scope.document.deSelectRowsById(rowIds);
     };
 
-    /**
-     * Assign a column value to multiple rows of the table.
-     *
-     * @param {ColumnId} columnId
-     * @param {Array.<RowId>} rowIds
-     * @param {string} value
-     */
     const assignValueToCells = (columnId, rowIds, value) => {
-      $scope.$broadcast("before-assigning-value-to-cells", {
-        columnId: columnId,
-        rowIds: rowIds,
-        value: value,
-      });
-
-      const columnExists = $scope.columns.find(column => column.id === columnId);
-      const rows = $scope.wells.filter(well => rowIds.indexOf(well.id) !== -1);
-
-      if (columnExists !== undefined && rows.length > 0) {
-        rows.forEach(row => row[columnId] = value);
-      }
-
-      $scope.$broadcast("after-assigning-value-to-cells", {
-        columnId: columnId,
-        rowIds: rowIds,
-        value: value,
-      });
+      $scope.document.assignValueToCells(columnId, rowIds, value);
     };
 
-    /**
-     * Create a prompt that allows the user to save the data to a
-     * location on their disk.
-     *
-     * @param {string} fileName - Proposed name of the file to save.
-     * @param {string} contentType - The content-type of the data (e.g. "text/csv;charset=utf-8;".
-     * @param {byte} data - The data to save.
-     */
-    const promptUserToSaveData = (fileName, contentType, data) => {
-      const blob = new Blob([data], { type: contentType });
-
-      // If it's shitty IE
-      if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveOrOpenBlob(blob, fileName);
-      } else {
-        const blobUrl = URL.createObjectURL(blob);
-
-        const downloadLink = document.createElement("a");
-        downloadLink.href = blobUrl;
-        downloadLink.download = fileName;
-        downloadLink.visibility = "hidden";
-
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }
-    };
-
-    /**
-     * Copy text to the user's clipboard.
-     *
-     * @param {string} text - The text to copy.
-     */
-    const copyTextToClipboard = (text) => {
-      const $textElement = document.createElement("textarea");
-      $textElement.visibility = "hidden";
-      $textElement.value = text;
-      document.body.appendChild($textElement);
-      $textElement.select();
-      document.execCommand("copy");
-      document.body.removeChild($textElement);
-    };
-
-    /**
-     * Prompt the user to browse for files on their filesystem.
-     *
-     * @param {string} mimeTypes - A comma-delimited list of MIME
-     * types the file dialog should filter against.
-     * @param {boolean} multipleFiles - If the dialog should allow
-     * the user to select multiple files.
-     * @return {Promise.<Array.<File>>} A promise that will resolve
-     * with the selected files after the user clicks OK in the file
-     * dialog. The promise will reject if the user cancels out of the
-     * dialog.
-     */
-    const promptUserForFiles = (mimeTypes = "", allowMultipleFiles = true) => {
-      return $q((resolve, reject) => {
-        const fileInputEl = document.createElement("input");
-        if (allowMultipleFiles) fileInputEl.multiple = "multiple";
-        fileInputEl.visibility = "hidden";
-        fileInputEl.type = "file";
-        fileInputEl.accept = mimeTypes;
-
-        const onBodyFocus = () => {
-          fileInputEl.removeEventListener("change", onChange);
-
-          reject("User cancelled out of dialog");
-        };
-
-        const onChange = () => {
-          document.removeEventListener("focus", onBodyFocus);
-
-          if (fileInputEl.files.length === 1)
-            resolve(fileInputEl.files);
-          else reject("User did not select a file");
-        };
-
-        fileInputEl.addEventListener("change", onChange, false, true);
-        document.addEventListener("focus", onBodyFocus, false, true);
-
-        // Otherwise, the click will propagate upto the root click
-        // handler and angular will cry
-        fileInputEl.onclick = (e) => e.stopPropagation();
-
-        document.body.appendChild(fileInputEl);
-
-        fileInputEl.click();
-
-        document.body.removeChild(fileInputEl);
-      });
-    };
-
-    /**
-     * Prompt the user to browse for a single file on their filesystem.
-     *
-     * @param {string} mimeTypes - A comma-delimited list of MIME
-     * types the file dialog should filter against
-     * @return {Promise.<File>} A promise that will resolve with the
-     * selected file after the user clicks OK in the file dialog. The
-     * promise will reject if the user cancels out of the dialog.
-     */
-    const promptUserForFile = (mimeTypes = "") => {
-      return promptUserForFiles(mimeTypes, false)
-        .then(files => files[0]);
-    };
-
-    /**
-     * Reads a file's content as text.
-     *
-     * @param {File} file - The File object to read
-     * @return {Promise.<string>} A promise that will resolve with
-     * the file's content as text.
-     */
-    const readFileAsText = (file) => {
-      return $q((resolve, reject) => {
-        const textReader = new FileReader();
-        textReader.onload = (e) => resolve(e.target.result);
-        textReader.onerror = (e) => reject(e.target.error);
-        textReader.readAsText(file);
-      });
-    };
-
-    /**
-     * Returns the table's data in a row-by-row format.
-     *
-     * @return {Array.<Array.<TableDataValue>>}
-     */
     const getTableData = () => {
-      const orderedColumnIds = ["id"].concat($scope.columns.map(column => column.id));
-
-      return $scope.wells.map(wellData => orderedColumnIds.map(columnId => wellData[columnId]));
+      return $scope.document.getTableData();
     };
 
-    /**
-     * Get the ID of the focused row (nullable).
-     * @return {RowId}
-     */
     const getFocusedRowId = () => {
-      if ($scope.clickedWell !== null)
-        return $scope.clickedWell.id;
-      else return null;
+      return $scope.document.getFocusedRowId();
     };
 
-    /**
-     * Set a row as focused.
-     * @param {RowId} rowId - The ID of the row to focus.
-     */
     const focusRow = (rowId) => {
-      // null clears focus
-      if (rowId === null) {
-        $scope.$broadcast("before-focus-row", null);
-        $scope.clickedWell = null;
-        $scope.$broadcast("after-focused-row", null);
-      }
-
-      const row = $scope.wells.find(well => well.id === rowId);
-
-      if (row !== undefined) {
-        $scope.$broadcast("before-focus-row", rowId);
-
-        $scope.clickedWell = row;
-        selectRowsById([rowId]);
-
-        $scope.$broadcast("after-focused-row", rowId);
-      }
+      $scope.document.focusRow(rowId);
     };
 
     $scope.hoverOverWell = (well) => {
-      well.hovered = true;
+      $scope.document.hoverOverWell(well.id);
     };
 
     $scope.unHoverOverWell = (well) => {
-      well.hovered = false;
+      $scope.document.unHoverOverWell(well.id);
     };
 
     $scope.hoverOverWells = (wells) => {
-      wells.forEach($scope.hoverOverWell);
+      $scope.document.hoverOverWells(wells.map(well => well.id));
     };
 
     $scope.unHoverOverWells = (wells) => {
-      wells.forEach($scope.unHoverOverWell);
+      $scope.document.unHoverOverWells(wells.map(well => well.id));
     };
 
-    // For styling comparisons
     $scope.getFocusedRowId = getFocusedRowId;
-
-    const performHttpGetRequest = (path) => {
-      return $http.get(path);
-    };
 
     const setPlateLayout = (layout) => {
       // vbox is used by <svg> elements to calculate
       // aspect ratios
       $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
 
-      const columnIds = $scope.columns.map(column => column.id);
-
-      // Supply random and default arrangements for all
-      // plates
-      const defaultArrangement = {
-        name: "Default",
-        order: layout.wells.map(well => well.id)
-      };
-
-      const defaultArrangements = [
-        defaultArrangement,
-        {
-          name: "Random",
-          order: shuffle(layout.wells.map(well => well.id))
-        },
-      ];
-
-      $scope.currentPlateArrangement = defaultArrangement;
-
-      // If the plate comes with custom arrangements, supply
-      // those as well
-      $scope.plateArrangements =
-        layout.arrangements ?
-        defaultArrangements.concat(layout.arrangements) :
-        defaultArrangements;
-
-      $scope.wells = layout.wells.map(well => {
-        const wellData = {
-          id: well.id,
-          columns: [],
-          selected: false,
-          hovered: false,
-          x: well.x,
-          y: well.y,
-          radius: well.radius || layout.defaultWellRadius || 0.3,
-        };
-
-        columnIds.forEach(id => {
-          wellData[id] = null;
-        });
-
-        return wellData;
-      });
-
-      $scope.selectors = layout.selectors.map(selector => {
-        return {
-          x: selector.x,
-          y: selector.y,
-          label: selector.label,
-          selectsIds: selector.selects,
-          selects: selector
-            .selects
-            .map(wellId => $scope.wells.find(well => well.id === wellId))
-            .filter(well => well !== undefined) // e.g. if the selector has an invalid ID in it
-        };
-      });
+      $scope.document.setLayout(layout);
     };
 
     $scope.loadPlateLayout = (plateTemplate) => {
       $scope.currentPlateTemplate = plateTemplate;
 
       $scope.$broadcast("before-plate-layout-loaded", plateTemplate);
-      performHttpGetRequest(plateTemplate.path).then(response => {
-        setPlateLayout(response.data);
-        $scope.$broadcast("after-plate-layout-loaded", response.data);
+
+      plateyAPI.getPlateTemplateByID(plateTemplate.id).then(plateTemplateDetails => {
+        $scope.document.setLayout(plateTemplateDetails);
+        setPlateLayout(plateTemplateDetails);
+
+        $scope.$broadcast("after-plate-layout-loaded", plateTemplateDetails);
       });
     };
 
     $scope.changePlateArrangement = (arrangement) => {
-      const arrangementWells = arrangement.order;
-
-      const arrangedWells =
-              arrangementWells
-              .map(wellId => $scope.wells.find(well => well.id === wellId))
-              .filter(well => well !== undefined);
-
-      const remainingWells =
-              $scope.wells.filter(well => arrangement.order.indexOf(well.id) === -1);
-
-      $scope.wells = arrangedWells.concat(remainingWells);
+      $scope.document.setRowArrangement(arrangement);
     };
 
-    // Aggregate / co-dependant events.
-    $scope.$on("after-column-added", () => $scope.$broadcast("after-table-columns-changed", null));
-    $scope.$on("after-column-removed", () => $scope.$broadcast("after-table-columns-changed", null));
-    $scope.$on("after-column-moved", () => $scope.$broadcast("after-table-columns-changed", null));
-
-    $scope.$on("after-table-columns-changed", () => $scope.$broadcast("after-table-changed", null));
-    $scope.$on("after-assigning-value-to-cells", () => $scope.$broadcast("after-table-changed", null));
-
-    $scope.$on("after-selecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
-    $scope.$on("after-deselecting-rows", () => $scope.$broadcast("after-row-selection-changed", null));
-
-    $scope.$on("after-row-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
-    $scope.$on("after-column-selection-changed", () => $scope.$broadcast("after-table-selection-changed", null));
+    // EVENTS
 
     const primativeCommands = {
       newDocument: newDocument,
@@ -528,7 +159,6 @@ export default [
       hoverOverWells: $scope.hoverOverWells, // TODO: Make more generic
       unHoverOverWell: $scope.unHoverOverWell, // TODO: Make more generic
       unHoverOverWells: $scope.unHoverOverWells, // TODO: Make more generic
-      performHttpGetRequest: performHttpGetRequest, // TODO: Make more generic
       setPlateLayout: setPlateLayout, // TODO: Make more generic
       promptUserForFiles: promptUserForFiles,
       promptUserForFile: promptUserForFile,
@@ -550,7 +180,7 @@ export default [
     // COMMANDS - Key, click, or otherwise, commands are executed
     // through a central command controller. This is so that disabled
     // logic is checked and application state changes are recorded.
-    const commandController = plateyCommandController;
+    const commandController = new PlateyCommandController();
 
     $scope.getCommandDetails = (commandName) => {
       const command = nativeCommands.getCommandById(commandName);
@@ -568,31 +198,7 @@ export default [
     };
 
     // for debugging
-    commandController.onAfterExecutingPlateyExpression.subscribe((cmdName) => console.log(cmdName));
-
-    /**
-     * Returns an array of the currently selected wells.
-     * @returns {Array.<Well>}
-     */
-    function getSelectedWells() {
-      return $scope.wells.filter(well => well.selected);
-    }
-
-    /**
-     * Returns an array of values in the current selection.
-     * @returns {Array.<String>}
-     */
-    function getSelectionValues() {
-      if ($scope.selectedColumn === null) return [];
-      else {
-        const columnId = $scope.selectedColumn.id;
-
-        const values =
-                getSelectedWells().map(selectedWell => selectedWell[columnId]);
-
-        return values;
-      }
-    }
+    commandController.afterExecPlateyExpression.subscribe((cmdName) => console.log(cmdName));
 
     /**
      * Determines what should be shown as the current value based on
@@ -600,7 +206,7 @@ export default [
      * @returns {String}
      */
     function determineCurrentValueFromSelection() {
-      const selectionValues = getSelectionValues();
+      const selectionValues = $scope.document.getSelectionValues();
 
       if (selectionValues.length === 0) {
         return "";
@@ -617,28 +223,23 @@ export default [
       }
     }
 
-    /**
-     * Sets the currently selected wells to currentValue.
-     */
     $scope.setValueOfSelectedWells = function() {
-      const selectedColumn = $scope.selectedColumn;
+      const selectedColumn = $scope.document.selectedColumn;
 
       if (selectedColumn !== null) {
         const selectedColumnId = selectedColumn.id;
 
-        getSelectedWells().forEach(selectedWell => {
+        $scope.document.getSelectedWells().forEach(selectedWell => {
           selectedWell[selectedColumnId] = $scope.currentValue;
         });
       }
     };
 
-    /**
-     * Returns true if no cells are selected.
-     * @returns {boolean}
-     */
     $scope.noCellsSelected = () => {
-      return $scope.selectedColumn === null ||
-        !$scope.wells.some(well => well.selected);
+      if ($scope.document) {
+        return $scope.document.selectedColumn === null ||
+          !$scope.document.wells.some(well => well.selected);
+      } else return true;
     };
 
     // Extra Behaviors
@@ -667,9 +268,6 @@ export default [
         focusRow(firstRow);
       }
     });
-
-    // BUG: keyboard command callers don't check the disabled state
-    // of a command.
 
     // EMACS-style kbd representation
     let keybinds = {};
@@ -755,7 +353,7 @@ export default [
             ["button", "input", "td", "th", "circle", "text", "circle", "option", "select"];
 
     /**
-     * Handles clicks that have bubbled all the way upto the body.
+     * Handles clicks that have bubbled all the way up to the body.
      */
     $scope.bodyClickEventHandler = function($event) {
       const sourceElement = $event.target.tagName.toLowerCase();
@@ -767,44 +365,12 @@ export default [
     };
 
     function loadDocument(document) {
-      if (document.fileSchema.version !== "1")
-        throw "Unsupported document version: " + document.fileSchema.version;
-
-      if (document.workspace.plates.length > 1)
-        console.log("Multiple workspaces found in document. Platey can only load the first");
-
-      const focusedPlateId = document.workspace.focusedPlate;
-      const focusedPlate = document.plates[focusedPlateId];
-      const tableSchemaId = focusedPlate.tableSchema;
-      const tableSchema = document.tableSchemas[tableSchemaId];
-      const plateData = focusedPlate.data;
-      const plateLayoutId = focusedPlate.plateTemplate;
-      const plateLayout = document.plateLayouts[plateLayoutId];
-
-      newDocument();
-      getColumnIds().forEach(removeColumn);
-
-      setPlateLayout(plateLayout);
-
-      tableSchema.columns.forEach(column => {
-        addColumnWithId(column.id);
-        setColumnHeader(column.header, column.id);
-      });
-
-      Object.keys(plateData).forEach(rowId => {
-        const rowData = plateData[rowId];
-
-        Object.keys(rowData).forEach(columnId => {
-          const cellValue = rowData[columnId].value;
-
-          assignValueToCells(columnId, rowId, cellValue);
-        });
-      });
+      $scope.document = PlateyDocument.fromPlateyDocumentFile(document);
     }
 
     // INIT
-    const configurationPromise = plateyPersistence.fetchConfiguration();
-    const platesPromise = performHttpGetRequest("plates.json");
+    const configurationPromise = plateyAPI.fetchConfiguration();
+    const platesPromise = plateyAPI.getPlateTemplateSummaries();
 
     Promise
       .all([configurationPromise, platesPromise])
@@ -812,28 +378,34 @@ export default [
         const configuration = responses[0];
         const plates = responses[1];
 
-        // Initialize plates
-        const plateTemplates = plates.data;
-        $scope.plateTemplates = Object.keys(plateTemplates).map(key => plateTemplates[key]);
+        // Try to load default document
+        const defaultDocumentId = configuration.defaultDocumentId;
 
-        const defaultPlateTemplateId = configuration.defaultPlateTemplateId;
+        plateyAPI
+          .fetchDocument(defaultDocumentId)
+          .then(document => {
+            // Initialize plates
+            const plateTemplates = plates;
+            $scope.plateTemplates = Object.keys(plateTemplates).map(key => plateTemplates[key]);
 
-        const plateTemplateIdToLoad =
-                (defaultPlateTemplateId !== undefined &&
-                 plateTemplates[defaultPlateTemplateId] !== undefined) ?
+            const defaultPlateTemplateId = configuration.defaultPlateTemplateId;
+
+            const plateTemplateIdToLoad =
+              (defaultPlateTemplateId !== undefined &&
+              plateTemplates[defaultPlateTemplateId] !== undefined) ?
                 defaultPlateTemplateId :
                 Object.keys(plateTemplates)[0];
 
-        const plateTemplate = plateTemplates[plateTemplateIdToLoad];
-        $scope.loadPlateLayout(plateTemplate);
+            const plateTemplate = plateTemplates[plateTemplateIdToLoad];
+            $scope.loadPlateLayout(plateTemplate);
 
-        // Initialize keybinds
-        if (configuration.keybinds !== undefined) {
-          keybinds = configuration.keybinds;
-        }
+            // Initialize keybinds
+            if (configuration.keybinds !== undefined) {
+              keybinds = configuration.keybinds;
+            }
 
-        // Try to load default document
-        const defaultDocument = configuration.defaultDocument;
-        plateyPersistence.fetchDocument(defaultDocument).then(loadDocument);
+            loadDocument(document);
+
+          });
       });
   }];

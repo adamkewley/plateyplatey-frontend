@@ -39,11 +39,13 @@
     "karma-webpack": "^2.0.2",
     "sass-loader": "^6.0.2",
     "style-loader": "^0.13.2",
-    "webpack": "^2.2.1"
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1"
   },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start",
-    "build": "./node_modules/.bin/webpack"
+    "build": "./node_modules/.bin/webpack",
+    "serve": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
   },
   "repository": {
     "type": "git",

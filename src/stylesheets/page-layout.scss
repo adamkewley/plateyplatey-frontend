@@ -1,0 +1,32 @@
+@import "constants";
+
+html, body, .main-container {
+
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  font-size: $base-font-size;
+}
+
+main {
+
+  background-color: $main-area-background-color;
+  padding-top: 1em;
+  position: relative;
+  height: 95%;
+}
+
+.plate-panel {
+  width: 30%;
+  float: left;
+  align: center;
+  text-align: center;
+}
+
+.main-panel {
+  width: 70%;
+  float: left;
+  height: 100%;
+  overflow: scroll;
+}

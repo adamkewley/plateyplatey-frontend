@@ -21,9 +21,9 @@ export default class RemoveSelectedColumnCommand {
 
     if (selectedColumn === null) {
       return {
-	isDisabled: true,
-	hasReason: true,
-	reason: "No column currently selected."
+        isDisabled: true,
+        hasReason: true,
+        reason: "No column currently selected."
       };
     } else {
       return { isDisabled: false };

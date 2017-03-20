@@ -1,6 +1,6 @@
 import Rx from "lib/rxjs/Rx";
 
-export default class PromptUserForFile {
+export default class PromptUserForFileCommand {
 
   constructor(primativeCommands) {
     this.id = "prompt-user-for-file";

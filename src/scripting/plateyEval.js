@@ -1,5 +1,5 @@
-import PlateyLexer from "platey-lang/platey-lexer";
-import PlateyParser from "platey-lang/platey-parser";
+import PlateyLexer from "PlateyLexer";
+import PlateyParser from "PlateyParser";
 
 /**
  * Evaluate a platey expression (e.g. (f x)). Variables

@@ -1,4 +1,4 @@
-import getFirstSymbolName from "platey-lang/get-first-symbol";
+import getFirstSymbolName from "scripting/get-first-symbol";
 
 describe("getFirstSymbolName", function() {
   it("exists", function() {

@@ -1,6 +1,6 @@
 import Rx from "lib/rxjs/Rx";
 
-export default class HoverOverRow {
+export default class HoverOverRowCommand {
 
   constructor(primativeCommands) {
     this.id = "hover-over-row";

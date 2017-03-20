@@ -1,4 +1,4 @@
-export default [() => {
+export const plateyRadius = [() => {
   return {
     link: (scope, el, attrs) => {
       attrs.$observe("plateyRadius", (val) => {

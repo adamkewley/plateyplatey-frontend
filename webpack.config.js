@@ -41,5 +41,17 @@ module.exports = {
 
   plugins: [
     new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
-  ]
+  ],
+
+  devtool: "source-map",
+
+  devServer: {
+    port: 8090,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        secure: false
+      }
+    }
+  }
 };

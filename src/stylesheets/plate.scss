@@ -1,0 +1,39 @@
+@import "constants";
+
+.plate {
+  /* Prevent normal selection behavior because
+     we handle selection behavior in the javascript */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  .well {
+    fill: transparent;
+    stroke-width: 0.2%;
+    stroke: $non-selected-well-stroke;
+    cursor: pointer;
+    transition: fill .1s ease;
+  }
+
+  .selected {
+    fill: $selected-well-color;
+    stroke: $selected-well-stroke;
+  }
+
+  .focused {
+    stroke-width: 0.4%;
+  }
+
+  .hovered {
+    fill: #eee;
+  }
+
+  .selector {
+    font-size: 0.4px; /* px in unscaled svg coordinate system */
+    text-anchor: middle;
+    cursor: pointer;
+  }
+}
