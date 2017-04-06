@@ -20,7 +20,7 @@ import { vbox } from "helpers/vbox.directive";
 angular.module("plateyController", []).controller("plateyController", plateyController);
 angular.module("plateyCommand", []).directive("plateyCommand", plateyCommand);
 angular.module("plateyKeyup", []).directive("plateyKeyup", plateyKeyup);
-angular.module("plateyPersistence", []).service("plateyPersistence", plateyAPI);
+angular.module("plateyAPI", []).service("plateyAPI", plateyAPI);
 angular.module("plateyRadius", []).directive("plateyRadius", plateyRadius);
 angular.module("rangeFilter", []).filter("range", rangeFilter);
 angular.module("vbox", []).directive("vbox", vbox);

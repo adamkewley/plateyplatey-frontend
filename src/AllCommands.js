@@ -23,9 +23,9 @@ import HoverOverRow from "commands/HoverOverRowCommand";
 import ObjectAccessor from "commands/ObjectAccessor";
 import SetValueOfSelectedWells from "commands/SetValueOfSelectedWells";
 import PromptUserForFile from "commands/PromptUserForFileCommand";
-import PromptUserForFiles from "commands/prompt-user-for-files";
+import PromptUserForFiles from "commands/PromptUserForFilesCommand";
 import ImportCsvFile from "commands/ImportCSVFileCommand";
-import RemoveSelectedColumnCommand from "commands/remove-selected-column";
+import RemoveSelectedColumnCommand from "commands/RemoveSelectedColumnCommand";
 
 export default class AllCommands {
 

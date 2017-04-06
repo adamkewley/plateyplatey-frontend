@@ -76,7 +76,7 @@
 
         <div class="plate-panel">
 
-            <svg class="plate" vbox="{{ vbox }}" preserveAspectRatio="xMinYMin">
+            <svg class="plate" vbox="{{ getPlateVbox(); }}" preserveAspectRatio="xMinYMin">
 
                 <!-- Wells -->
                 <circle ng-repeat="well in document.wells"
@@ -105,9 +105,9 @@
             <!-- Plate selector -->
             <div>
                 Plate Layout:
-                <select ng-options="plateTemplate as plateTemplate.name for plateTemplate in plateTemplates track by plateTemplate.id"
-                        ng-model="currentPlateTemplate"
-                        ng-change="loadPlateLayout(currentPlateTemplate);"
+                <select ng-options="plateTemplateSummary as plateTemplateSummary.name for plateTemplateSummary in plateTemplateSummaries track by plateTemplateSummary.id"
+                        ng-model="currentPlateTemplateSummary"
+                        ng-change="loadPlateLayout(currentPlateTemplateSummary);"
                         class="form-control">
                 </select>
             </div>

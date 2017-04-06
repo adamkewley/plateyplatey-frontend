@@ -8,11 +8,11 @@ export const plateyAPI = ["$http", function($http) {
         return $http.get("api/documents/" + documentId).then(resp => resp.data);
     };
 
-    this.getPlateTemplateSummaries = function () {
+    this.fetchPlateTemplateSummaries = function () {
         return $http.get("api/plates").then(resp => resp.data);
     };
 
-    this.getPlateTemplateByID = function(plateTemplateID) {
+    this.fetchPlateTemplateById = function(plateTemplateID) {
       return $http.get("api/plates/" + plateTemplateID).then(resp => resp.data);
     };
 }];

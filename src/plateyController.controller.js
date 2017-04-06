@@ -1,24 +1,43 @@
 import NativeCommands from "AllCommands";
-import { eventToKeybindKey, promptUserToSaveData, copyTextToClipboard, promptUserForFile, promptUserForFiles, readFileAsText } from "helpers";
+import {
+    eventToKeybindKey,
+    promptUserToSaveData,
+    copyTextToClipboard,
+    promptUserForFile,
+    promptUserForFiles,
+    readFileAsText } from "helpers";
 import { PlateyDocument } from "PlateyDocument";
 import { PlateyCommandController } from "PlateyCommandController";
+import Rx from "lib/rxjs/Rx";
 
 export const plateyController = ["$scope", "plateyAPI", function($scope, plateyAPI) {
 
-    $scope.document = new PlateyDocument();
-
     $scope.currentValue = "";
-    $scope.currentPlateTemplate = null;
-    $scope.plateTemplates = [];
+    $scope.currentPlateTemplateSummary = null;
+    $scope.plateTemplateSummaries = [];
+
+    const documentHolder = new Rx.BehaviorSubject(new PlateyDocument());
+
+    documentHolder.subscribe(document => {
+      $scope.document = document;
+    });
+
+    documentHolder.subscribe(document => {
+      $scope.$broadcast("after-document-changed", document);
+    });
 
     const selectColumn = (columnId) => {
-      $scope.document.selectColumn(columnId);
+      const document = documentHolder.getValue();
+      if (document !== null) {
+        document.selectColumn(columnId);
+      }
     };
 
     const newDocument = () => {
-      $scope.$broadcast("before-new-document-created", null);
+      documentHolder.next(new PlateyDocument());
 
-      $scope.document = new PlateyDocument();
+      if ($scope.currentPlateTemplateSummary !== null)
+        $scope.loadPlateLayout($scope.currentPlateTemplateSummary);
     };
 
     const addColumn = () => {
@@ -107,24 +126,19 @@ export const plateyController = ["$scope", "plateyAPI", function($scope, plateyA
 
     $scope.getFocusedRowId = getFocusedRowId;
 
-    const setPlateLayout = (layout) => {
-      // vbox is used by <svg> elements to calculate
-      // aspect ratios
-      $scope.vbox = `0 0 ${layout.gridWidth} ${layout.gridHeight}`;
+    $scope.getPlateVbox = () => {
+        return `0 0 ${$scope.document.gridWidth} ${$scope.document.gridHeight}`;
+    };
 
+    const setPlateLayout = (layout) => {
       $scope.document.setLayout(layout);
     };
 
-    $scope.loadPlateLayout = (plateTemplate) => {
-      $scope.currentPlateTemplate = plateTemplate;
+    $scope.loadPlateLayout = (plateTemplateSummary) => {
+      $scope.currentPlateTemplateSummary = plateTemplateSummary;
 
-      $scope.$broadcast("before-plate-layout-loaded", plateTemplate);
-
-      plateyAPI.getPlateTemplateByID(plateTemplate.id).then(plateTemplateDetails => {
+      plateyAPI.fetchPlateTemplateById(plateTemplateSummary.id).then(plateTemplateDetails => {
         $scope.document.setLayout(plateTemplateDetails);
-        setPlateLayout(plateTemplateDetails);
-
-        $scope.$broadcast("after-plate-layout-loaded", plateTemplateDetails);
       });
     };
 
@@ -242,31 +256,39 @@ export const plateyController = ["$scope", "plateyAPI", function($scope, plateyA
       } else return true;
     };
 
-    // Extra Behaviors
-    $scope.$on("after-column-added", (_, columnId) => {
-      selectColumn(columnId);
-    });
+    // The document changes at runtime, need to dispose of
+    // existing document subscriptions.
+    let documentEventSubscriptions = [];
+    $scope.$on("after-document-changed", (_, newDocument) => {
+        documentEventSubscriptions.forEach(subscription => subscription.unsubscribe());
+        documentEventSubscriptions = [];
 
-    $scope.$on("after-table-selection-changed", () => {
-      $scope.currentValue = determineCurrentValueFromSelection();
-    });
+        if (newDocument !== null) {
+          documentEventSubscriptions.push(
+            newDocument.afterColumnAdded.subscribe(columnId => {
+              selectColumn(columnId);
+            }));
 
-    $scope.$on("after-table-changed", () => {
-      $scope.currentValue = determineCurrentValueFromSelection();
-    });
+          documentEventSubscriptions.push(
+            newDocument.afterSelectingRows.subscribe(row => {
+              $scope.currentValue = determineCurrentValueFromSelection();
+            }));
 
-    $scope.$on("after-plate-layout-loaded", () => {
-      const columnIds = getColumnIds();
+          documentEventSubscriptions.push(
+            newDocument.afterLayoutChanged.subscribe(_ => {
+              const columnIds = getColumnIds();
 
-      if (columnIds.length === 0) {
-        const newColumn = addColumn();
-        selectColumn(newColumn);
+              if (columnIds.length === 0) {
+                const newColumn = addColumn();
+                selectColumn(newColumn);
 
-        const rows = getRowIds();
-        const firstRow = rows[0];
+                const rows = getRowIds();
+                const firstRow = rows[0];
 
-        focusRow(firstRow);
-      }
+                focusRow(firstRow);
+              }
+            }));
+        }
     });
 
     // EMACS-style kbd representation
@@ -365,12 +387,15 @@ export const plateyController = ["$scope", "plateyAPI", function($scope, plateyA
     };
 
     function loadDocument(document) {
-      $scope.document = PlateyDocument.fromPlateyDocumentFile(document);
+      const loadedDocument = PlateyDocument.fromPlateyDocumentFile(document);
+      documentHolder.next(loadedDocument);
     }
 
     // INIT
+    newDocument();
+
     const configurationPromise = plateyAPI.fetchConfiguration();
-    const platesPromise = plateyAPI.getPlateTemplateSummaries();
+    const platesPromise = plateyAPI.fetchPlateTemplateSummaries();
 
     Promise
       .all([configurationPromise, platesPromise])
@@ -386,7 +411,7 @@ export const plateyController = ["$scope", "plateyAPI", function($scope, plateyA
           .then(document => {
             // Initialize plates
             const plateTemplates = plates;
-            $scope.plateTemplates = Object.keys(plateTemplates).map(key => plateTemplates[key]);
+            $scope.plateTemplateSummaries = Object.keys(plateTemplates).map(key => plateTemplates[key]);
 
             const defaultPlateTemplateId = configuration.defaultPlateTemplateId;
 
@@ -395,9 +420,6 @@ export const plateyController = ["$scope", "plateyAPI", function($scope, plateyA
               plateTemplates[defaultPlateTemplateId] !== undefined) ?
                 defaultPlateTemplateId :
                 Object.keys(plateTemplates)[0];
-
-            const plateTemplate = plateTemplates[plateTemplateIdToLoad];
-            $scope.loadPlateLayout(plateTemplate);
 
             // Initialize keybinds
             if (configuration.keybinds !== undefined) {

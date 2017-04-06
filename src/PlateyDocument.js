@@ -68,6 +68,7 @@ export class PlateyDocument {
     this.afterAssigningValueToCells = new Rx.Subject();
     this.beforeFocusRow = new Rx.Subject();
     this.afterFocusRow = new Rx.Subject();
+    this.afterLayoutChanged = new Rx.Subject();
   }
 
   selectColumn(columnId) {
@@ -338,6 +339,11 @@ export class PlateyDocument {
           .filter(well => well !== undefined) // e.g. if the selector has an invalid ID in it
       };
     });
+
+    this.gridWidth = layout.gridWidth;
+    this.gridHeight = layout.gridHeight;
+
+    this.afterLayoutChanged.next(layout);
   }
 
   setRowArrangement(arrangement) {
