@@ -1,6 +1,6 @@
 import {Subject} from "rxjs";
 import { generateGuid, moveItemInArray, shuffle } from "./helpers";
-import {Plate, PlateArrangement, PlateWellSelector, PlateySavedDocument} from "./PlateySavedDocument";
+import {Plate, PlateArrangement, PlateWellSelector, PlateySavedDocument} from "./api/PlateySavedDocument";
 
 interface Column {
   id: string;

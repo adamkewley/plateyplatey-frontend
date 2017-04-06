@@ -10,7 +10,7 @@ import {PlateyDocument, Well} from "./PlateyDocument";
 import { PlateyCommandController } from "./PlateyCommandController";
 import * as Rx from "rxjs";
 import {IController, IScope} from "angular";
-import {Plate, PlateArrangement, PlateySavedDocument} from "./PlateySavedDocument";
+import {Plate, PlateArrangement, PlateySavedDocument} from "./api/PlateySavedDocument";
 import {Subscription} from "rxjs";
 
 export const plateyController: IController = ["$scope", "plateyAPI", function($scope: IScope, plateyAPI: any) {
