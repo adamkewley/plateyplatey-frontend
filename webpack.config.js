@@ -10,7 +10,8 @@ module.exports = {
   },
 
   resolve: {
-    modules: ["src", "."],
+    modules: ["src", ".", "node_modules"],
+    extensions: [".ts", ".js", ".json"],
     alias: { "lib": "node_modules" }
   },
 
@@ -19,6 +20,15 @@ module.exports = {
       {
         test: /\.scss$/,
         loader: ExtractTextPlugin.extract('css-loader!sass-loader')
+      },
+      {
+        test: /\.tsx?$/,
+        loader: "ts-loader"
+      },
+      {
+        enforce: "pre",
+        test: /\.js$/,
+        loader: "source-map-loader"
       },
       {
         test: /\.js$/,

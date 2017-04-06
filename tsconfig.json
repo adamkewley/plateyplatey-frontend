@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "target": "es2015",
+    "baseUrl": ".",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "strictNullChecks": true,
+    "paths": {
+      "*": [
+        "*",
+        "node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "./src/**/*"
+  ]
+}
