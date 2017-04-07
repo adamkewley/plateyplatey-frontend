@@ -15,7 +15,7 @@
 
 <!-- Click is in this container because some browser tricks
      involve clicking the body -->
-<div class="main-container" ng-click="bodyClickEventHandler($event);">
+<div class="main-container" ng-click="bodyClickEventHandler($event);" ng-if="document !== null">
 
     <div class="control-bar">
 
@@ -69,12 +69,12 @@
                placeholder="Value"
                ng-model="currentValue"
                platey-keyup="(set-value-of-selected-wells currentValue)"
-               ng-disabled="noCellsSelected();"/>
+               ng-disabled="document.hasNoCellsSelected();"/>
     </div>
 
     <main>
 
-        <div class="plate-panel">
+        <div class="plate-panel" ng-if="document !== null">
 
             <svg class="plate" vbox="{{ getPlateVbox(); }}" preserveAspectRatio="xMinYMin">
 
@@ -84,10 +84,10 @@
                         ng-attr-cy="{{ well.y }}"
                         platey-radius="{{ well.radius }}"
                         class="well"
-                        ng-class="{ hovered: well.hovered, selected: well.selected, focused: well.id === getFocusedRowId() }"
+                        ng-class="{ hovered: well.hovered, selected: well.selected, focused: well.id === document.getFocusedRowId() }"
                         platey-command='(focus-row (. well "id") e)'
-                        ng-mouseover="hoverOverWell(well);"
-                        ng-mouseout="unHoverOverWell(well);">
+                        ng-mouseover="document.hoverOverWell(well);"
+                        ng-mouseout="document.unHoverOverWell(well);">
                 </circle>
 
                 <!-- Selectors -->
@@ -96,8 +96,8 @@
                       ng-attr-y="{{ selector.y }}"
                       class="selector"
                       platey-command='(select-rows-by-id (. selector "selectsIds") e)'
-                      ng-mouseover="hoverOverWells(selector.selects);"
-                      ng-mouseout="unHoverOverWells(selector.selects);">
+                      ng-mouseover="document.hoverOverWells(selector.selects);"
+                      ng-mouseout="document.unHoverOverWells(selector.selects);">
                     {{ selector.label }}
                 </text>
             </svg>
@@ -107,7 +107,7 @@
                 Plate Layout:
                 <select ng-options="plateTemplateSummary as plateTemplateSummary.name for plateTemplateSummary in plateTemplateSummaries track by plateTemplateSummary.id"
                         ng-model="currentPlateTemplateSummary"
-                        ng-change="loadPlateLayout(currentPlateTemplateSummary);"
+                        ng-change="loadPlateSummary(currentPlateTemplateSummary);"
                         class="form-control">
                 </select>
             </div>
@@ -119,7 +119,7 @@
 
                 <select ng-options="arrangement as arrangement.name for arrangement in document.availableArrangements track by arrangement.name"
                         ng-model="currentPlateArrangement"
-                        ng-change="changePlateArrangement(currentPlateArrangement)"
+                        ng-change="document.setRowArrangement(currentPlateArrangement)"
                         class="form-control">
                 </select>
             </div>
@@ -157,8 +157,8 @@
                     <td ng-repeat="column in document.columns"
                         ng-class="{'hovered-well': well.hovered && $parent.document.selectedColumn === column, 'selected-well': well.selected && $parent.document.selectedColumn === column, 'focused-well': $parent.document.getFocusedRowId() === well.id && $parent.document.selectedColumn === column }"
                         platey-command='(select-column "{{ column.id }}")'
-                        ng-mouseover="hoverOverWell(well);"
-                        ng-mouseout="unHoverOverWell(well);">
+                        ng-mouseover="document.hoverOverWell(well);"
+                        ng-mouseout="document.unHoverOverWell(well);">
                         {{ well[column.id] }}
                     </td>
                 </tr>

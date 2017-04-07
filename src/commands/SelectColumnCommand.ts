@@ -1,26 +1,27 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class SelectColumnCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "select-column";
+  title = "Select Column";
+  description = "Select a column in the table.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this.id = "select-column";
-    this.title = "Select Column";
-    this.description = "Select a column in the table.";
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute(columnId: string) {
-    this._primativeCommands.selectColumn(columnId);
-  }
+    const currentDocument = this._currentDocument.getValue();
 
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+    if (currentDocument !== null) {
+      currentDocument.selectColumn(columnId);
+    }
   }
 }

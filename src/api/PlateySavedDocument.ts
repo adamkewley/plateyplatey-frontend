@@ -1,63 +1,9 @@
-export interface DocumentSchemaDetails {
-    version: String;
-}
-
-export interface DocumentProperties {
-    documentName: String;
-}
-
-export interface Plate {
-    name: String;
-    gridWidth: number;
-    gridHeight: number;
-    selectors: PlateWellSelector[];
-    wells: PlateWell[];
-    wellRadius: number;
-    arrangements: PlateArrangement[];
-}
-
-export interface PlateWellSelector {
-    x: number;
-    y: number;
-    label: string;
-    selects: string[];
-}
-
-export interface PlateWell {
-    id: string;
-    x: number;
-    y: number;
-    radius: number;
-}
-
-export interface PlateArrangement {
-    name: string;
-    order: string[];
-}
-
-export interface TableSchema {
-    columns: ColumnSchema[];
-}
-
-export interface ColumnSchema {
-    id: string;
-    header: string;
-}
-
-export interface DocumentWorkbook {
-    sheets: string[];
-    focusedSheet: string;
-}
-
-export interface DocumentSheet {
-    plateTemplate: string;
-    tableSchema: string;
-    data: { [plateId: string]: { [columnId: string]: ColumnValue }};
-}
-
-export interface ColumnValue {
-    value: string;
-}
+import {DocumentWorkbook} from "./DocumentWorkbook";
+import {TableSchema} from "./TableSchema";
+import {Plate} from "./Plate";
+import {DocumentProperties} from "./DocumentProperties";
+import {DocumentSchemaDetails} from "./DocumentSchemaDetails";
+import {DocumentSheet} from "./DocumentSheet";
 
 export interface PlateySavedDocument {
     fileSchema: DocumentSchemaDetails;

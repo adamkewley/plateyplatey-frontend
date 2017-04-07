@@ -1,31 +1,32 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class SetValueOfSelectedWells implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "set-value-of-selected-wells";
+  title = "Set value of selected wells";
+  description = "Sets the value of the currently selected wells.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this.id = "set-value-of-selected-wells";
-    this.title = "Set value of selected wells";
-    this.description = "Sets the value of the currently selected wells.";
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this.disabledSubject = disabledIfNull(currentDocument);
+    this._currentDocument = currentDocument;
   }
 
   execute(newValue: string) {
-    const selectedColumn = this._primativeCommands.getSelectedColumnId();
-    const selectedRows = this._primativeCommands.getSelectedRowIds();
+    const currentDocument = this._currentDocument.getValue();
 
-    if (selectedColumn !== null && selectedRows.length > 0) {
-      this._primativeCommands.assignValueToCells(selectedColumn, selectedRows, newValue);
+    if (currentDocument !== null) {
+      const selectedColumn = currentDocument.getSelectedColumnId();
+      const selectedRows = currentDocument.getSelectedRowIds();
+
+      if (selectedColumn !== null && selectedRows.length > 0) {
+        currentDocument.assignValueToCells(selectedColumn, selectedRows, newValue);
+      }
     }
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false});
   }
 }

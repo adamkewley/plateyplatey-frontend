@@ -1,4 +1,4 @@
-import {IAttributes, IDirectiveFactory, IDirectiveLinkFn, IScope} from "@types/angular";
+import {IAttributes, IScope} from "@types/angular";
 
 export const plateyRadius = [() => {
   return {

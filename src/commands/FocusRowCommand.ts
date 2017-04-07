@@ -1,32 +1,33 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class FocusRowCommand implements Command {
 
-  _primativeCommands: any;
-  id: string;
-  title: string;
-  description: string;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "focus-row";
+  title = "Focus Row";
+  description = "Focus on a row";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this.id = "focus-row";
-    this.title = "Focus Row";
-    this.description = "Focus on a row";
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
-  execute(id: any, e: any) {
-    if (!e.shiftKey) {
-      // clear selection before focusing
-      const selectedRowIds = this._primativeCommands.getSelectedRowIds();
-      this._primativeCommands.deSelectRowsById(selectedRowIds);
+  execute(id: string, e: KeyboardEvent) {
+    const currentDocument = this._currentDocument.getValue();
+
+    if (currentDocument !== null) {
+      if (!e.shiftKey) {
+        // clear selection before focusing
+        const selectedRowIds = currentDocument.getSelectedRowIds();
+        currentDocument.deSelectRowsById(selectedRowIds);
+      }
+
+      currentDocument.focusRow(id);
     }
-
-    this._primativeCommands.focusRow(id);
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
   }
 }

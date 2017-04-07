@@ -1,35 +1,36 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class SelectRowsById implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "select-rows-by-id";
+  title = "Select Rows";
+  description = "Select rows in the main table.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this.id = "select-rows-by-id";
-    this.title = "Select Rows";
-    this.description = "Select rows in the main table.";
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute(ids: string[], e: KeyboardEvent) {
-    if (!e.shiftKey) {
-      // clear selection before focusing
-      const selectedRowIds = this._primativeCommands.getSelectedRowIds();
-      this._primativeCommands.deSelectRowsById(selectedRowIds);
+    const currentDocument = this._currentDocument.getValue();
+
+    if (currentDocument !== null) {
+      if (!e.shiftKey) {
+        // clear selection before focusing
+        const selectedRowIds = currentDocument.getSelectedRowIds();
+        currentDocument.deSelectRowsById(selectedRowIds);
+      }
+
+      if (ids.length > 0)
+        currentDocument.focusRow(ids[0]);
+
+      currentDocument.selectRowsById(ids);
     }
-
-    if (ids.length > 0)
-      this._primativeCommands.focusRow(ids[0]);
-
-    this._primativeCommands.selectRowsById(ids);
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
   }
 }

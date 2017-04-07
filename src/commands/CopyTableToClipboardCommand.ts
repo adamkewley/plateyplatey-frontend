@@ -1,41 +1,41 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull, copyTextToClipboard} from "../helpers";
 
 export class CopyTableToClipboardCommand implements Command {
 
-  _primativeCommands: any;
-  id: string;
-  title: string;
-  description: string;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "copy-table-to-clipboard";
+  title = "Copy Table to Clipboard";
+  description = "Copy the table to the clipboard as a tab-separated text block.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "copy-table-to-clipboard";
-    this.title = "Copy Table to Clipboard";
-    this.description = "Copy the table to the clipboard as a tab-separated text block.";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute() {
-    const primativeCommands = this._primativeCommands;
-    const columnSeparator = "\t";
-    const rowSeparator = "\n";
+    const currentDocument = this._currentDocument.getValue();
 
-    const columnIds = primativeCommands.getColumnIds();
+    if (currentDocument !== null) {
+      const columnSeparator = "\t";
+      const rowSeparator = "\n";
 
-    const tableHeaders =
-      ["Well ID"].concat(columnIds.map((columnId: string) => primativeCommands.getColumnHeader(columnId)));
+      const columnIds = currentDocument.getColumnIds();
 
-    const tableData = primativeCommands.getTableData();
+      const tableHeaders =
+          ["Well ID"].concat(<string[]>columnIds.map((columnId: string) => currentDocument.getColumnHeader(columnId)));
 
-    const entireTable = [tableHeaders].concat(tableData);
+      const tableData = currentDocument.getTableData();
 
-    const tsvData = entireTable.map(row => row.join(columnSeparator)).join(rowSeparator);
+      const entireTable = [tableHeaders].concat(tableData);
 
-    primativeCommands.copyTextToClipboard(tsvData);
-  }
+      const tsvData = entireTable.map(row => row.join(columnSeparator)).join(rowSeparator);
 
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+      copyTextToClipboard(tsvData);
+    }
   }
 }

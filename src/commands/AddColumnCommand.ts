@@ -1,21 +1,26 @@
 import {Command} from "./Command";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class AddColumnCommand implements Command {
 
-  _addColumn: () => void;
-  id: string = "add-column";
-  title: string = "Add Column";
-  description: string = "Add a column to the table";
-  disabledSubject: BehaviorSubject<DisabledMessage> =
-      new BehaviorSubject({ isDisabled: false });
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "add-column";
+  title = "Add Column";
+  description = "Add a column to the table";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._addColumn = primativeCommands.addColumn;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute() {
-    this._addColumn();
+    const currentDocument = this._currentDocument.getValue();
+
+    if (currentDocument !== null)
+      currentDocument.addColumn();
   }
 }

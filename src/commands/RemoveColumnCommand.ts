@@ -1,26 +1,24 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
 
 export class RemoveColumnCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _removeColumn: (columnId: string) => void;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "remove-column";
+  title = "Remove Column";
+  description = "Remove a column, identified by its ID, from the table";
+  disabledSubject = new BehaviorSubject<DisabledMessage>({ isDisabled: false });
 
-  constructor(primativeCommands: any) {
-    this._removeColumn = primativeCommands.removeColumn;
-    this.id = "remove-column";
-    this.title = "Remove Column";
-    this.description = "Remove a column, identified by its ID, from the table";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
   }
 
   execute(columnId: string) {
-    this._removeColumn(columnId);
-  }
+    const currentDocument = this._currentDocument.getValue();
 
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+    if (currentDocument !== null)
+      currentDocument.removeColumn(columnId);
   }
 }

@@ -4,15 +4,12 @@ import {DisabledMessage} from "./DisabledMessage";
 
 export class ObjectAccessor implements Command {
 
-  id: string;
-  title: string;
-  description: string;
+  id = ".";
+  title = "Access Property";
+  description = "Access the property of an object";
+  disabledSubject = new BehaviorSubject<DisabledMessage>({ isDisabled: false });
 
-  constructor() {
-    this.id = ".";
-    this.title = "Access Property";
-    this.description = "Access the property of an object";
-  }
+  constructor() {}
 
   execute(instance: any, memberSymbol: string, args: any[]) {
     const member = instance[memberSymbol];
@@ -20,9 +17,5 @@ export class ObjectAccessor implements Command {
     if (member !== undefined && args !== undefined) {
       return member.apply(member, args);
     } else return member;
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
   }
 }

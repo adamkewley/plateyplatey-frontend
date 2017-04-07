@@ -1,22 +1,28 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class ClearPlateCommand implements Command {
 
-  id: string = "clear-plate";
-  title: string = "Clear Plate";
-  description: string = "Clear the plate of data, leaving the columns intact.";
-  disabledSubject: BehaviorSubject<DisabledMessage> =
-      new BehaviorSubject({ isDisabled: false });
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "clear-plate";
+  title = "Clear Plate";
+  description = "Clear the plate of data, leaving the columns intact.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute() {
-    const columnIds = this._primativeCommands.getColumnIds();
-    columnIds.forEach((columnId: any) => this._primativeCommands.clearDataInColumn(columnId));
+    const currentDocument = this._currentDocument.getValue();
+
+    if (currentDocument !== null) {
+      const columnIds = currentDocument.getColumnIds();
+      columnIds.forEach((columnId: any) => currentDocument.clearDataInColumn(columnId));
+    }
   }
 }

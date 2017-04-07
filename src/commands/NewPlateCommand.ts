@@ -1,28 +1,22 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyApp} from "../PlateyApp";
 
 export class NewPlateCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _newDocument: () => void;
+  private _app: PlateyApp;
+  id = "new-plate";
+  title = "New Plate";
+  description: "Create a new plate.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-
-    this.id = "new-plate";
-    this.title = "New Plate";
-    this.description = "Create a new plate.";
-    this._newDocument = primativeCommands.newDocument;
+  constructor(app: PlateyApp) {
+    this._app = app;
+    this.disabledSubject = new BehaviorSubject({ isDisabled: false });
   }
 
   execute() {
-    this._newDocument();
+    this._app.newDocument();
   }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
-  }
-
 }

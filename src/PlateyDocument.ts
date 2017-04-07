@@ -1,6 +1,8 @@
 import {Subject} from "rxjs";
 import { generateGuid, moveItemInArray, shuffle } from "./helpers";
-import {Plate, PlateArrangement, PlateWellSelector, PlateySavedDocument} from "./api/PlateySavedDocument";
+import {PlateySavedDocument} from "./api/PlateySavedDocument";
+import {PlateArrangement} from "./api/PlateArrangement";
+import {Plate} from "./api/Plate";
 
 interface Column {
   id: string;
@@ -10,7 +12,7 @@ interface Column {
 interface ValueAssignment {
   columnId: string;
   rowIds: string[]
-  value: string
+  value: string | null
 }
 
 export interface Well {
@@ -102,12 +104,12 @@ export class PlateyDocument {
 
   constructor() {}
 
-  selectColumn(columnId: string): void {
+  selectColumn(columnId: string | null): void {
 
     const columnToSelect =
       (columnId === null) ? null : this.columns.find(column => column.id === columnId);
 
-    if (columnToSelect !== undefined) {
+    if (columnToSelect !== undefined && columnToSelect !== null && columnId !== null) {
 
       this.beforeColumnSelectionChanged.next(columnId);
       this.selectedColumn = columnToSelect;
@@ -241,7 +243,7 @@ export class PlateyDocument {
     this.afterDeselectingRows.next(rowIds);
   }
 
-  assignValueToCells(columnId: string, rowIds: string[], value: string) {
+  assignValueToCells(columnId: string, rowIds: string[], value: string | null) {
 
     this.beforeAssigningValueToCells.next({
       columnId: columnId,
@@ -296,24 +298,20 @@ export class PlateyDocument {
     }
   }
 
-  hoverOverWell(wellId: string): void {
-    const well = this.wells.find(well => well.id === wellId);
-
-    if (well !== undefined) well.hovered = true;
+  hoverOverWell(well: Well): void {
+    well.hovered = true;
   }
 
-  unHoverOverWell(wellId: string): void {
-    const well = this.wells.find(well => well.id === wellId);
-
-    if (well !== undefined) well.hovered = false;
+  unHoverOverWell(well: Well): void {
+    well.hovered = false;
   }
 
-  hoverOverWells(wellIds: string[]): void {
-    wellIds.forEach(wellId => this.hoverOverWell(wellId));
+  hoverOverWells(wells: Well[]): void {
+    wells.forEach(well => this.hoverOverWell(well));
   }
 
-  unHoverOverWells(wellIds: string[]): void {
-    wellIds.forEach(wellId => this.unHoverOverWell(wellId));
+  unHoverOverWells(wells: Well[]): void {
+    wells.forEach(well => this.unHoverOverWell(well));
   }
 
   setLayout(layout: Plate) {
@@ -405,5 +403,40 @@ export class PlateyDocument {
 
       return values;
     }
+  }
+
+  setValueOfSelectionTo(value: string) {
+    const selectedColumn = this.selectedColumn;
+
+    if (selectedColumn !== null) {
+      const selectedColumnId = selectedColumn.id;
+
+      this.getSelectedWells().forEach((selectedWell: Well) => {
+        selectedWell[selectedColumnId] = value;
+      });
+    }
+  }
+
+  getCurrentSelectionValue(): string {
+    const selectionValues = this.getSelectionValues();
+
+    if (selectionValues.length === 0) {
+      return "";
+    } else {
+      const firstValue = selectionValues[0];
+
+      if (firstValue === null) return "";
+
+      const allWellsHaveSameValue =
+          selectionValues.every((selectedWell: string) => selectedWell === firstValue);
+
+      if (allWellsHaveSameValue) return firstValue;
+      else return "";
+    }
+  }
+
+  hasNoCellsSelected() {
+    return this.selectedColumn === null ||
+      !this.wells.some((well: Well) => well.selected);
   }
 }

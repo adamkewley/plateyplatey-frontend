@@ -1,28 +1,30 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class SelectAllCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "select-all";
+  title = "Select All";
+  description = "Select all rows in the current column.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "select-all";
-    this.title = "Select All";
-    this.description = "Select all rows in the current column.";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
+
   }
 
   execute() {
-    const allRowIds = this._primativeCommands.getRowIds();
+    const currentDocument = this._currentDocument.getValue();
 
-    this._primativeCommands.selectRowsById(allRowIds);
-  }
+    if (currentDocument !== null) {
+      const allRowIds = currentDocument.getRowIds();
 
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+      currentDocument.selectRowsById(allRowIds);
+    }
   }
 }

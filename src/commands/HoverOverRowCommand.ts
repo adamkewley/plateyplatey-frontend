@@ -1,26 +1,27 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class HoverOverRowCommand implements Command {
 
-  _primativeCommands: any;
-  id: string;
-  title: string;
-  description: string;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "hover-over-row";
+  title = "Hover over row";
+  description = "Hover over a row in the data.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this.id = "hover-over-row";
-    this.title = "Hover over row";
-    this.description = "Hover over a row in the data.";
-    this._primativeCommands = primativeCommands;
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute(well: any) {
-    this._primativeCommands.hoverOverWell(well);
-  }
+    const currentDocument = this._currentDocument.getValue();
 
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+    if (currentDocument !== null) {
+      currentDocument.hoverOverWell(well);
+    }
   }
 }

@@ -1,33 +1,37 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class MoveColumnSelectionRightCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _primativeCommands: any;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "move-column-selection-right";
+  title = "Move Column Selection Right";
+  description = "Select the column right of the currently selected column.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "move-column-selection-right";
-    this.title = "Move Column Selection Right";
-    this.description = "Select the column right of the currently selected column.";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute() {
-    const currentColumnSelection = this._primativeCommands.getSelectedColumnId();
-    const columns = this._primativeCommands.getColumnIds();
-    const selectionIndex = columns.indexOf(currentColumnSelection);
+    const currentDocument = this._currentDocument.getValue();
 
-    if (currentColumnSelection !== null && selectionIndex !== (columns.length - 1)) {
-      const newColumnSelection = columns[selectionIndex + 1];
-      this._primativeCommands.selectColumn(newColumnSelection);
+    if (currentDocument !== null) {
+      const currentColumnSelection = currentDocument.getSelectedColumnId();
+
+      if (currentColumnSelection !== null) {
+        const columns = currentDocument.getColumnIds();
+        const selectionIndex = columns.indexOf(currentColumnSelection);
+
+        if (currentColumnSelection !== null && selectionIndex !== (columns.length - 1)) {
+          const newColumnSelection = columns[selectionIndex + 1];
+          currentDocument.selectColumn(newColumnSelection);
+        }
+      }
     }
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
   }
 }

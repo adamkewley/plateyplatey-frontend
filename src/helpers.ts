@@ -1,3 +1,7 @@
+import {BehaviorSubject} from "rxjs";
+import {PlateyDocument} from "./PlateyDocument";
+import {DisabledMessage} from "./commands/DisabledMessage";
+
 export function shuffle<T>(a: T[]): T[] {
   var j, x, i;
   for (i = a.length; i; i--) {
@@ -168,3 +172,26 @@ export function readFileAsText(file: File): Promise<string> {
   });
 }
 
+export function behaviorMap<T, R> (bh: BehaviorSubject<T>, f: (val: T) => R): BehaviorSubject<R> {
+  const ret = new BehaviorSubject<R>(f(bh.getValue()));
+
+  const subscription = bh.subscribe(
+      next => { ret.next(f(next)) },
+      err => { ret.error(err); },
+      () => { subscription.unsubscribe(); });
+
+  return ret;
+}
+
+export function disabledIfNull(bh: BehaviorSubject<PlateyDocument | null>): BehaviorSubject<DisabledMessage> {
+  return behaviorMap(bh, document => {
+    if (document === null) {
+      return {
+        isDisabled: true,
+        reason: "No document currently open"
+      }
+    } else {
+      return { isDisabled: false };
+    }
+  });
+}

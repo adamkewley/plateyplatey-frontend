@@ -27,50 +27,55 @@ import {PromptUserForFilesCommand} from "./commands/PromptUserForFilesCommand";
 import {ImportCSVFileCommand} from "./commands/ImportCSVFileCommand";
 import {RemoveSelectedColumnCommand} from "./commands/RemoveSelectedColumnCommand";
 import {Command} from "./commands/Command";
+import {BehaviorSubject} from "rxjs";
+import {PlateyDocument} from "./PlateyDocument";
+import {PlateyApp} from "./PlateyApp";
 
 export class AllCommands {
 
   _commands: Command[];
   commandsHash: { [key: string]:(...args: any[]) => any };
 
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>, app: PlateyApp) {
 
-  constructor(primativeCommands: any, events: any) {
     this._commands = [
-      new NewPlateCommand(primativeCommands),
-      new ClearPlateCommand(primativeCommands),
-      new InvertSelectionCommand(primativeCommands, events),
-      new MoveSelectedColumnLeftCommand(primativeCommands, events),
-      new MoveSelectedColumnRightCommand(primativeCommands, events),
-      new ExportTableToCSVCommand(primativeCommands),
-      new CopyTableToClipboardCommand(primativeCommands),
-      new AddColumnCommand(primativeCommands),
-      new ClearSelectionCommand(primativeCommands),
-      new SelectAllCommand(primativeCommands),
-      new MoveColumnSelectionLeftCommand(primativeCommands),
-      new MoveColumnSelectionRightCommand(primativeCommands),
-      new MoveRowFocusDownCommand(primativeCommands),
-      new MoveRowFocusUpCommand(primativeCommands),
-      new ClearValuesInCurrentSelectionCommand(primativeCommands),
-      new ClearRowSelectionCommand(primativeCommands),
-      new RemoveColumnCommand(primativeCommands),
-      new SelectRowById(primativeCommands),
-      new SelectRowsById(primativeCommands),
-      new SelectColumnCommand(primativeCommands),
-      new FocusRowCommand(primativeCommands),
-      new HoverOverRowCommand(primativeCommands),
+      new NewPlateCommand(app),
+      new ClearPlateCommand(currentDocument),
+      new InvertSelectionCommand(currentDocument),
+      new MoveSelectedColumnLeftCommand(currentDocument),
+      new MoveSelectedColumnRightCommand(currentDocument),
+      new ExportTableToCSVCommand(currentDocument),
+      new CopyTableToClipboardCommand(currentDocument),
+      new AddColumnCommand(currentDocument),
+      new ClearSelectionCommand(currentDocument),
+      new SelectAllCommand(currentDocument),
+      new MoveColumnSelectionLeftCommand(currentDocument),
+      new MoveColumnSelectionRightCommand(currentDocument),
+      new MoveRowFocusDownCommand(currentDocument),
+      new MoveRowFocusUpCommand(currentDocument),
+      new ClearValuesInCurrentSelectionCommand(currentDocument),
+      new ClearRowSelectionCommand(currentDocument),
+      new RemoveColumnCommand(currentDocument),
+      new SelectRowById(currentDocument),
+      new SelectRowsById(currentDocument),
+      new SelectColumnCommand(currentDocument),
+      new FocusRowCommand(currentDocument),
+      new HoverOverRowCommand(currentDocument),
       new ObjectAccessor(),
-      new SetValueOfSelectedWells(primativeCommands),
-      new PromptUserForFileCommand(primativeCommands),
-      new PromptUserForFilesCommand(primativeCommands),
-      new ImportCSVFileCommand(primativeCommands),
-      new RemoveSelectedColumnCommand(primativeCommands, events),
+      new SetValueOfSelectedWells(currentDocument),
+      new PromptUserForFileCommand(),
+      new PromptUserForFilesCommand(),
+      new ImportCSVFileCommand(app),
+      new RemoveSelectedColumnCommand(currentDocument),
     ];
 
     this.commandsHash = {};
     this._commands.forEach(cmd => this.commandsHash[cmd.id] = (...args) => cmd.execute(...args));
   }
 
-  getCommandById(id: string) {
-    return this._commands.find(command => command.id === id);
+  getCommandById(id: string): Command | null {
+    const command = this._commands.find(command => command.id === id);
+
+    return command === undefined ? null : command;
   }
 }

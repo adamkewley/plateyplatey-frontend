@@ -1,29 +1,28 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class MoveSelectedColumnLeftCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "move-selected-column-left";
+  title = "Move Selected Column Left";
+  description: "Move the currently selected column left.";
   disabledSubject: BehaviorSubject<DisabledMessage>;
-  _primativeCommands: any;
 
-  constructor(primativeCommands: any, applicationEvents: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "move-selected-column-left";
-    this.title = "Move Selected Column Left";
-    this.description = "Move the currently selected column left.";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
 
-    this.disabledSubject = new BehaviorSubject(this._calculateDisabled());
-
-    const updateCallback = () => this.disabledSubject.next(this._calculateDisabled());
-
+    /* TODO: Implement
     applicationEvents.subscribeTo("after-column-selection-changed", updateCallback);
     applicationEvents.subscribeTo("after-table-columns-changed", updateCallback);
+    */
   }
 
+  /* TODO: Implement
   _calculateDisabled() {
     const allColumns = this._primativeCommands.getColumnIds();
     const selectedColumn = this._primativeCommands.getSelectedColumnId();
@@ -43,14 +42,21 @@ export class MoveSelectedColumnLeftCommand implements Command {
       };
     }
     else return { isDisabled: false };
-  }
+  } */
 
   execute() {
-    const selectedColumn = this._primativeCommands.getSelectedColumnId();
-    const allColumns = this._primativeCommands.getColumnIds();
-    const oldIndex = allColumns.indexOf(selectedColumn);
-    const newIndex = oldIndex - 1;
+    const currentDocument = this._currentDocument.getValue();
 
-    this._primativeCommands.moveColumn(selectedColumn, newIndex);
+    if (currentDocument !== null) {
+      const selectedColumn = currentDocument.getSelectedColumnId();
+
+      if (selectedColumn !== null) {
+        const allColumns = currentDocument.getColumnIds();
+        const oldIndex = allColumns.indexOf(selectedColumn);
+        const newIndex = oldIndex - 1;
+
+        currentDocument.moveColumn(selectedColumn, newIndex);
+      }
+    }
   }
 }

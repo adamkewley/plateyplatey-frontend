@@ -2,42 +2,38 @@ import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
 import Papa from "papaparse";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull, promptUserToSaveData} from "../helpers";
 
 export class ExportTableToCSVCommand implements Command {
 
-  _primativeCommands: any;
-  id: string;
-  title: string;
-  description: string;
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
+  id = "export-table-to-csv";
+  title = "Export Table to CSV";
+  description = "Export the current content of the table as a downloadable CSV file.";
+  disabledSubject: BehaviorSubject<DisabledMessage>;
 
-  constructor(primativeCommands: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "export-table-to-csv";
-    this.title = "Export Table to CSV";
-    this.description = "Export the current content of the table as a downloadable CSV file.";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
   }
 
   execute() {
-    const primativeCommands = this._primativeCommands;
+    const currentDocument = this._currentDocument.getValue();
 
-    const columnIds = primativeCommands.getColumnIds();
+    if (currentDocument !== null) {
+      const columnIds = currentDocument.getColumnIds();
 
-    const tableHeaders =
-      ["Well ID"].concat(columnIds.map((columnId: string) => primativeCommands.getColumnHeader(columnId)));
+      const tableHeaders =
+          ["Well ID"].concat(<string[]>columnIds.map(columnId => currentDocument.getColumnHeader(columnId)));
 
-    const tableData = primativeCommands.getTableData();
+      const tableData = currentDocument.getTableData();
 
-    const entireTable = [tableHeaders].concat(tableData);
+      const entireTable = [tableHeaders].concat(tableData);
 
-    const csvData = (<any>Papa).unparse(entireTable);
+      const csvData = (<any>Papa).unparse(entireTable);
 
-    primativeCommands.promptUserToSaveData(
-      "platey-export.csv",
-      "text/csv;charset=utf-8;",
-      csvData);
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+      promptUserToSaveData("platey-export.csv", "text/csv;charset=utf-8;", csvData);
+    }
   }
 }

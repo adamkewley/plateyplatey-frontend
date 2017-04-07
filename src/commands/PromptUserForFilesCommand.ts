@@ -1,26 +1,18 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {promptUserForFiles} from "../helpers";
 
 export class PromptUserForFilesCommand implements Command {
 
-  id: string;
-  title: string;
-  description: string;
-  _promptUserForFiles: (mimeTypes: string) => any;
+  id = "prompt-user-for-files";
+  title = "Prompt User for Files";
+  description = "Prompt a user to browse for file(s) on their local filesystem";
+  disabledSubject = new BehaviorSubject<DisabledMessage>({ isDisabled: false });
 
-  constructor(primativeCommands: any) {
-    this.id = "prompt-user-for-files";
-    this.title = "Prompt User for Files";
-    this.description = "Prompt a user to browse for file(s) on their local filesystem";
-    this._promptUserForFiles = primativeCommands.promptUserForFiles;
-  }
+  constructor() {}
 
   execute(mimeTypes = "") {
-    return this._promptUserForFiles(mimeTypes);
-  }
-
-  get disabledSubject() {
-    return new BehaviorSubject<DisabledMessage>({ isDisabled: false });
+    return promptUserForFiles(mimeTypes);
   }
 }

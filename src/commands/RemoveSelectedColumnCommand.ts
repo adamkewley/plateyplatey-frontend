@@ -1,29 +1,30 @@
 import {BehaviorSubject} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
+import {PlateyDocument} from "../PlateyDocument";
+import {disabledIfNull} from "../helpers";
 
 export class RemoveSelectedColumnCommand implements Command {
+  private _currentDocument: BehaviorSubject<PlateyDocument | null>;
 
-  id: string;
-  title: string;
-  description: string;
+  id = "remove-selected-column";
+  title = "Remove selected column";
+  description = "Remove the currently selected column";
   disabledSubject: BehaviorSubject<DisabledMessage>;
-  _primativeCommands: any;
 
-  constructor(primativeCommands: any, applicationEvents: any) {
-    this._primativeCommands = primativeCommands;
-    this.id = "remove-selected-column";
-    this.title = "Remove selected column";
-    this.description = "Remove the currently selected column";
+  constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
+    this._currentDocument = currentDocument;
+    this.disabledSubject = disabledIfNull(currentDocument);
 
-    this.disabledSubject = new BehaviorSubject<DisabledMessage>(this._calculateDisabled());
-
+    /* TODO: Implement
     const updateCallback = () => this.disabledSubject.next(this._calculateDisabled());
 
     applicationEvents.subscribeTo("after-column-selection-changed", updateCallback);
     applicationEvents.subscribeTo("after-table-columns-changed", updateCallback);
+    */
   }
 
+  /* TODO: Implement
   _calculateDisabled() {
     const selectedColumn = this._primativeCommands.getSelectedColumnId();
 
@@ -37,10 +38,16 @@ export class RemoveSelectedColumnCommand implements Command {
       return { isDisabled: false };
     }
   }
+  */
 
   execute() {
-    const selectedColumn = this._primativeCommands.getSelectedColumnId();
+    const currentDocument = this._currentDocument.getValue();
 
-    this._primativeCommands.removeColumn(selectedColumn);
+    if (currentDocument !== null) {
+      const selectedColumn = currentDocument.getSelectedColumnId();
+
+      if (selectedColumn !== null)
+        currentDocument.removeColumn(selectedColumn);
+    }
   }
 }

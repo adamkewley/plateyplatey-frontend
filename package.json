@@ -5,22 +5,20 @@
   "main": "platey.js",
   "dependencies": {
     "angular": "^1.6.2",
-    "angular-mocks": "^1.6.2",
     "bootstrap": "^3.3.7",
-    "dev": "~0.1.3",
     "es6-shim": "^0.35.3",
-    "express": "^4.14.1",
-    "karma": "~1.1.2",
-    "karma-cli": "~1.0.1",
     "normalize-css": "^2.3.1",
     "papaparse": "^4.1.4",
     "requirejs": "^2.3.3",
-    "rxjs": "^5.2.0",
-    "url-loader": "^0.5.8",
-    "webpack": "^2.2.1"
+    "rxjs": "^5.2.0"
   },
   "devDependencies": {
+    "express": "^4.14.1",
+    "karma": "~1.1.2",
+    "karma-cli": "~1.0.1",
     "@types/angular": "^1.6.14",
+    "dev": "~0.1.3",
+    "angular-mocks": "^1.6.2",
     "awesome-typescript-loader": "^3.1.2",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
@@ -46,7 +44,9 @@
     "ts-loader": "^2.0.3",
     "typescript": "^2.2.2",
     "webpack": "^2.2.1",
-    "webpack-dev-server": "^2.4.1"
+    "webpack-dev-server": "^2.4.1",
+    "url-loader": "^0.5.8",
+    "webpack": "^2.2.1"
   },
   "scripts": {
     "test": "./node_modules/karma/bin/karma start",
