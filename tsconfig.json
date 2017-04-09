@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "noImplicitAny": true,
     "target": "es2015",
     "baseUrl": ".",
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "paths": {
       "*": [
         "*",

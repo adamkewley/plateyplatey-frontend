@@ -1,0 +1,186 @@
+<!-- <body (keypress)="bodyKeypressHandler($event);" (keydown)="bodyKeydownHandler($event);"> -->
+
+<!-- Click is in this container because some browser tricks
+     involve clicking the body -->
+<div class="main-container"
+     *ngIf="document !== null"
+     (click)="bodyClickEventHandler($event);">
+
+    <div class="control-bar">
+
+        <span class="site-title">PlateyPlatey</span>
+
+        <button [plateyCommand]="'(new-plate)'">
+            New Plate
+        </button>
+
+        <button [plateyCommand]="'(import-csv-file)'">
+            Import CSV
+        </button>
+
+        <button [plateyCommand]="'(export-table-to-csv)'">
+            Export CSV
+        </button>
+
+        <button [plateyCommand]="'(copy-table-to-clipboard)'">
+            Copy Table To Clipboard
+        </button>
+
+        <button [plateyCommand]="'(clear-plate)'">
+            Clear Plate Data
+        </button>
+
+        <button [plateyCommand]="'(select-all)'">
+            Select All
+        </button>
+
+        <button [plateyCommand]="'(invert-selection)'">
+            Invert Selection
+        </button>
+
+        <button [plateyCommand]="'(move-selected-column-left)'">
+            Move Selected Column Left
+        </button>
+
+        <button [plateyCommand]="'(move-selected-column-right)'">
+            Move Selected Column Right
+        </button>
+
+        <button [plateyCommand]="'(remove-selected-column)'">
+            Delete Column
+        </button>
+
+        <span class="column-selection">
+          {{ document.selectedColumn === null ? "No column selected" : document.selectedColumn.header + ": " }}
+        </span>
+
+        <input type="text"
+               placeholder="Value"
+               [(ngModel)]="currentValue"
+               [plateyKeyup]="'(set-value-of-selected-wells currentValue)'"
+               [disabled]="document.hasNoCellsSelected" />
+    </div>
+
+    <main>
+
+        <div class="plate-panel" *ngIf="document !== null">
+
+            <svg class="plate" [attr.viewBox]="plateVbox" preserveAspectRatio="xMinYMin">
+
+                <!-- Wells -->
+                <circle *ngFor="let well of document.wells;"
+                        [attr.cx]="well.x"
+                        [attr.cy]="well.y"
+                        [plateyRadius]="well.radius"
+                        class="well"
+                        [ngClass]="{ hovered: well.hovered, selected: well.selected, focused: well.id === document.getFocusedRowId() }"
+                        (mouseover)="document.hoverOverWell(well);"
+                        (mouseout)="document.unHoverOverWell(well);">
+                        <!-- [plateyCommand]='(focus-row (. well "id") e)' -->
+                </circle>
+
+                <!-- Selectors -->
+                <!-- [plateyCommand]='(select-rows-by-id (. selector "selectsIds") e)' -->
+                <text *ngFor="let selector of document.selectors"
+                      [attr.x]="selector.x"
+                      [attr.y]="selector.y"
+                      class="selector"
+                      (mouseover)="document.hoverOverWells(selector.selects);"
+                      (mouseout)="document.unHoverOverWells(selector.selects);">
+
+                    {{ selector.label }}
+                </text>
+            </svg>
+
+            <!-- Plate selector -->
+            <div>
+                Plate Layout:
+                <select [(ngModel)]="currentPlateTemplateSummary"
+                        (ngModelChange)="loadPlateSummary(currentPlateTemplateSummary);"
+                        class="form-control">
+                    <!-- track by id -->
+                    <option *ngFor="let plateTemplateSummary of plateTemplateSummaries"
+                            [selected]="plateTemplateSummary === currentPlateTemplateSummary"
+                            [ngValue]="plateTemplateSummary">
+                        {{ plateTemplateSummary.name }}
+                    </option>
+                </select>
+            </div>
+
+            <br/>
+
+            <div>
+                <!-- Table Layout: -->
+
+                <select class="form-control"
+                        [(ngModel)]="document.arrangement"
+                        (ngModelChange)="document.setRowArrangement(document.arrangement);">
+                    <option *ngFor="let arrangement of document.availableArrangements"
+                            [ngValue]="arrangement"
+                            [selected]="arrangement === document.arrangement">
+
+                        {{ arrangement.name }}
+                    </option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="main-panel">
+
+            <table class="table-condensed main-table">
+
+                <thead>
+                <th>Well ID</th>
+
+                <!-- [plateyCommand]='(select-column "{{ column.id }}")' -->
+                <th *ngFor="let column of document.columns"
+                    [ngClass]="{ selected: document.getSelectedColumnId() === column.id }">
+
+                    <input type="text"
+                           [(ngModel)]="column.header"
+                           style="display: inline"
+                           class="form-control"
+                           (keydown)="$event.stopPropagation();" />
+                </th>
+
+                <th>
+                    <!--[plateyCommand]="'(add-column)'" -->
+                    <button class="btn btn-success" (click)="document.addColumn();">
+                        Add Column
+                    </button>
+                </th>
+                </thead>
+
+                <!-- Well IDs and their associated data -->
+                <tbody>
+
+                <!-- [plateyCommand]='(focus-row "{{ well.id }}" e)' -->
+                <tr *ngFor="let well of document.wells">
+
+                    <!-- The first column is always the well IDs -->
+                    <td class="well-id" [ngClass]="{'selected-row': well.selected }">
+                        {{ well.id }}
+                    </td>
+
+                    <!-- [plateyCommand]='(select-column "{{ column.id }}")' -->
+                    <td *ngFor="let column of document.columns"
+                        [ngClass]="{'hovered-well': well.hovered && document.selectedColumn === column, 'selected-well': well.selected && $parent.document.selectedColumn === column, 'focused-well': document.getFocusedRowId() === well.id && document.selectedColumn === column }"
+                        (mouseover)="document.hoverOverWell(well);"
+                        (mouseout)="document.unHoverOverWell(well);">
+
+                        {{ well[column.id] }}
+                    </td>
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- </body> -->

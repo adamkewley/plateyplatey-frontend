@@ -1,5 +1,6 @@
 var path = require('path');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var ContextReplacementPlugin = require('webpack/lib/ContextReplacementPlugin');
 
 module.exports = {
   entry: './src/platey.js',
@@ -50,7 +51,12 @@ module.exports = {
   },
 
   plugins: [
-    new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
+    new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true }),
+    // This removes angular library warnings
+    new ContextReplacementPlugin(
+      /angular(\\|\/)core(\\|\/)@angular/,
+      path.resolve(__dirname, '../src')
+    )
   ],
 
   devtool: "source-map",

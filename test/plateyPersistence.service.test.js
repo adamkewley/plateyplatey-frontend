@@ -6,7 +6,7 @@ import "platey";
 describe("plateyAPI", function() {
   let plateyPersistence, $httpBackend;
 
-  beforeEach(angular.mock.module("api"));
+  beforeEach(angular.mock.module("apitypes"));
 
   beforeEach(inject(function($injector) {
     fixture.setBase("src/documents");
