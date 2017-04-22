@@ -15,7 +15,7 @@ export class RemoveColumnCommand implements Command {
     this._currentDocument = currentDocument;
   }
 
-  execute(columnId: string) {
+  execute(e: any, columnId: string) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null)

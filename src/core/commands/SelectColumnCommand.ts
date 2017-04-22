@@ -17,7 +17,7 @@ export class SelectColumnCommand implements Command {
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
   }
 
-  execute(columnId: string) {
+  execute(e: any, columnId: string) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null) {

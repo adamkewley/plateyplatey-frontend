@@ -3,11 +3,12 @@ import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
 import {PlateyDocument} from "../document/PlateyDocument";
 import {Helpers} from "../../Helpers";
+import {Well} from "../document/Well";
 
-export class SelectRowsById implements Command {
+export class SelectRows implements Command {
 
   private _currentDocument: BehaviorSubject<PlateyDocument | null>;
-  id = "select-rows-by-id";
+  id = "select-rows";
   title = "Select Rows";
   description = "Select rows in the main table.";
   disabledSubject: BehaviorSubject<DisabledMessage>;
@@ -17,7 +18,7 @@ export class SelectRowsById implements Command {
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
   }
 
-  execute(ids: string[], e: KeyboardEvent) {
+  execute(e: KeyboardEvent, ...rows: Well[]) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null) {
@@ -27,10 +28,10 @@ export class SelectRowsById implements Command {
         currentDocument.deSelectRowsById(selectedRowIds);
       }
 
-      if (ids.length > 0)
-        currentDocument.focusRow(ids[0]);
+      if (rows.length > 0)
+        currentDocument.focusRow(rows[0].id);
 
-      currentDocument.selectRowsById(ids);
+      currentDocument.selectRows(rows);
     }
   }
 }

@@ -17,7 +17,7 @@ export class SetValueOfSelectedWells implements Command {
     this._currentDocument = currentDocument;
   }
 
-  execute(newValue: string) {
+  execute(e: any, newValue: string) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null) {

@@ -199,6 +199,16 @@ export class PlateyDocument {
     return this.wells.filter(well => well.selected === true).map(well => well.id);
   }
 
+  selectRows(rows: Well[]) {
+    const rowIds = rows.map(row => row.id);
+
+    this.beforeSelectingRows.next(rowIds);
+
+    rows.forEach(row => row.selected = true);
+
+    this.afterSelectingRows.next(rowIds);
+  }
+
   selectRowsById(rowIds: string[]): void {
     this.beforeSelectingRows.next(rowIds);
 

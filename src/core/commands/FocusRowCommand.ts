@@ -17,7 +17,7 @@ export class FocusRowCommand implements Command {
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
   }
 
-  execute(id: string, e: KeyboardEvent) {
+  execute(e: any, id: string) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null) {

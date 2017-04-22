@@ -8,7 +8,7 @@ export class NewPlateCommand implements Command {
   private _app: PlateyApp;
   id = "new-plate";
   title = "New Plate";
-  description: "Create a new plate.";
+  description = "Create a new plate.";
   disabledSubject: BehaviorSubject<DisabledMessage>;
 
   constructor(app: PlateyApp) {

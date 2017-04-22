@@ -1,5 +1,6 @@
 require("file-loader?name=[name].[ext]!index.html");
-require("file-loader?name=[name].[ext]!angular/plateyApp.html");
+require("file-loader?name=[name].[ext]!angular/mainUI.html");
+require("file-loader?name=[name].[ext]!angular/plate.html");
 require("file-loader?name=lib/requirejs/[name].[ext]!lib/requirejs/require.js");
 
 import "lib/reflect-metadata";

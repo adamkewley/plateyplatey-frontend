@@ -12,7 +12,7 @@ export class PromptUserForFilesCommand implements Command {
 
   constructor() {}
 
-  execute(mimeTypes = "") {
+  execute(e: any, mimeTypes = "") {
     return Helpers.promptUserForFiles(mimeTypes);
   }
 }

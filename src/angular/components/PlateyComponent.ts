@@ -1,7 +1,7 @@
 import {Component} from '@angular/core';
 import {PlateSummary} from "../../core/apitypes/PlateSummary";
 import {PlateyDocument} from "../../core/document/PlateyDocument";
-import {PlateyAPI} from "../PlateyAPI";
+import {PlateyAPI} from "../services/PlateyAPI";
 import {PlateyConfiguration} from "../../core/apitypes/PlateyConfiguration";
 import {PlateySavedDocument} from "../../core/apitypes/PlateySavedDocument";
 import {PlateyApp} from "../../core/PlateyApp";
@@ -16,7 +16,7 @@ import {BodyClickHandler} from "../BodyClickHandler";
 
 @Component({
   selector: 'plateyApp',
-  templateUrl: "plateyApp.html",
+  templateUrl: "mainUI.html",
   providers: [PlateyAPI]
 })
 export class PlateyComponent {
@@ -29,7 +29,8 @@ export class PlateyComponent {
   currentPlateTemplateSummary: PlateSummary | null = null;
   plateTemplateSummaries: PlateSummary[] = [];
   document: PlateyDocument | null = null;
-  commands: { [key: string]: (...args: any[]) => any } | null;
+  commandFunctions: { [key: string]: (...args: any[]) => any } | null;
+  commands: { [commandId: string]: Command };
   getCommandDetails: ((commandId: string) => Command) | null;
   exec: ((expr: string, ...args: any[]) => void) | null;
 
@@ -51,12 +52,6 @@ export class PlateyComponent {
           this.bootApplication(appConfiguration, defaultDocument, plates);
         });
       });
-  }
-
-  get plateVbox(): string | null {
-    if (this.document !== null) {
-      return `0 0 ${this.document.gridWidth} ${this.document.gridHeight}`
-    } else return null;
   }
 
   loadPlateSummary(plateSummary: PlateSummary): void {
@@ -83,6 +78,11 @@ export class PlateyComponent {
 
     const nativeCommands = new AppCommands(plateyApp);
     this.commands = nativeCommands.commandsHash;
+    this.commandFunctions = {};
+    Object.keys(nativeCommands.commandsHash).forEach(key => {
+      const executeFunction = nativeCommands.commandsHash[key].execute;
+      this.commandFunctions[key] = executeFunction;
+    });
     const commandController = new PlateyCommandController();
     this.getCommandDetails = nativeCommands.getCommandById.bind(nativeCommands);
     const exec = commandController.executePlateyExpression.bind(commandController);

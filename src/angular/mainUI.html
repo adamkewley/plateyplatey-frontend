@@ -1,52 +1,54 @@
-<!-- <body (keypress)="bodyKeypressHandler($event);" (keydown)="bodyKeydownHandler($event);"> -->
-
 <!-- Click is in this container because some browser tricks
      involve clicking the body -->
 <div class="main-container"
      *ngIf="document !== null"
-     (click)="bodyClickEventHandler($event);">
+     (click)="bodyClickEventHandler($event);"
+     (keypress)="bodyKeypressHandler($event);"
+     (keydown)="bodyKeydownHandler($event);">
 
     <div class="control-bar">
 
-        <span class="site-title">PlateyPlatey</span>
+        <span class="site-title">
+            PlateyPlatey
+        </span>
 
-        <button [plateyCommand]="'(new-plate)'">
+        <button [command]="commands['new-plate']">
             New Plate
         </button>
 
-        <button [plateyCommand]="'(import-csv-file)'">
+        <button [command]="commands['import-csv-file']">
             Import CSV
         </button>
 
-        <button [plateyCommand]="'(export-table-to-csv)'">
+        <button [command]="commands['export-table-to-csv']">
             Export CSV
         </button>
 
-        <button [plateyCommand]="'(copy-table-to-clipboard)'">
+        <button [command]="commands['copy-table-to-clipboard']">
             Copy Table To Clipboard
         </button>
 
-        <button [plateyCommand]="'(clear-plate)'">
+        <button [command]="commands['clear-plate']">
             Clear Plate Data
         </button>
 
-        <button [plateyCommand]="'(select-all)'">
+        <button [command]="commands['select-all']">
             Select All
         </button>
 
-        <button [plateyCommand]="'(invert-selection)'">
+        <button [command]="commands['invert-selection']">
             Invert Selection
         </button>
 
-        <button [plateyCommand]="'(move-selected-column-left)'">
+        <button [command]="commands['move-selected-column-left']">
             Move Selected Column Left
         </button>
 
-        <button [plateyCommand]="'(move-selected-column-right)'">
+        <button [command]="commands['move-selected-column-right']">
             Move Selected Column Right
         </button>
 
-        <button [plateyCommand]="'(remove-selected-column)'">
+        <button [command]="commands['remove-selected-column']">
             Delete Column
         </button>
 
@@ -57,7 +59,8 @@
         <input type="text"
                placeholder="Value"
                [(ngModel)]="currentValue"
-               [plateyKeyup]="'(set-value-of-selected-wells currentValue)'"
+               [keyup]="commands['set-value-of-selected-wells']"
+               [keyupArguments]="currentValue"
                [disabled]="document.hasNoCellsSelected" />
     </div>
 
@@ -65,32 +68,7 @@
 
         <div class="plate-panel" *ngIf="document !== null">
 
-            <svg class="plate" [attr.viewBox]="plateVbox" preserveAspectRatio="xMinYMin">
-
-                <!-- Wells -->
-                <circle *ngFor="let well of document.wells;"
-                        [attr.cx]="well.x"
-                        [attr.cy]="well.y"
-                        [plateyRadius]="well.radius"
-                        class="well"
-                        [ngClass]="{ hovered: well.hovered, selected: well.selected, focused: well.id === document.getFocusedRowId() }"
-                        (mouseover)="document.hoverOverWell(well);"
-                        (mouseout)="document.unHoverOverWell(well);">
-                        <!-- [plateyCommand]='(focus-row (. well "id") e)' -->
-                </circle>
-
-                <!-- Selectors -->
-                <!-- [plateyCommand]='(select-rows-by-id (. selector "selectsIds") e)' -->
-                <text *ngFor="let selector of document.selectors"
-                      [attr.x]="selector.x"
-                      [attr.y]="selector.y"
-                      class="selector"
-                      (mouseover)="document.hoverOverWells(selector.selects);"
-                      (mouseout)="document.unHoverOverWells(selector.selects);">
-
-                    {{ selector.label }}
-                </text>
-            </svg>
+            <plate [document]="document"></plate>
 
             <!-- Plate selector -->
             <div>
@@ -133,9 +111,9 @@
                 <thead>
                 <th>Well ID</th>
 
-                <!-- [plateyCommand]='(select-column "{{ column.id }}")' -->
                 <th *ngFor="let column of document.columns"
-                    [ngClass]="{ selected: document.getSelectedColumnId() === column.id }">
+                    [ngClass]="{ selected: document.getSelectedColumnId() === column.id }"
+                    (click)="document.selectColumn(column.id);">
 
                     <input type="text"
                            [(ngModel)]="column.header"
@@ -145,8 +123,7 @@
                 </th>
 
                 <th>
-                    <!--[plateyCommand]="'(add-column)'" -->
-                    <button class="btn btn-success" (click)="document.addColumn();">
+                    <button class="btn btn-success" [command]="commands['add-column']">
                         Add Column
                     </button>
                 </th>
@@ -155,19 +132,21 @@
                 <!-- Well IDs and their associated data -->
                 <tbody>
 
-                <!-- [plateyCommand]='(focus-row "{{ well.id }}" e)' -->
-                <tr *ngFor="let well of document.wells">
+                <tr *ngFor="let well of document.wells"
+                    [command]="commands['focus-row']"
+                    [commandArguments]="well.id">
 
                     <!-- The first column is always the well IDs -->
                     <td class="well-id" [ngClass]="{'selected-row': well.selected }">
                         {{ well.id }}
                     </td>
 
-                    <!-- [plateyCommand]='(select-column "{{ column.id }}")' -->
                     <td *ngFor="let column of document.columns"
-                        [ngClass]="{'hovered-well': well.hovered && document.selectedColumn === column, 'selected-well': well.selected && $parent.document.selectedColumn === column, 'focused-well': document.getFocusedRowId() === well.id && document.selectedColumn === column }"
+                        [ngClass]="{'hovered-well': well.hovered && document.selectedColumn === column, 'selected-well': well.selected && document.selectedColumn === column, 'focused-well': document.getFocusedRowId() === well.id && document.selectedColumn === column }"
                         (mouseover)="document.hoverOverWell(well);"
-                        (mouseout)="document.unHoverOverWell(well);">
+                        (mouseout)="document.unHoverOverWell(well);"
+                        [command]="commands['select-column']"
+                        [commandArguments]="column.id">
 
                         {{ well[column.id] }}
                     </td>
@@ -182,5 +161,3 @@
     </main>
 
 </div>
-
-<!-- </body> -->

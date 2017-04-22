@@ -16,7 +16,7 @@ import {ClearValuesInCurrentSelectionCommand} from "./commands/ClearValuesInCurr
 import {ClearRowSelectionCommand} from "./commands/ClearRowSelectionCommand";
 import {RemoveColumnCommand} from "./commands/RemoveColumnCommand";
 import {SelectRowById} from "./commands/SelectRowById";
-import {SelectRowsById} from "./commands/SelectRowsById";
+import {SelectRows} from "./commands/SelectRows";
 import {SelectColumnCommand} from "./commands/SelectColumnCommand";
 import {FocusRowCommand} from "./commands/FocusRowCommand";
 import {HoverOverRowCommand} from "./commands/HoverOverRowCommand";
@@ -32,7 +32,7 @@ import {PlateyApp} from "./PlateyApp";
 export class AppCommands {
 
   _commands: Command[];
-  commandsHash: { [key: string]:(...args: any[]) => any };
+  commandsHash: { [key: string]:Command };
 
   constructor(app: PlateyApp) {
 
@@ -55,7 +55,7 @@ export class AppCommands {
       new ClearRowSelectionCommand(app.currentDocument),
       new RemoveColumnCommand(app.currentDocument),
       new SelectRowById(app.currentDocument),
-      new SelectRowsById(app.currentDocument),
+      new SelectRows(app.currentDocument),
       new SelectColumnCommand(app.currentDocument),
       new FocusRowCommand(app.currentDocument),
       new HoverOverRowCommand(app.currentDocument),
@@ -68,7 +68,7 @@ export class AppCommands {
     ];
 
     this.commandsHash = {};
-    this._commands.forEach(cmd => this.commandsHash[cmd.id] = (...args) => cmd.execute(...args));
+    this._commands.forEach(cmd => this.commandsHash[cmd.id] = cmd);
   }
 
   getCommandById(id: string): Command | null {

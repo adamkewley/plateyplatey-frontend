@@ -1,17 +1,16 @@
 import {NgModule} from '@angular/core';
-import {Http, HttpModule} from "@angular/http";
+import {HttpModule} from "@angular/http";
 import {BrowserModule} from '@angular/platform-browser';
 import {PlateyComponent} from "./components/PlateyComponent";
-import {PlateyCommand} from "./directives/PlateyCommand";
-import {PlateyKeyup} from "./directives/PlateyKeyup";
-import {PlateyRadius} from "./directives/PlateyRadius";
-import {VBox} from "./directives/VBox";
-import {PlateyAPI} from "./PlateyAPI";
+import {PlateyAPI} from "./services/PlateyAPI";
 import {FormsModule} from "@angular/forms";
+import {UiCommand} from "./directives/UiCommand";
+import {UiKeyup} from "./directives/UiKeyup";
+import {PlateComponent} from "./components/PlateComponent";
 
 @NgModule({
   imports:      [ BrowserModule, HttpModule, FormsModule ],
-  declarations: [ PlateyComponent, PlateyCommand, PlateyKeyup, PlateyRadius, VBox ],
+  declarations: [ PlateyComponent, UiCommand, UiKeyup, PlateComponent ],
   providers: [ PlateyAPI ],
   bootstrap:    [ PlateyComponent ]
 })

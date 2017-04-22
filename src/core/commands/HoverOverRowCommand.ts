@@ -17,7 +17,7 @@ export class HoverOverRowCommand implements Command {
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
   }
 
-  execute(well: any) {
+  execute(e: any, well: any) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null) {

@@ -11,7 +11,7 @@ export class ObjectAccessor implements Command {
 
   constructor() {}
 
-  execute(instance: any, memberSymbol: string, args: any[]) {
+  execute(e: any, instance: any, memberSymbol: string, args: any[]) {
     const member = instance[memberSymbol];
 
     if (member !== undefined && args !== undefined) {

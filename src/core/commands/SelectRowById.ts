@@ -17,7 +17,7 @@ export class SelectRowById implements Command {
     this._currentDocument = currentDocument;
   }
 
-  execute(id: string) {
+  execute(e: any, id: string) {
     const currentDocument = this._currentDocument.getValue();
 
     if (currentDocument !== null)
