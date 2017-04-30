@@ -1,3 +1,3 @@
 export interface DocumentSchemaDetails {
-  version: String;
+  version: string;
 }

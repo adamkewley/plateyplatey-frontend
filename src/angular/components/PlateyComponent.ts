@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, HostListener} from '@angular/core';
 import {PlateSummary} from "../../core/apitypes/PlateSummary";
 import {PlateyDocument} from "../../core/document/PlateyDocument";
 import {PlateyAPI} from "../services/PlateyAPI";
@@ -81,6 +81,10 @@ export class PlateyComponent {
     this.commandFunctions = {};
     Object.keys(nativeCommands.commandsHash).forEach(key => {
       const executeFunction = nativeCommands.commandsHash[key].execute;
+
+      if (this.commandFunctions === null || this.commandFunctions === undefined)
+        this.commandFunctions = {};
+
       this.commandFunctions[key] = executeFunction;
     });
     const commandController = new PlateyCommandController();
@@ -101,6 +105,10 @@ export class PlateyComponent {
       this.document = newDocument;
 
         if (newDocument !== null) {
+          if (newDocument.selectedColumn === null && newDocument.columns.length > 0) {
+            newDocument.selectColumn(newDocument.columns[0].id);
+          }
+
           documentEventSubscriptions.push(
             newDocument.afterColumnAdded.subscribe((columnId: string) => {
               newDocument.selectColumn(columnId);
@@ -128,20 +136,16 @@ export class PlateyComponent {
         }
     });
 
-    const bodyKeydownHandler = new BodyKeydownHandler(
+    this.bodyKeydownHandler = new BodyKeydownHandler(
       plateyApp.getKeybinds(),
       exec,
       plateyApp.currentDocument,
       nativeCommands);
 
-    this.bodyKeydownHandler = bodyKeydownHandler.handler.bind(bodyKeydownHandler);
-
     // Keypress happens before keydown
-    const bodyKeypressHandler = new BodyKepressHandler(
+    this.bodyKeypressHandler = new BodyKepressHandler(
       plateyApp.getKeybinds(),
       plateyApp.currentDocument);
-
-    this.bodyKeypressHandler = bodyKeypressHandler.handler.bind(bodyKeypressHandler);
 
     const bodyClickEventHandler = new BodyClickHandler(
       nativeCommands,
@@ -164,5 +168,15 @@ export class PlateyComponent {
     };
 
     plateyApp.newDocument();
+  }
+
+  @HostListener("document:keypress", ["$event"])
+  handleKeypress(e: KeyboardEvent) {
+    this.bodyKeypressHandler.handler(e);
+  }
+
+  @HostListener("document:keydown", ["$event"])
+  handleKeydown(e: KeyboardEvent) {
+    this.bodyKeydownHandler.handler(e);
   }
 }

@@ -23,7 +23,7 @@ export class PlateyScript {
           else {
             let f, funcArgs;
             [f, ...funcArgs] = ast.elements.map(evalAST);
-            return f.apply(f, funcArgs);
+            return f.execute(...funcArgs);
           }
 
         case PlateyParser.SYMBOL:

@@ -3,7 +3,7 @@ import {PlateWell} from "./PlateWell";
 import {PlateWellSelector} from "./PlateWellSelector";
 
 export interface Plate {
-  name: String;
+  name: string;
   gridWidth: number;
   gridHeight: number;
   selectors: PlateWellSelector[];

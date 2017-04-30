@@ -5,7 +5,7 @@ import {PlateyConfiguration} from "./apitypes/PlateyConfiguration";
 
 export class PlateyApp {
 
-    currentDocument: BehaviorSubject<PlateyDocument | null>;
+    public currentDocument: BehaviorSubject<PlateyDocument | null>;
     private _configuration: PlateyConfiguration;
     private _defaultDocument: PlateySavedDocument;
 

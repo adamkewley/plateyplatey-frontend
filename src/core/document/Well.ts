@@ -6,4 +6,5 @@ export interface Well {
   y: number;
   radius: number;
   [columnId: string]: any;
+  color: string | null;
 }

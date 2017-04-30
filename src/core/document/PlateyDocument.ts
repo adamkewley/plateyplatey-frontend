@@ -72,20 +72,26 @@ export class PlateyDocument {
   afterSelectingRows = new Subject<string[]>();
   beforeDeselectingRows = new Subject<string[]>();
   afterDeselectingRows = new Subject<string[]>();
+  afterRowSelectionChanged = this.afterSelectingRows.merge(this.afterDeselectingRows);
   beforeAssigningValueToCells = new Subject<ValueAssignment>();
   afterAssigningValueToCells = new Subject<ValueAssignment>();
   beforeFocusRow = new Subject<string | null>();
   afterFocusRow = new Subject<string | null>();
   afterLayoutChanged = new Subject<Plate>();
 
-  constructor() {}
+  constructor() {
+    this.afterColumnSelectionChanged.subscribe(_ => this.recalculateWellColors());
+  }
 
   selectColumn(columnId: string | null): void {
 
     const columnToSelect =
       (columnId === null) ? null : this.columns.find(column => column.id === columnId);
 
-    if (columnToSelect !== undefined && columnToSelect !== null && columnId !== null) {
+    if (columnId !== null &&
+        columnToSelect !== undefined &&
+        columnToSelect !== null &&
+        this.selectedColumn !== columnToSelect) {
 
       this.beforeColumnSelectionChanged.next(columnId);
       this.selectedColumn = columnToSelect;
@@ -332,6 +338,7 @@ export class PlateyDocument {
         x: well.x,
         y: well.y,
         radius: well.radius || layout.wellRadius || 0.3,
+        color: null
       };
 
       columnIds.forEach(id => {
@@ -391,14 +398,90 @@ export class PlateyDocument {
     }
   }
 
-  setValueOfSelectionTo(value: string) {
+  setValueOfSelectionTo(newValue: string) {
     const selectedColumn = this.selectedColumn;
+    const selectedWells = this.getSelectedWells();
 
-    if (selectedColumn !== null) {
+    if (selectedColumn !== null && selectedWells.length > 0) {
+
       const selectedColumnId = selectedColumn.id;
 
-      this.getSelectedWells().forEach((selectedWell: Well) => {
-        selectedWell[selectedColumnId] = value;
+      const colorMappings: { [value: string]: { color: string, numEntries: number } } = {};
+
+      this.wells
+          .forEach(well => {
+            if (well.color !== null) {
+              const columnValue = well[selectedColumnId];
+
+              if (colorMappings[columnValue] === undefined) {
+                colorMappings[columnValue] = { color: well.color, numEntries: 1 }
+              } else {
+                colorMappings[columnValue].numEntries++;
+              }
+            }
+          });
+
+      let wellColor: string;
+      if (colorMappings[newValue] === undefined) {
+        const previousValue = selectedWells[0][selectedColumnId];
+
+        const previousValueHadColorAssigned = colorMappings[previousValue] !== undefined;
+
+        if (previousValueHadColorAssigned) {
+          const selectedWellsAreOnlyWellsWithPreviousValue =
+              colorMappings[previousValue].numEntries === selectedWells.length;
+
+          if (selectedWellsAreOnlyWellsWithPreviousValue) {
+            const allSelectedWellsPreviouslyHadSameValue =
+                selectedWells.every(well => well[selectedColumnId] === previousValue);
+
+            if (allSelectedWellsPreviouslyHadSameValue) {
+              wellColor = colorMappings[previousValue].color;
+            } else {
+              wellColor = Helpers.generateRandomColorHexString();
+            }
+          } else {
+            wellColor = Helpers.generateRandomColorHexString();
+          }
+        } else {
+          wellColor = Helpers.generateRandomColorHexString();
+        }
+      } else {
+        wellColor = colorMappings[newValue].color;
+      }
+
+      selectedWells.forEach((selectedWell: Well) => {
+        selectedWell[selectedColumnId] = newValue;
+        selectedWell.color = wellColor;
+      });
+    }
+  }
+
+  recalculateWellColors() {
+    const selectedColumnId = this.getSelectedColumnId();
+
+    if (selectedColumnId === null) {
+      this.wells.forEach(well => well.color = null);
+    } else {
+      const valueMappings: { [value: string]: Well[] } = {};
+
+      this.wells.forEach(well => {
+        const wellValue = well[selectedColumnId];
+        const valueMapping = valueMappings[wellValue];
+
+        if (valueMapping === undefined) {
+          valueMappings[wellValue] = [well];
+        } else {
+          valueMappings[wellValue].push(well);
+        }
+      });
+
+      Object.keys(valueMappings).forEach(value => {
+        const color = value === "null" ? null : Helpers.generateRandomColorHexString();
+
+        valueMappings[value].forEach(well => {
+          well.color = color;
+        });
       });
     }
   }

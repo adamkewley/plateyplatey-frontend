@@ -176,4 +176,22 @@ export class Helpers {
       }
     });
   }
+
+    static generateRandomColorHexString() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    static allArrayValuesTheSame<T>(ary: T[]) {
+      for(let i = 1; i < ary.length; i++) {
+        if(ary[i] !== ary[0])
+          return false;
+      }
+
+      return true;
+    }
 }

@@ -1,10 +1,7 @@
 <!-- Click is in this container because some browser tricks
      involve clicking the body -->
 <div class="main-container"
-     *ngIf="document !== null"
-     (click)="bodyClickEventHandler($event);"
-     (keypress)="bodyKeypressHandler($event);"
-     (keydown)="bodyKeydownHandler($event);">
+     *ngIf="document !== null" (click)="bodyClickEventHandler($event);">
 
     <div class="control-bar">
 
@@ -53,7 +50,7 @@
         </button>
 
         <span class="column-selection">
-          {{ document.selectedColumn === null ? "No column selected" : document.selectedColumn.header + ": " }}
+          {{ document.selectedColumn=== null ? "No column selected" : document.selectedColumn.header + ": " }}
         </span>
 
         <input type="text"
@@ -61,14 +58,14 @@
                [(ngModel)]="currentValue"
                [keyup]="commands['set-value-of-selected-wells']"
                [keyupArguments]="currentValue"
-               [disabled]="document.hasNoCellsSelected" />
+               [disabled]="document.hasNoCellsSelected()" />
     </div>
 
     <main>
 
         <div class="plate-panel" *ngIf="document !== null">
 
-            <plate [document]="document"></plate>
+            <plate [document]="document" [commands]="commands"></plate>
 
             <!-- Plate selector -->
             <div>

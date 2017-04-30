@@ -1,8 +1,7 @@
-import {BehaviorSubject} from "rxjs/Rx";
+import {BehaviorSubject, Observable} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
 import {PlateyDocument} from "../document/PlateyDocument";
-import {Helpers} from "../../Helpers";
 
 export class InvertSelectionCommand implements Command {
 
@@ -14,31 +13,28 @@ export class InvertSelectionCommand implements Command {
 
   constructor(currentDocument: BehaviorSubject<PlateyDocument | null>) {
     this._currentDocument = currentDocument;
-    this.disabledSubject = Helpers.disabledIfNull(currentDocument);
+    this.disabledSubject = new BehaviorSubject({ isDisabled: true, reason: "Not yet initialized" });
 
-    /* TODO: Reimplement
-    this.disabledSubject = new BehaviorSubject(this._calculateDisabled());
-    const callback = () => this.disabledSubject.next(this._calculateDisabled());
-    applicationEvents.subscribeTo("after-row-selection-changed", callback);
-    */
+    currentDocument
+        .map(maybeDocument => {
+          if (maybeDocument === null)
+            return Observable.of({ isDisabled: true, reason: "No document open" });
+          else {
+            const calculateDisabledState = () => {
+              if (maybeDocument.getSelectedRowIds().length === 0)
+                return {isDisabled: true, reason: "Nothing selected "};
+              else return {isDisabled: false};
+            };
+
+            const ret = new BehaviorSubject(calculateDisabledState());
+            maybeDocument.afterRowSelectionChanged.subscribe(_ => ret.next(calculateDisabledState()));
+
+            return ret;
+          }
+        })
+        .switch()
+        .subscribe(disabledState => this.disabledSubject.next(disabledState));
   }
-
-  /* TODO: Reimplement
-  _calculateDisabled() {
-    if (this._currentDocument.getValue() == null)
-    const selectedRows = this._primativeCommands.getSelectedRowIds();
-
-    if (selectedRows.length > 0) {
-      return { isDisabled: false };
-    } else {
-      return {
-        isDisabled: true,
-        hasReason: true,
-        reason: "Nothing currently selected.",
-      };
-    }
-  }
-  */
 
   execute() {
     const currentDocument = this._currentDocument.getValue();

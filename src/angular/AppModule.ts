@@ -10,7 +10,7 @@ import {PlateComponent} from "./components/PlateComponent";
 
 @NgModule({
   imports:      [ BrowserModule, HttpModule, FormsModule ],
-  declarations: [ PlateyComponent, UiCommand, UiKeyup, PlateComponent ],
+  declarations: [ PlateyComponent, UiCommand, UiKeyup, PlateComponent],
   providers: [ PlateyAPI ],
   bootstrap:    [ PlateyComponent ]
 })

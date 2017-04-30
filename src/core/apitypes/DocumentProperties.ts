@@ -1,3 +1,3 @@
 export interface DocumentProperties {
-  documentName: String;
+  documentName: string;
 }

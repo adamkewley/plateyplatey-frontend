@@ -1,5 +1,6 @@
 import {Component, Input} from "@angular/core";
 import {PlateyDocument} from "../../core/document/PlateyDocument";
+import {Command} from "../../core/commands/Command";
 
 @Component({
     selector: "plate",
@@ -9,6 +10,9 @@ export class PlateComponent {
 
     @Input()
     document: PlateyDocument;
+
+    @Input()
+    commands: { [commandId: string]: Command };
 
     get plateVbox(): string | null {
         if (this.document !== null) {
