@@ -145,7 +145,7 @@
                         [command]="commands['select-column']"
                         [commandArguments]="column.id">
 
-                        {{ well[column.id] }}
+                        {{ well.data[column.id].value }}
                     </td>
                 </tr>
 

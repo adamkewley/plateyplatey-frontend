@@ -56,7 +56,8 @@
   "scripts": {
     "test": "./node_modules/karma/bin/karma start",
     "build": "./node_modules/.bin/webpack",
-    "serve": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
+    "serve": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
+    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
   },
   "repository": {
     "type": "git",

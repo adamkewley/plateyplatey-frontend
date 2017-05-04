@@ -25,7 +25,7 @@ export class ClearValuesInCurrentSelectionCommand implements Command {
       const selectedRows = currentDocument.getSelectedRowIds();
 
       if (selectedColumn !== null && selectedRows.length > 0) {
-        currentDocument.assignValueToCells(selectedColumn, selectedRows, null);
+        currentDocument.assignValueToCells(selectedColumn, selectedRows, "");
       }
     }
   }

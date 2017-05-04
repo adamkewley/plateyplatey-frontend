@@ -11,7 +11,7 @@
             (mouseout)="document.unHoverOverWell(well);"
             [command]="commands['focus-row']"
             [commandArguments]="well.id"
-            [style.fill]="well.color">
+            [style.fill]="document.getSelectedColumnId() !== null ? well.data[document.getSelectedColumnId()].color : null">
     </circle>
 
     <!-- Selectors -->

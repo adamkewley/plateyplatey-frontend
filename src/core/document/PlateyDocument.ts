@@ -79,10 +79,6 @@ export class PlateyDocument {
   afterFocusRow = new Subject<string | null>();
   afterLayoutChanged = new Subject<Plate>();
 
-  constructor() {
-    this.afterColumnSelectionChanged.subscribe(_ => this.recalculateWellColors());
-  }
-
   selectColumn(columnId: string | null): void {
 
     const columnToSelect =
@@ -114,10 +110,8 @@ export class PlateyDocument {
 
     this.columns.push(newColumn);
 
-    // Populate the wells with null values
-    // for this new column
     this.wells.forEach(well => {
-      well[newColumn.id] = null;
+      well.data[newColumn.id] = { value: "", color: null };
     });
 
     this.afterColumnAdded.next(newColumn.id);
@@ -145,7 +139,6 @@ export class PlateyDocument {
   }
 
   removeColumn(columnId: string): void {
-    this.beforeColumnRemoved.next(columnId);
 
     const column = this.columns.find(col => col.id === columnId);
 
@@ -154,11 +147,13 @@ export class PlateyDocument {
       if (column === this.selectedColumn)
         this.selectedColumn = null;
 
+      this.beforeColumnRemoved.next(columnId);
+
       const idx = this.columns.indexOf(column);
       this.columns.splice(idx, 1);
 
       this.wells.forEach(well => {
-        delete well[columnId];
+        delete well.data[columnId];
       });
 
       this.afterColumnRemoved.next(columnId);
@@ -174,7 +169,7 @@ export class PlateyDocument {
   clearDataInColumn(columnId: string): void {
     this.beforeColumnDataCleared.next(columnId);
 
-    this.wells.forEach(well => well[columnId] = null);
+    this.wells.forEach(well => well.data[columnId].value = "");
 
     this.afterColumnDataCleared.next(columnId);
   }
@@ -235,7 +230,7 @@ export class PlateyDocument {
     this.afterDeselectingRows.next(rowIds);
   }
 
-  assignValueToCells(columnId: string, rowIds: string[], value: string | null) {
+  assignValueToCells(columnId: string, rowIds: string[], value: string) {
 
     this.beforeAssigningValueToCells.next({
       columnId: columnId,
@@ -243,11 +238,63 @@ export class PlateyDocument {
       value: value,
     });
 
-    const columnExists = this.columns.find(column => column.id === columnId);
-    const rows = this.wells.filter(well => rowIds.indexOf(well.id) !== -1);
+    const maybeColumn = this.columns.find(column => column.id === columnId);
+    const wells = this.wells.filter(well => rowIds.indexOf(well.id) !== -1);
 
-    if (columnExists !== undefined && rows.length > 0) {
-      rows.forEach(row => row[columnId] = value);
+    if (maybeColumn !== undefined && wells.length > 0) {
+      const column = maybeColumn;
+      const columnId = column.id;
+
+      const colorMappings: { [value: string]: { color: string, numEntries: number } } = {};
+
+      this.wells
+          .forEach(well => {
+            const wellData = well.data[columnId];
+
+            if (wellData.color !== null) {
+              const columnValue = wellData.value;
+
+              if (colorMappings[columnValue] === undefined) {
+                colorMappings[columnValue] = { color: wellData.color, numEntries: 1 }
+              } else {
+                colorMappings[columnValue].numEntries++;
+              }
+            }
+          });
+
+      let wellColor: string;
+      if (colorMappings[value] === undefined) {
+        const previousValue = wells[0].data[columnId].value;
+
+        const previousValueHadColorAssigned = colorMappings[previousValue] !== undefined;
+
+        if (previousValueHadColorAssigned) {
+          const selectedWellsAreOnlyWellsWithPreviousValue =
+              colorMappings[previousValue].numEntries === wells.length;
+
+          if (selectedWellsAreOnlyWellsWithPreviousValue) {
+            const allSelectedWellsPreviouslyHadSameValue =
+                wells.every(well => well.data[columnId].value === previousValue);
+
+            if (allSelectedWellsPreviouslyHadSameValue) {
+              wellColor = colorMappings[previousValue].color;
+            } else {
+              wellColor = Helpers.generateRandomColorHexString();
+            }
+          } else {
+            wellColor = Helpers.generateRandomColorHexString();
+          }
+        } else {
+          wellColor = Helpers.generateRandomColorHexString();
+        }
+      } else {
+        wellColor = colorMappings[value].color;
+      }
+
+      wells.forEach((selectedWell: Well) => {
+        selectedWell.data[columnId].value = value;
+        selectedWell.data[columnId].color = wellColor;
+      });
     }
 
     this.afterAssigningValueToCells.next({
@@ -257,10 +304,14 @@ export class PlateyDocument {
     });
   }
 
-  getTableData(): any[] {
-    const orderedColumnIds = ["id"].concat(this.columns.map(column => column.id));
+  getTableData(): string[][] {
+    const columnIds = this.columns.map(column => column.id);
 
-    return this.wells.map(wellData => orderedColumnIds.map(columnId => wellData[columnId]));
+    return this.wells.map(well => {
+      const data = columnIds.map(columnId => well.data[columnId].value);
+
+      return [well.id, ...data];
+    });
   }
 
   getFocusedRowId(): string | null {
@@ -331,21 +382,21 @@ export class PlateyDocument {
     this.arrangement = defaultArrangement;
 
     this.wells = layout.wells.map(well => {
-      const wellData: Well = {
+      const uiWell: Well = {
         id: well.id,
         selected: false,
         hovered: false,
         x: well.x,
         y: well.y,
         radius: well.radius || layout.wellRadius || 0.3,
-        color: null
+        data: {}
       };
 
-      columnIds.forEach(id => {
-        wellData[id] = null;
+      columnIds.forEach(columnId => {
+        uiWell.data[columnId] = { value: "", color: null };
       });
 
-      return wellData;
+      return uiWell;
     });
 
     this.selectors = layout.selectors.map(selector => {
@@ -392,97 +443,18 @@ export class PlateyDocument {
       const columnId = this.selectedColumn.id;
 
       const values =
-        this.getSelectedWells().map(selectedWell => selectedWell[columnId]);
+        this.getSelectedWells().map(selectedWell => selectedWell.data[columnId].value);
 
       return values;
     }
   }
 
   setValueOfSelectionTo(newValue: string) {
-    const selectedColumn = this.selectedColumn;
-    const selectedWells = this.getSelectedWells();
+    const selectedColumn = this.getSelectedColumnId();
 
-    if (selectedColumn !== null && selectedWells.length > 0) {
-
-      const selectedColumnId = selectedColumn.id;
-
-      const colorMappings: { [value: string]: { color: string, numEntries: number } } = {};
-
-      this.wells
-          .forEach(well => {
-            if (well.color !== null) {
-              const columnValue = well[selectedColumnId];
-
-              if (colorMappings[columnValue] === undefined) {
-                colorMappings[columnValue] = { color: well.color, numEntries: 1 }
-              } else {
-                colorMappings[columnValue].numEntries++;
-              }
-            }
-          });
-
-      let wellColor: string;
-      if (colorMappings[newValue] === undefined) {
-        const previousValue = selectedWells[0][selectedColumnId];
-
-        const previousValueHadColorAssigned = colorMappings[previousValue] !== undefined;
-
-        if (previousValueHadColorAssigned) {
-          const selectedWellsAreOnlyWellsWithPreviousValue =
-              colorMappings[previousValue].numEntries === selectedWells.length;
-
-          if (selectedWellsAreOnlyWellsWithPreviousValue) {
-            const allSelectedWellsPreviouslyHadSameValue =
-                selectedWells.every(well => well[selectedColumnId] === previousValue);
-
-            if (allSelectedWellsPreviouslyHadSameValue) {
-              wellColor = colorMappings[previousValue].color;
-            } else {
-              wellColor = Helpers.generateRandomColorHexString();
-            }
-          } else {
-            wellColor = Helpers.generateRandomColorHexString();
-          }
-        } else {
-          wellColor = Helpers.generateRandomColorHexString();
-        }
-      } else {
-        wellColor = colorMappings[newValue].color;
-      }
-
-      selectedWells.forEach((selectedWell: Well) => {
-        selectedWell[selectedColumnId] = newValue;
-        selectedWell.color = wellColor;
-      });
-    }
-  }
-
-  recalculateWellColors() {
-    const selectedColumnId = this.getSelectedColumnId();
-
-    if (selectedColumnId === null) {
-      this.wells.forEach(well => well.color = null);
-    } else {
-      const valueMappings: { [value: string]: Well[] } = {};
-
-      this.wells.forEach(well => {
-        const wellValue = well[selectedColumnId];
-        const valueMapping = valueMappings[wellValue];
-
-        if (valueMapping === undefined) {
-          valueMappings[wellValue] = [well];
-        } else {
-          valueMappings[wellValue].push(well);
-        }
-      });
-
-      Object.keys(valueMappings).forEach(value => {
-        const color = value === "null" ? null : Helpers.generateRandomColorHexString();
-
-        valueMappings[value].forEach(well => {
-          well.color = color;
-        });
-      });
+    if (selectedColumn !== null) {
+      const selectedRows = this.getSelectedRowIds();
+      this.assignValueToCells(selectedColumn, selectedRows, newValue);
     }
   }
 

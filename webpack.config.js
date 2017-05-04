@@ -80,14 +80,14 @@ module.exports = {
   devtool: "source-map",
 
   devServer: {
-    port: 8090,
+    port: (process.env.PORT || 8090),
     proxy: {
       "/api": {
         target: "http://localhost:8080",
           secure: false,
-	  pathRewrite: {
-	      "^/api": ""
-	  }
+        pathRewrite: {
+          "^/api": ""
+        }
       }
     }
   }

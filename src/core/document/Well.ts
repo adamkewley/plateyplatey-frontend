@@ -1,3 +1,5 @@
+import { WellData } from "./WellData";
+
 export interface Well {
   id: string;
   selected: boolean;
@@ -5,6 +7,5 @@ export interface Well {
   x: number;
   y: number;
   radius: number;
-  [columnId: string]: any;
-  color: string | null;
-}
+  data: { [columnId: string]: WellData }
+} 
