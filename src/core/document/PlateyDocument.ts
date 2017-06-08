@@ -169,7 +169,9 @@ export class PlateyDocument {
   clearDataInColumn(columnId: string): void {
     this.beforeColumnDataCleared.next(columnId);
 
-    this.wells.forEach(well => well.data[columnId].value = "");
+    const rowIds = this.getRowIds();
+
+    this.assignValueToCells(columnId, rowIds, "");
 
     this.afterColumnDataCleared.next(columnId);
   }
@@ -245,7 +247,10 @@ export class PlateyDocument {
       const column = maybeColumn;
       const columnId = column.id;
 
-      const colorMappings: { [value: string]: { color: string, numEntries: number } } = {};
+      const colorMappings: { [value: string]: { color: string | null, numEntries: number } } = {};
+
+      // Empty/null values should be blank.
+      colorMappings[""] = { color: null, numEntries: 0 };
 
       this.wells
           .forEach(well => {
@@ -262,7 +267,7 @@ export class PlateyDocument {
             }
           });
 
-      let wellColor: string;
+      let wellColor: string | null;
       if (colorMappings[value] === undefined) {
         const previousValue = wells[0].data[columnId].value;
 

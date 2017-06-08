@@ -58,11 +58,7 @@
     "build": "./node_modules/.bin/webpack",
     "serve": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
     "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "C:/Users/adam.kewley/Desktop/..\\\\Documents\\\\projects\\\\platey.git"
-  },
+  }
   "keywords": [
     "plate"
   ],
