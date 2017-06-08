@@ -1,0 +1,86 @@
+@import "constants";
+
+.main-table {
+
+  align: left;
+  white-space: nowrap;
+  min-width: 100%;
+  padding: 0;
+  margin: 0;
+
+  /* Prevent normal selection behavior because
+     we handle selection behavior in the javascript */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  > tbody td {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  thead {
+    text-align: left;
+  }
+
+  th {
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: grey;
+  }
+
+  th.selected {
+    border-width: 0 0 3px 0;
+  }
+
+  th > input {
+    width: 100%;
+  }
+
+  td.selected-well {
+    background-color: $selected-well-color;
+  }
+
+  td.focused-well {
+    border: 1px solid black;
+  }
+
+  td.hovered-well {
+    background-color: #eee;
+  }
+
+  // Ends of the rows/columns
+  .selected-row .selected-column {
+    background-color: #e6f7ff;
+  }
+
+  // Columns in the table should take minimum
+  // space
+  tbody td {
+    text-align: center;
+    padding: 0em 1em;
+    min-width: 200px;
+    cursor: cell;
+  }
+
+  td.well-id {
+    min-width: auto;
+    width: 1em;
+  }
+}
+
+.add-column-btn {
+  color: white;
+  background-color: green;
+  border-width: 0;
+  border-radius: 5px;
+}
+
+.remove-column-btn {
+  background-color: transparent;
+  border-width: 0;
+  color: grey;
+}

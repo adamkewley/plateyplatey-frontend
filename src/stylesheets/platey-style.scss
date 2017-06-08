@@ -1,244 +1,32 @@
-$selected-well-color: #ccefff;
-$main-area-background-color: #f9f9f9;
-$base-font-size: 14px;
-$control-bar-background-color: #fff;
-$control-bar-button-hover-background-color: #eee;
-$disabled-text-color: #ccc;
-$non-selected-well-stroke: #666;
-$selected-well-stroke: #000;
-
-html, body {
-    
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    font-size: $base-font-size;
-}
-
-main {
-    
-    background-color: $main-area-background-color;
-    padding-top: 1em;
-    height: 95%;
-}
-
-.control-bar {
-    
-    padding: 0.2em 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 100%;
-    background-color: $control-bar-background-color;
-
-    > * {
-	flex: none;
-	display: inline-block;
-    }
-
-    > *:last-child {
-	flex: auto;
-	border-radius: 0;
-    }
-
-    .site-title {
-	padding: 0 20px 0 5px;
-	font-weight: bold;
-    }
-
-    button {
-	margin: 0 5px;
-	border-width: 0;
-	background-color: $control-bar-background-color;
-
-	&:hover {
-	    background-color: $control-bar-button-hover-background-color;
-	}
-
-	&[disabled] {
-	    color: $disabled-text-color;
-	}
-
-	&[disabled]:hover {
-	    background-color: $control-bar-background-color;
-	    cursor: not-allowed;
-	}
-    }
-
-    .column-selection {
-	padding-left: 20px;
-	padding-right: 10px;
-	font-style: italic;
-    }
-
-    .input-bar input {
-	vertical-align: middle;
-	background-color: #eee;
-    }
-}
-
-.plate-panel {
-    width: 30%;
-    max-height: 100%;
-    float: left;
-    align: center;
-    text-align: center;
-}
-
-.plate {
-    /* Prevent normal selection behavior because
-       we handle selection behavior in the javascript */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    .well {
-	fill: transparent;
-	stroke-width: 0.2%;
-	stroke: $non-selected-well-stroke;
-	cursor: pointer;
-	transition: fill .1s ease; 
-    }
-
-    .selected {
-	fill: $selected-well-color;
-	stroke: $selected-well-stroke;
-    }
-
-    .focused {
-	stroke-width: 0.4%;
-    }
-
-    .hovered {
-	fill: #eee;
-    }
-
-    .selector {
-	font-size: 0.4px; /* px in unscaled svg coordinate system */
-	text-anchor: middle;
-	cursor: pointer;
-    }
-}
-
-.main-panel {
-    width: 70%;
-    float: left;
-    height: 100%;
-    overflow: auto;
-}
-
-.main-table {
-    align: left;
-    white-space: nowrap;
-    min-width: 100%;
-    padding: 0;
-    margin: 0;
-
-    /* Prevent normal selection behavior because
-       we handle selection behavior in the javascript */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    > tbody td {
-	padding: 0 !important;
-	margin: 0 !important;
-    }
-
-    thead {
-	text-align: left;
-    }
-
-    th {
-	border-width: 0 0 1px 0;
-	border-style: solid;
-	border-color: grey;
-    }
-
-    th.selected {
-	border-width: 0 0 3px 0;
-    }
-
-    th > input {
-	width: 100%;
-    }
-
-    td.selected-well {
-	background-color: $selected-well-color;
-    }
-
-    td.focused-well {
-	border: 1px solid black;
-    }
-    
-    td.hovered-well {
-	background-color: #eee;
-    }
-
-    // Ends of the rows/columns
-    .selected-row .selected-column {
-	background-color: #e6f7ff;
-    }
-
-    // Columns in the table should take minimum
-    // space
-    tbody td {
-	text-align: center;
-	padding: 0em 1em;
-	min-width: 200px;
-	cursor: cell;
-    }
-
-    td.well-id {
-	min-width: auto;
-	width: 1em;
-    }
-}
-
-.add-column-btn {
-    color: white;
-    background-color: green;
-    border-width: 0;
-    border-radius: 5px;
-}
-
-.remove-column-btn {
-    background-color: transparent;
-    border-width: 0;
-    color: grey;
-}
+@import "page-layout";
+@import "control-bar";
+@import "plate";
+@import "table";
 
 .remove-column-btn:hover {
-    color: red;
+  color: red;
 }
 
 .form-control {
-    display: inline;
-    width: auto;
+  display: inline;
+  width: auto;
 }
 
 .platey-dropdown {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
 }
 
 .platey-dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f9f9f9;
-    min-width: 300px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    padding: 12px 16px;
-    z-index: 1;
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 300px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+  z-index: 1;
 }
 
 .platey-dropdown:hover .platey-dropdown-content {
-    display: block;
+  display: block;
 }

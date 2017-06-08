@@ -1,4 +1,4 @@
-import plateyEval from "platey-lang/platey-eval";
+import plateyEval from "scripting/platey-eval";
 
 describe("plateyEval", function() {
   it("exists", function() {

@@ -1,0 +1,1 @@
+heroku static:deploy

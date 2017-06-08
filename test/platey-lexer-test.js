@@ -1,4 +1,4 @@
-import PlateyLexer from "platey-lang/platey-lexer";
+import PlateyLexer from "scripting/platey-lexer";
 
 describe("PlateyLexer", function() {
   it("Exists", function() {
@@ -172,16 +172,6 @@ describe("PlateyLexer", function() {
         expect(ret[0].isString).toBe(true);
         expect(ret[0].index).toBe(0);
         expect(ret[0].text).toBe("");
-      });
-
-      it("allows quote characters to be escaped with a backslash", function() {
-        const expr = '"\\" hello"';
-        const ret = this.lexer.lex(expr);
-
-        expect(ret.length).toBe(1);
-        expect(ret[0].isString).toBe(true);
-        expect(ret[0].index).toBe(0);
-        expect(ret[0].text).toBe('" hello');
       });
 
       it("allows symbols beggining with a period", function() {

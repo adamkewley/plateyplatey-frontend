@@ -2,6 +2,7 @@ var path = require('path');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var ContextReplacementPlugin = require('webpack/lib/ContextReplacementPlugin');
 var webpack = require("webpack");
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 function isExternal(module) {
   var userRequest = module.userRequest;
@@ -45,14 +46,6 @@ module.exports = {
         loader: "source-map-loader"
       },
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: "babel-loader",
-        query: {
-          presets: ["es2015"]
-        }
-      },
-      {
         test: /\.css$/,
         loader: "style-loader!css-loader"
       },
@@ -62,6 +55,11 @@ module.exports = {
       }
     ]
   },
+
+  node: {
+   fs: "empty"
+  },
+
 
   plugins: [
     // This removes angular library warnings
@@ -74,21 +72,7 @@ module.exports = {
       minChunks: function(module) {
         return isExternal(module);
       }
-    })
-  ],
-
-  devtool: "source-map",
-
-  devServer: {
-    port: (process.env.PORT || 8090),
-    proxy: {
-      "/api": {
-        target: "http://localhost:8080",
-          secure: false,
-        pathRewrite: {
-          "^/api": ""
-        }
-      }
-    }
-  }
+    }),
+      new UglifyJSPlugin()
+  ]
 };
