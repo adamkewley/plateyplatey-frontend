@@ -2,8 +2,8 @@
   "root": "dist",
     "clean_urls": false,
     "proxies": {
-	"/api/": {
-	    "origin": "http://plateyplatey-server.herokuapp.com/"
-	}
+      "/api/": {
+        "origin": "http://plateyplatey-server.herokuapp.com/"
+      }
     }
 }
