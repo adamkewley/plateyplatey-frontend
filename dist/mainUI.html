@@ -1,0 +1,222 @@
+<div class="loading-screen" *ngIf="apiRequests.length > 0">
+    <svg style="height: 5em; margin: 0 auto;" preserveAspectRatio="xMinYMin meet" viewBox="0 0 17 12" xmlns="http://www.w3.org/2000/svg">
+
+        <circle r="1" cx="1.0" cy="1.0"></circle>
+        <circle r="1" cx="3.5" cy="1.0"></circle>
+        <circle r="1" cx="6.0" cy="1.0"></circle>
+        <circle r="1" cx="8.5" cy="1.0"></circle>
+        <circle r="1" cx="11.0" cy="1.0"></circle>
+        <circle r="1" cx="13.5" cy="1.0"></circle>
+        <circle r="1" cx="16.0" cy="1.0"></circle>
+
+        <circle r="1" cx="1.0" cy="3.5"></circle>
+        <circle r="1" cx="3.5" cy="3.5"></circle>
+        <circle r="1" cx="6.0" cy="3.5"></circle>
+        <circle r="1" cx="8.5" cy="3.5"></circle>
+        <circle r="1" cx="11.0" cy="3.5"></circle>
+        <circle r="1" cx="13.5" cy="3.5"></circle>
+        <circle r="1" cx="16.0" cy="3.5"></circle>
+
+        <circle r="1" cx="1.0" cy="6.0"></circle>
+        <circle r="1" cx="3.5" cy="6.0"></circle>
+        <circle r="1" cx="6.0" cy="6.0"></circle>
+        <circle r="1" cx="8.5" cy="6.0"></circle>
+        <circle r="1" cx="11.0" cy="6.0"></circle>
+        <circle r="1" cx="13.5" cy="6.0"></circle>
+        <circle r="1" cx="16.0" cy="6.0"></circle>
+
+        <circle r="1" cx="1.0" cy="8.5"></circle>
+        <circle r="1" cx="3.5" cy="8.5"></circle>
+        <circle r="1" cx="6.0" cy="8.5"></circle>
+        <circle r="1" cx="8.5" cy="8.5"></circle>
+        <circle r="1" cx="11.0" cy="8.5"></circle>
+        <circle r="1" cx="13.5" cy="8.5"></circle>
+        <circle r="1" cx="16.0" cy="8.5"></circle>
+
+        <circle r="1" cx="1.0" cy="11.0"></circle>
+        <circle r="1" cx="3.5" cy="11.0"></circle>
+        <circle r="1" cx="6.0" cy="11.0"></circle>
+        <circle r="1" cx="8.5" cy="11.0"></circle>
+        <circle r="1" cx="11.0" cy="11.0"></circle>
+        <circle r="1" cx="13.5" cy="11.0"></circle>
+        <circle r="1" cx="16.0" cy="11.0"></circle>
+    </svg>
+
+    <h1>Fetching Data</h1>
+
+    <ul>
+        <li *ngFor="let apiRequest of apiRequests">
+            {{ apiRequest.description }}
+        </li>
+    </ul>
+</div>
+
+
+
+<!-- Click is in this container because some browser tricks
+     involve clicking the body -->
+<div class="main-container"
+     *ngIf="document !== null && apiRequests.length === 0"
+     (click)="bodyClickEventHandler($event);">
+
+    <div id="top-button-bar">
+
+        <button [command]="commands['new-plate']">
+            New Document
+        </button>
+
+        <button [command]="commands['export-document-as-json']">
+            Export Document
+        </button>
+
+        <button [command]="commands['open-document']">
+            Import Document
+        </button>
+
+        <button [command]="commands['export-table-to-csv']">
+            Export Table as CSV
+        </button>
+
+        <button [command]="commands['import-csv-file']">
+            Import Table from CSV
+        </button>
+
+        <button [command]="commands['copy-table-to-clipboard']">
+            Copy Table To Clipboard
+        </button>
+
+        <button [command]="commands['clear-plate']">
+            Clear Plate Data
+        </button>
+
+        <button [command]="commands['select-all']">
+            Select All
+        </button>
+
+        <button [command]="commands['invert-selection']">
+            Invert Selection
+        </button>
+
+        <button [command]="commands['move-selected-column-left']">
+            Move Selected Column Left
+        </button>
+
+        <button [command]="commands['move-selected-column-right']">
+            Move Selected Column Right
+        </button>
+
+        <button [command]="commands['remove-selected-column']">
+            Delete Column
+        </button>
+    </div>
+
+    <div id="top-input-bar">
+        <!-- Plate selector -->
+        <select [(ngModel)]="currentPlateTemplateSummary"
+                (ngModelChange)="loadPlateSummary(currentPlateTemplateSummary);"
+                class="form-control">
+            <option *ngFor="let plateTemplateSummary of plateTemplateSummaries"
+                    [selected]="plateTemplateSummary === currentPlateTemplateSummary"
+                    [ngValue]="plateTemplateSummary">
+                {{ plateTemplateSummary.name }}
+            </option>
+        </select>
+
+        <!-- Table Arrangement: -->
+        <select [(ngModel)]="document.arrangement"
+                (ngModelChange)="document.setRowArrangement(document.arrangement);"
+                class="form-control">
+            <option *ngFor="let arrangement of document.availableArrangements"
+                    [ngValue]="arrangement"
+                    [selected]="arrangement === document.arrangement">
+
+                {{ arrangement.name }} Arrangement
+            </option>
+        </select>
+
+        <select [(ngModel)]="document.selectedColumn" id="column-selection-dropdown" class="form-control">
+            <!-- track by id -->
+            <option *ngFor="let column of document.columns"
+                    [selected]="column === document.selectedColumn"
+                    [ngValue]="column">
+                {{ column.header }}
+            </option>
+        </select>
+
+        <span class="equals-sign"></span>
+
+        <input type="text"
+               placeholder="Value"
+               id="column-value-input"
+               class="form-control"
+               [(ngModel)]="currentValue"
+               [keyup]="commands['set-value-of-selected-wells']"
+               [keyupArguments]="currentValue"
+               [disabled]="document.hasNoCellsSelected()" />
+    </div>
+
+    <main>
+
+        <div class="plate-panel" *ngIf="document !== null">
+
+            <plate [document]="document" [commands]="commands"></plate>
+
+        </div>
+
+        <div class="main-panel">
+
+            <table class="table-condensed main-table">
+
+                <thead>
+                <th>Well ID</th>
+
+                <th *ngFor="let column of document.columns"
+                    [ngClass]="{ selected: document.getSelectedColumnId() === column.id }"
+                    (click)="document.selectColumn(column.id);">
+
+                    <input type="text"
+                           [(ngModel)]="column.header"
+                           style="display: inline"
+                           class="form-control"
+                           (keydown)="$event.stopPropagation();" />
+                </th>
+
+                <th style="border-bottom: none;">
+                    <button class="btn btn-success btn-circle" [command]="commands['add-column']">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
+                </th>
+                </thead>
+
+                <!-- Well IDs and their associated data -->
+                <tbody>
+
+                <tr *ngFor="let well of document.wells"
+                    [command]="commands['focus-row']"
+                    [commandArguments]="well.id">
+
+                    <!-- The first column is always the well IDs -->
+                    <td class="well-id" [ngClass]="{'selected-row': well.selected }">
+                        {{ well.id }}
+                    </td>
+
+                    <td *ngFor="let column of document.columns"
+                        [ngClass]="{'hovered-well': well.hovered && document.selectedColumn === column, 'selected-well': well.selected && document.selectedColumn === column, 'focused-well': document.getFocusedRowId() === well.id && document.selectedColumn === column }"
+                        (mouseover)="document.hoverOverWell(well);"
+                        (mouseout)="document.unHoverOverWell(well);"
+                        [command]="commands['select-column']"
+                        [commandArguments]="column.id">
+
+                        {{ well.data[column.id].value }}
+                    </td>
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>

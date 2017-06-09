@@ -1,0 +1,29 @@
+<svg class="plate" [attr.viewBox]="plateVbox" preserveAspectRatio="xMinYMin meet">
+
+    <!-- Wells -->
+    <circle *ngFor="let well of document.wells;"
+            [attr.cx]="well.x"
+            [attr.cy]="well.y"
+            [attr.r]="well.radius"
+            class="well"
+            [ngClass]="{ hovered: well.hovered, selected: well.selected, focused: well.id === document.getFocusedRowId() }"
+            (mouseover)="document.hoverOverWell(well);"
+            (mouseout)="document.unHoverOverWell(well);"
+            [command]="commands['focus-row']"
+            [commandArguments]="well.id"
+            [style.fill]="document.getSelectedColumnId() !== null ? well.data[document.getSelectedColumnId()].color : null">
+    </circle>
+
+    <!-- Selectors -->
+    <text *ngFor="let selector of document.selectors"
+          [attr.x]="selector.x"
+          [attr.y]="selector.y"
+          class="selector"
+          (mouseover)="document.hoverOverWells(selector.selects);"
+          (mouseout)="document.unHoverOverWells(selector.selects);"
+          [command]="commands['select-rows']"
+          [commandArguments]="selector.selects">
+
+        {{ selector.label }}
+    </text>
+</svg>
