@@ -1,4 +1,4 @@
-import {BehaviorSubject} from "rxjs/Rx";
+import {BehaviorSubject, Observable} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
 import {PlateyDocument} from "../document/PlateyDocument";
@@ -16,29 +16,27 @@ export class RemoveSelectedColumnCommand implements Command {
     this._currentDocument = currentDocument;
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
 
-    /* TODO: Implement
-    const updateCallback = () => this.disabledSubject.next(this._calculateDisabled());
+    currentDocument.map(maybeDocument => {
+      if (maybeDocument === null) {
+        return Observable.of({ isDisabled: true, reason: "No document open" });
+      } else {
+        const calculateDisabledState = () => {
+          const columnId = maybeDocument.getSelectedColumnId();
 
-    applicationEvents.subscribeTo("after-column-selection-changed", updateCallback);
-    applicationEvents.subscribeTo("after-table-columns-changed", updateCallback);
-    */
+          if (columnId === null) {
+            return { isDisabled: true, reason: "No column selected" };
+          } else {
+            return { isDisabled: false };
+          }
+        };
+
+        const ret = new BehaviorSubject(calculateDisabledState());
+        maybeDocument.afterColumnSelectionChanged.subscribe(_ => ret.next(calculateDisabledState()));
+        maybeDocument.afterColumnRemoved.subscribe(_ => ret.next(calculateDisabledState()));
+        return ret;
+      }
+    }).switch().subscribe(disabledState => this.disabledSubject.next(disabledState));
   }
-
-  /* TODO: Implement
-  _calculateDisabled() {
-    const selectedColumn = this._primativeCommands.getSelectedColumnId();
-
-    if (selectedColumn === null) {
-      return {
-        isDisabled: true,
-        hasReason: true,
-        reason: "No column currently selected."
-      };
-    } else {
-      return { isDisabled: false };
-    }
-  }
-  */
 
   execute() {
     const currentDocument = this._currentDocument.getValue();

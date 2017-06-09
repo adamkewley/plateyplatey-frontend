@@ -27,7 +27,11 @@ export class MoveColumnSelectionRightCommand implements Command {
         const columns = currentDocument.getColumnIds();
         const selectionIndex = columns.indexOf(currentColumnSelection);
 
-        if (currentColumnSelection !== null && selectionIndex !== (columns.length - 1)) {
+        if (currentColumnSelection !== null) {
+          if (selectionIndex == (columns.length - 1)) {
+            currentDocument.addColumn();
+          }
+
           const newColumnSelection = columns[selectionIndex + 1];
           currentDocument.selectColumn(newColumnSelection);
         }

@@ -59,22 +59,26 @@
      *ngIf="document !== null && apiRequests.length === 0"
      (click)="bodyClickEventHandler($event);">
 
-    <div class="control-bar">
-
-        <span class="site-title">
-            PlateyPlatey
-        </span>
+    <div id="top-button-bar">
 
         <button [command]="commands['new-plate']">
-            New Plate
+            New Document
         </button>
 
-        <button [command]="commands['import-csv-file']">
-            Import CSV
+        <button [command]="commands['export-document-as-json']">
+            Export Document
+        </button>
+
+        <button [command]="commands['open-document']">
+            Import Document
         </button>
 
         <button [command]="commands['export-table-to-csv']">
-            Export CSV
+            Export Table as CSV
+        </button>
+
+        <button [command]="commands['import-csv-file']">
+            Import Table from CSV
         </button>
 
         <button [command]="commands['copy-table-to-clipboard']">
@@ -104,13 +108,47 @@
         <button [command]="commands['remove-selected-column']">
             Delete Column
         </button>
+    </div>
 
-        <span class="column-selection">
-          {{ document.selectedColumn=== null ? "No column selected" : document.selectedColumn.header + ": " }}
-        </span>
+    <div id="top-input-bar">
+        <!-- Plate selector -->
+        <select [(ngModel)]="currentPlateTemplateSummary"
+                (ngModelChange)="loadPlateSummary(currentPlateTemplateSummary);"
+                class="form-control">
+            <option *ngFor="let plateTemplateSummary of plateTemplateSummaries"
+                    [selected]="plateTemplateSummary === currentPlateTemplateSummary"
+                    [ngValue]="plateTemplateSummary">
+                {{ plateTemplateSummary.name }}
+            </option>
+        </select>
+
+        <!-- Table Arrangement: -->
+        <select [(ngModel)]="document.arrangement"
+                (ngModelChange)="document.setRowArrangement(document.arrangement);"
+                class="form-control">
+            <option *ngFor="let arrangement of document.availableArrangements"
+                    [ngValue]="arrangement"
+                    [selected]="arrangement === document.arrangement">
+
+                {{ arrangement.name }} Arrangement
+            </option>
+        </select>
+
+        <select [(ngModel)]="document.selectedColumn" id="column-selection-dropdown" class="form-control">
+            <!-- track by id -->
+            <option *ngFor="let column of document.columns"
+                    [selected]="column === document.selectedColumn"
+                    [ngValue]="column">
+                {{ column.header }}
+            </option>
+        </select>
+
+        <span class="equals-sign"></span>
 
         <input type="text"
                placeholder="Value"
+               id="column-value-input"
+               class="form-control"
                [(ngModel)]="currentValue"
                [keyup]="commands['set-value-of-selected-wells']"
                [keyupArguments]="currentValue"
@@ -122,38 +160,6 @@
         <div class="plate-panel" *ngIf="document !== null">
 
             <plate [document]="document" [commands]="commands"></plate>
-
-            <!-- Plate selector -->
-            <div>
-                Plate Layout:
-                <select [(ngModel)]="currentPlateTemplateSummary"
-                        (ngModelChange)="loadPlateSummary(currentPlateTemplateSummary);"
-                        class="form-control">
-                    <!-- track by id -->
-                    <option *ngFor="let plateTemplateSummary of plateTemplateSummaries"
-                            [selected]="plateTemplateSummary === currentPlateTemplateSummary"
-                            [ngValue]="plateTemplateSummary">
-                        {{ plateTemplateSummary.name }}
-                    </option>
-                </select>
-            </div>
-
-            <br/>
-
-            <div>
-                <!-- Table Layout: -->
-                Table Layout:
-                <select class="form-control"
-                        [(ngModel)]="document.arrangement"
-                        (ngModelChange)="document.setRowArrangement(document.arrangement);">
-                    <option *ngFor="let arrangement of document.availableArrangements"
-                            [ngValue]="arrangement"
-                            [selected]="arrangement === document.arrangement">
-
-                        {{ arrangement.name }}
-                    </option>
-                </select>
-            </div>
 
         </div>
 
@@ -175,9 +181,9 @@
                            (keydown)="$event.stopPropagation();" />
                 </th>
 
-                <th>
-                    <button class="btn btn-success" [command]="commands['add-column']">
-                        Add Column
+                <th style="border-bottom: none;">
+                    <button class="btn btn-success btn-circle" [command]="commands['add-column']">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     </button>
                 </th>
                 </thead>

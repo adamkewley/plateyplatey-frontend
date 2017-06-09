@@ -1,0 +1,35 @@
+@import "constants";
+
+#top-button-bar {
+  width: 100%;
+  height: $button-bar-height;
+  margin: 0 0 0 1px;
+  padding: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  background-color: $control-bar-background-color;
+  border-bottom: 1px solid lightgray;
+
+  button {
+    height: 100%;
+    padding: 0 5px;
+
+    flex: none;
+    display: inline-block;
+
+    border-width: 0;
+    background-color: $control-bar-background-color;
+
+    &[disabled] {
+      color: $disabled-text-color;
+    }
+
+    &[disabled]:hover {
+      background-color: $control-bar-background-color;
+      cursor: not-allowed;
+    }
+  }
+}

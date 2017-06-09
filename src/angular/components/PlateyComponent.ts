@@ -162,7 +162,12 @@ export class PlateyComponent {
 
     // Initialize plates
     const plateTemplates: { [plateId: string]: PlateSummary } = plates;
-    this.plateTemplateSummaries = Object.keys(plateTemplates).map(key => plateTemplates[key]);
+    this.plateTemplateSummaries =
+        Object.keys(plateTemplates)
+            .map(key => plateTemplates[key])
+            .sort((a, b) => {
+              return a.name.localeCompare(b.name);
+            });
 
     this.getKeybindsAssociatedWith = (expr: string) => {
       const currentKeybinds = plateyApp.getKeybinds();

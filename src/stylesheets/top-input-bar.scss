@@ -1,0 +1,27 @@
+@import "constants";
+
+#top-input-bar {
+  height: $input-bar-height;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  padding: 5px 2px 5px 2px;
+
+  > * {
+    margin-right: 0.5em;
+  }
+
+  .equals-sign {
+    &:before {
+      content: "=";
+    }
+    font-size: larger;
+  }
+
+  #column-value-input {
+    flex-grow: 1;
+  }
+}
+

@@ -2,7 +2,7 @@
 
 .main-table {
 
-  align: left;
+  text-align: left;
   white-space: nowrap;
   min-width: 100%;
   padding: 0;
@@ -23,10 +23,16 @@
   }
 
   thead {
-    text-align: left;
+    .form-control {
+      text-align: center;
+    }
+    text-align: center;
   }
 
   th {
+    vertical-align: middle;
+    margin: 0 0.5em;
+    padding: 5px;
     border-width: 0 0 1px 0;
     border-style: solid;
     border-color: grey;
@@ -38,6 +44,10 @@
 
   th > input {
     width: 100%;
+  }
+
+  td {
+    border: 1px dotted lightgray;
   }
 
   td.selected-well {
@@ -83,4 +93,14 @@
   background-color: transparent;
   border-width: 0;
   color: grey;
+}
+
+.btn-circle {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 12px;
+  line-height: 1.42;
+  border-radius: 15px;
 }

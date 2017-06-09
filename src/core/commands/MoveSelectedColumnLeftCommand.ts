@@ -1,4 +1,4 @@
-import {BehaviorSubject} from "rxjs/Rx";
+import {BehaviorSubject, Observable} from "rxjs/Rx";
 import {Command} from "./Command";
 import {DisabledMessage} from "./DisabledMessage";
 import {PlateyDocument} from "../document/PlateyDocument";
@@ -16,33 +16,35 @@ export class MoveSelectedColumnLeftCommand implements Command {
     this._currentDocument = currentDocument;
     this.disabledSubject = Helpers.disabledIfNull(currentDocument);
 
-    /* TODO: Implement
-    applicationEvents.subscribeTo("after-column-selection-changed", updateCallback);
-    applicationEvents.subscribeTo("after-table-columns-changed", updateCallback);
-    */
+    currentDocument
+        .map(maybeDocument => {
+          if (maybeDocument === null)
+            return Observable.of({ isDisabled: true, reason: "No document open" });
+          else {
+
+            const calculateDisabledState = () => {
+              const allColumns = maybeDocument.getColumnIds();
+              const selectedColumn = maybeDocument.getSelectedColumnId();
+
+              if (selectedColumn === null) {
+                return { isDisabled: true, reason: "No column selected." };
+              } else if(allColumns.indexOf(selectedColumn) === 0) {
+                return { isDisabled: true, reason: "Column is as left as it can go." };
+              } else {
+                return { isDisabled: false };
+              }
+            };
+
+            const ret = new BehaviorSubject(calculateDisabledState());
+            maybeDocument.afterColumnSelectionChanged.subscribe(_ => ret.next(calculateDisabledState()));
+            maybeDocument.afterColumnMoved.subscribe(_ => ret.next(calculateDisabledState()));
+
+            return ret;
+          }
+        })
+        .switch()
+        .subscribe(disabledState => this.disabledSubject.next(disabledState));
   }
-
-  /* TODO: Implement
-  _calculateDisabled() {
-    const allColumns = this._primativeCommands.getColumnIds();
-    const selectedColumn = this._primativeCommands.getSelectedColumnId();
-
-    if (selectedColumn === null) {
-      return {
-        isDisabled: true,
-        hasReason: true,
-        reason: "No column currently selected."
-      };
-    }
-    else if (allColumns.indexOf(selectedColumn) === 0) {
-      return {
-        isDisabled: true,
-        hasReason:true,
-        reason: "Selected column is as leftwards as it can go.",
-      };
-    }
-    else return { isDisabled: false };
-  } */
 
   execute() {
     const currentDocument = this._currentDocument.getValue();

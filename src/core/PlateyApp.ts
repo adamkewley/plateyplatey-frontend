@@ -24,4 +24,10 @@ export class PlateyApp {
     getKeybinds(): { [key: string]: string } {
         return this._configuration.keybinds;
     }
+
+    loadDocument(savedDocument: PlateySavedDocument): PlateyDocument {
+        const document = PlateyDocument.fromPlateyDocumentFile(savedDocument);
+        this.currentDocument.next(document);
+        return document;
+    }
 }

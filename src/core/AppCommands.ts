@@ -28,6 +28,8 @@ import {ImportCSVFileCommand} from "./commands/ImportCSVFileCommand";
 import {RemoveSelectedColumnCommand} from "./commands/RemoveSelectedColumnCommand";
 import {Command} from "./commands/Command";
 import {PlateyApp} from "./PlateyApp";
+import {ExportDocumentAsJSONCommand} from "./commands/ExportDocumentAsJSONCommand";
+import {OpenDocumentCommand} from "./commands/OpenDocumentCommand";
 
 export class AppCommands {
 
@@ -65,6 +67,8 @@ export class AppCommands {
       new PromptUserForFilesCommand(),
       new ImportCSVFileCommand(app),
       new RemoveSelectedColumnCommand(app.currentDocument),
+      new ExportDocumentAsJSONCommand(app.currentDocument),
+      new OpenDocumentCommand(app)
     ];
 
     this.commandsHash = {};

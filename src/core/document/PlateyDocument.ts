@@ -7,6 +7,13 @@ import {Column} from "./Column";
 import {Well} from "./Well";
 import {InternalSelector} from "./InternalSelector";
 import {ValueAssignment} from "./ValueAssignment";
+import {DocumentSchemaDetails} from "../apitypes/DocumentSchemaDetails";
+import {DocumentProperties} from "../apitypes/DocumentProperties";
+import {ColumnSchema} from "../apitypes/ColumnSchema";
+import {TableSchema} from "../apitypes/TableSchema";
+import {DocumentWorkbook} from "../apitypes/DocumentWorkbook";
+import {DocumentSheet} from "../apitypes/DocumentSheet";
+import {ColumnValue} from "../apitypes/ColumnValue";
 
 export class PlateyDocument {
 
@@ -47,7 +54,8 @@ export class PlateyDocument {
 
     return plateyDocument;
   }
-  
+
+  _layout: Plate;
   columns: Column[] = [];
   selectedColumn: Column | null = null;
   wells: Well[] = [];
@@ -364,6 +372,8 @@ export class PlateyDocument {
 
   setLayout(layout: Plate) {
 
+    this._layout = layout;
+
     const columnIds = this.columns.map(column => column.id);
 
     // Supply random and default arrangements for all
@@ -484,5 +494,59 @@ export class PlateyDocument {
   hasNoCellsSelected() {
     return this.selectedColumn === null ||
       !this.wells.some((well: Well) => well.selected);
+  }
+
+  getLayoutName() {
+    return this._layout.name;
+  }
+
+  toPlateyDocumentFile(): PlateySavedDocument {
+    // TODO: This is a bit of a bodge because the server-side model for the
+    // platey documents is designed to be super forward compatible and supports
+    // multiple sheets, schemas, etc. whereas the actual in-UI model is
+    // much simpler.
+
+    const wellDataRet: { [wellId: string]: { [columnId: string]: ColumnValue }} = {};
+
+    const data = this.wells.map(well => {
+      const plateWellId = well.id;
+
+      const dataRet: { [columnId: string]: ColumnValue } = {};
+
+      const data = Object.keys(well.data).map(columnId => {
+        return { columnId: columnId, data: { value: well.data[columnId].value }};
+      }).reduce((allColumns, column) => {
+        allColumns[column.columnId] = column.data;
+        return allColumns;
+      }, dataRet);
+
+      return { plateWellId: plateWellId, data: data };
+    }).reduce((allWellData, wellData) => {
+      allWellData[wellData.plateWellId] = wellData.data;
+      return allWellData;
+    }, wellDataRet);
+
+    return {
+      fileSchema: { version: "1" },
+      properties: { documentName: "NYI" },
+      plateLayouts: { "mainLayout": this._layout },
+      tableSchemas: {
+        "mainTable": {
+          columns: this.columns.map(col => {
+            return { id: col.id, header: col.header }
+          })
+        }},
+      workbook: {
+        sheets: ["mainSheet"],
+        focusedSheet: "mainSheet"
+      },
+      sheets: {
+        "mainSheet": {
+          plateTemplate: "mainLayout",
+          tableSchema: "mainTable",
+          data: data
+        }
+      }
+    };
   }
 }
