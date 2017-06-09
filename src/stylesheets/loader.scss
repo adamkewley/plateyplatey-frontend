@@ -1,0 +1,53 @@
+@namespace svg "http://www.w3.org/2000/svg";
+
+.loading-screen {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+
+  background-color: #000;
+  opacity: 0.8;
+  color: white;
+
+  h1 {
+    font-size: large;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  ul, li {
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    padding-top: 1em;
+    list-style: none;
+  }
+
+  circle {
+    animation: pulse 2s infinite;
+    animation-direction: alternate;
+    animation-timing-function: ease;
+
+    @keyframes pulse {
+      0% {
+        fill: white;
+      }
+      100% {
+        fill: #666;
+      }
+    }
+  }
+}
+
+
+

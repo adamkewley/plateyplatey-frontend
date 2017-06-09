@@ -5,13 +5,14 @@ import {Plate} from "../../core/apitypes/Plate";
 import {Injectable} from "@angular/core";
 import {Http} from "@angular/http";
 import {Observable} from "rxjs";
+import {CustomHttp} from "./CustomHttp";
 
 @Injectable()
 export class PlateyAPI {
 
     private httpService: Http;
 
-    constructor(httpService: Http) {
+    constructor(httpService: CustomHttp) {
         this.httpService = httpService;
     }
 
