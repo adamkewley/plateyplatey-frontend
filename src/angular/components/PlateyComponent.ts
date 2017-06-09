@@ -180,6 +180,9 @@ export class PlateyComponent {
     };
 
     plateyApp.newDocument();
+
+    // Load the demo document on first loading to show off the tech
+    this.plateyAPI.fetchDocument("demo").subscribe(doc => plateyApp.loadDocument(doc));
   }
 
   @HostListener("document:keypress", ["$event"])
