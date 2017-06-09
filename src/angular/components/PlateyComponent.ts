@@ -13,6 +13,8 @@ import {Observable, Subscription} from "rxjs";
 import {BodyKeydownHandler} from "../BodyKeydownHandler";
 import {BodyKepressHandler} from "../BodyKepressHandler";
 import {BodyClickHandler} from "../BodyClickHandler";
+import {CustomHttp} from "../services/CustomHttp";
+import {RequestDetails} from "../services/RequestDetails";
 
 @Component({
   selector: 'plateyApp',
@@ -21,6 +23,7 @@ import {BodyClickHandler} from "../BodyClickHandler";
 })
 export class PlateyComponent {
 
+  apiRequests: RequestDetails[] = [];
   getKeybindsAssociatedWith: (expr: string) => string[];
   bodyClickEventHandler: BodyClickHandler;
   bodyKeypressHandler: BodyKepressHandler;
@@ -34,7 +37,11 @@ export class PlateyComponent {
   getCommandDetails: ((commandId: string) => Command) | null;
   exec: ((expr: string, ...args: any[]) => void) | null;
 
-  constructor(private plateyAPI: PlateyAPI) {
+  constructor(private plateyAPI: PlateyAPI, httpService: CustomHttp) {
+
+    httpService.requestsObservable.subscribe(reqs => {
+      this.apiRequests = reqs;
+    });
 
     // To boot the app, the configuration and plate summaries
     // must be loaded. The configuration contains a reference to

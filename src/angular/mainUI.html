@@ -1,7 +1,63 @@
+<div class="loading-screen" *ngIf="apiRequests.length > 0">
+    <svg style="height: 5em; margin: 0 auto;" preserveAspectRatio="xMinYMin meet" viewBox="0 0 17 12" xmlns="http://www.w3.org/2000/svg">
+
+        <circle r="1" cx="1.0" cy="1.0"></circle>
+        <circle r="1" cx="3.5" cy="1.0"></circle>
+        <circle r="1" cx="6.0" cy="1.0"></circle>
+        <circle r="1" cx="8.5" cy="1.0"></circle>
+        <circle r="1" cx="11.0" cy="1.0"></circle>
+        <circle r="1" cx="13.5" cy="1.0"></circle>
+        <circle r="1" cx="16.0" cy="1.0"></circle>
+
+        <circle r="1" cx="1.0" cy="3.5"></circle>
+        <circle r="1" cx="3.5" cy="3.5"></circle>
+        <circle r="1" cx="6.0" cy="3.5"></circle>
+        <circle r="1" cx="8.5" cy="3.5"></circle>
+        <circle r="1" cx="11.0" cy="3.5"></circle>
+        <circle r="1" cx="13.5" cy="3.5"></circle>
+        <circle r="1" cx="16.0" cy="3.5"></circle>
+
+        <circle r="1" cx="1.0" cy="6.0"></circle>
+        <circle r="1" cx="3.5" cy="6.0"></circle>
+        <circle r="1" cx="6.0" cy="6.0"></circle>
+        <circle r="1" cx="8.5" cy="6.0"></circle>
+        <circle r="1" cx="11.0" cy="6.0"></circle>
+        <circle r="1" cx="13.5" cy="6.0"></circle>
+        <circle r="1" cx="16.0" cy="6.0"></circle>
+
+        <circle r="1" cx="1.0" cy="8.5"></circle>
+        <circle r="1" cx="3.5" cy="8.5"></circle>
+        <circle r="1" cx="6.0" cy="8.5"></circle>
+        <circle r="1" cx="8.5" cy="8.5"></circle>
+        <circle r="1" cx="11.0" cy="8.5"></circle>
+        <circle r="1" cx="13.5" cy="8.5"></circle>
+        <circle r="1" cx="16.0" cy="8.5"></circle>
+
+        <circle r="1" cx="1.0" cy="11.0"></circle>
+        <circle r="1" cx="3.5" cy="11.0"></circle>
+        <circle r="1" cx="6.0" cy="11.0"></circle>
+        <circle r="1" cx="8.5" cy="11.0"></circle>
+        <circle r="1" cx="11.0" cy="11.0"></circle>
+        <circle r="1" cx="13.5" cy="11.0"></circle>
+        <circle r="1" cx="16.0" cy="11.0"></circle>
+    </svg>
+
+    <h1>Fetching Data</h1>
+
+    <ul>
+        <li *ngFor="let apiRequest of apiRequests">
+            {{ apiRequest.description }}
+        </li>
+    </ul>
+</div>
+
+
+
 <!-- Click is in this container because some browser tricks
      involve clicking the body -->
 <div class="main-container"
-     *ngIf="document !== null" (click)="bodyClickEventHandler($event);">
+     *ngIf="document !== null && apiRequests.length === 0"
+     (click)="bodyClickEventHandler($event);">
 
     <div class="control-bar">
 
@@ -86,7 +142,7 @@
 
             <div>
                 <!-- Table Layout: -->
-
+                Table Layout:
                 <select class="form-control"
                         [(ngModel)]="document.arrangement"
                         (ngModelChange)="document.setRowArrangement(document.arrangement);">
