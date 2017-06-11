@@ -1,6 +1,6 @@
 This is the frontend code for
 [PlateyPlatey](http://plateyplatey.com). The server code (extremely
-rudamentary) is available in [another repo](NYI).
+rudamentary) is available in [another repo](https://github.com/AdamK117/plateyplatey-server).
 
 # What is PlateyPlatey?
 
