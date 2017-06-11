@@ -1,32 +1,32 @@
-import plateyEval from "scripting/platey-eval";
+import { PlateyScript } from "../src/core/scripting/PlateyScript";
 
-describe("plateyEval", function() {
+describe("PlateyScript.eval", function() {
   it("exists", function() {
-    expect(plateyEval).toBeDefined();
+    expect(PlateyScript.eval).toBeDefined();
   });
 
   it("is a function", function() {
-    expect(typeof plateyEval).toBe("function");
+    expect(typeof PlateyScript.eval).toBe("function");
   });
 
   it("accepts a platey expression string as its first argument", function() {
     const expr = "()";
 
-    expect(() => plateyEval(expr)).not.toThrow();
+    expect(() => PlateyScript.eval(expr)).not.toThrow();
   });
 
   it("accepts a scope object as an argument", function() {
     const scope = { x: 10 };
     const expr = "x";
 
-    expect(() => plateyEval(expr, scope)).not.toThrow();
+    expect(() => PlateyScript.eval(expr, scope)).not.toThrow();
   });
 
   it("throws if a symbol appears in the expression that cannot be dereferenced in the scope", function() {
     const expr = "f";
     const scope = {};
 
-    expect(() => plateyEval(expr, scope)).toThrow();
+    expect(() => PlateyScript.eval(expr, scope)).toThrow();
   });
 
   it("throws if a symbol appears in the expression that is not in the scope, even if other in-the-scope symbols are present", function() {
@@ -34,14 +34,14 @@ describe("plateyEval", function() {
 
     const scope = { x: 10 };
 
-    expect(() => plateyEval(expr, scope)).toThrow();
+    expect(() => PlateyScript.eval(expr, scope)).toThrow();
   });
 
   it("does not throw if multiple symbols appear that are all in the scope", function() {
     const expr = "(f x)";
     const scope = { f: (x) => x + 1, x: 1 };
 
-    expect(() => plateyEval(expr, scope)).not.toThrow();
+    expect(() => PlateyScript.eval(expr, scope)).not.toThrow();
   });
 
   it("treats a list expression as a function call (lisp-like)", function() {
@@ -50,7 +50,7 @@ describe("plateyEval", function() {
 
     const scope = { f: () => wasCalled = true, x: 10 };
 
-    expect(() => plateyEval(expr, scope)).not.toThrow();
+    expect(() => PlateyScript.eval(expr, scope)).not.toThrow();
     expect(wasCalled).toBe(true);
   });
 
@@ -66,7 +66,7 @@ describe("plateyEval", function() {
       x: 2048
     };
 
-    plateyEval(expr, scope);
+    PlateyScript.eval(expr, scope);
     expect(wasCalled).toBe(true);
   });
 
@@ -89,7 +89,7 @@ describe("plateyEval", function() {
       x: 1
     };
 
-    plateyEval(expr, scope);
+    PlateyScript.eval(expr, scope);
 
     expect(gWasCalled).toBe(true);
     expect(fWasCalled).toBe(true);
@@ -100,7 +100,7 @@ describe("plateyEval", function() {
 
     const scope = { f: () => 10 };
 
-    const ret = plateyEval(expr, scope);
+    const ret = PlateyScript.eval(expr, scope);
 
     expect(ret).toBe(10);
   });
@@ -109,7 +109,7 @@ describe("plateyEval", function() {
     const expr = "(f)";
     const scope = { f: () => {} };
 
-    const ret = plateyEval(expr, scope);
+    const ret = PlateyScript.eval(expr, scope);
 
     expect(ret).toBe(undefined);
   });
@@ -119,7 +119,7 @@ describe("plateyEval", function() {
     const firstScope = { f: (x) => x + 1, x: 1 };
     const secondScope = { f: (x) => x + 1, x: 1 };
 
-    expect(() => plateyEval(expr, firstScope, secondScope)).not.toThrow();
+    expect(() => PlateyScript.eval(expr, firstScope, secondScope)).not.toThrow();
   });
 
   it("if multiple scopes are supplied, the rightmost scope takes priority over the leftmost", function() {
@@ -131,7 +131,7 @@ describe("plateyEval", function() {
     let secondScopeWasCalled = false;
     const secondScope = { f: () => secondScopeWasCalled = true };
 
-    expect(() => plateyEval(expr, firstScope, secondScope)).not.toThrow();
+    expect(() => PlateyScript.eval(expr, firstScope, secondScope)).not.toThrow();
     expect(firstScopeWasCalled).toBe(false);
     expect(secondScopeWasCalled).toBe(true);
   });
@@ -146,7 +146,7 @@ describe("plateyEval", function() {
       expect(str).toBe("foo");
     }};
 
-    plateyEval(expr, scope);
+    PlateyScript.eval(expr, scope);
 
     expect(wasCalled).toBe(true);
   });
@@ -164,7 +164,7 @@ describe("plateyEval", function() {
       }
     };
 
-    plateyEval(expr, scope);
+    PlateyScript.eval(expr, scope);
 
     expect(gWasCalled).toBe(true);
   });

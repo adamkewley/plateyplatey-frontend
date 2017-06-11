@@ -1,47 +1,47 @@
-import getFirstSymbolName from "scripting/get-first-symbol";
+import { PlateyScript } from "../src/core/scripting/PlateyScript";
 
-describe("getFirstSymbolName", function() {
+describe("PlateyScript.getFirstSymbolName", function() {
   it("exists", function() {
-    expect(getFirstSymbolName).toBeDefined();
+    expect(PlateyScript.getFirstSymbolName).toBeDefined();
   });
 
   it("is a function", function() {
-    expect(typeof getFirstSymbolName).toBe("function");
+    expect(typeof PlateyScript.getFirstSymbolName).toBe("function");
   });
 
   it("accepts an expression argument", function() {
     const expr = "(f x)";
 
-    expect(() => getFirstSymbolName(expr)).not.toThrow();
+    expect(() => PlateyScript.getFirstSymbolName(expr)).not.toThrow();
   });
 
   it("returns the name of the first/root function call in the expression", function() {
     const expr = "(f x)";
 
-    expect(getFirstSymbolName(expr)).toBe("f");
+    expect(PlateyScript.getFirstSymbolName(expr)).toBe("f");
   });
 
   it("returns the first function name, even if there are nested ones", function() {
     const expr = "(f (g x))";
 
-    expect(getFirstSymbolName(expr)).toBe("f");
+    expect(PlateyScript.getFirstSymbolName(expr)).toBe("f");
   });
 
   it("returns the first function name even if there are subsequent calls", function() {
     const expr = "(f x) (g x)";
 
-    expect(getFirstSymbolName(expr)).toBe("f");
+    expect(PlateyScript.getFirstSymbolName(expr)).toBe("f");
   });
 
   it("returns undefined if there isn't a function call", function() {
     const expr = "()";
 
-    expect(getFirstSymbolName(expr)).toBe(undefined);
+    expect(PlateyScript.getFirstSymbolName(expr)).toBe(undefined);
   });
 
   it("returns the first symbol, even if it isn't a function call", function() {
     const expr = "f";
 
-    expect(getFirstSymbolName(expr)).toBe("f");
+    expect(PlateyScript.getFirstSymbolName(expr)).toBe("f");
   });
 });

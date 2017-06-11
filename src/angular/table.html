@@ -1,0 +1,49 @@
+<table class="table-condensed main-table">
+
+    <thead>
+    <th>Well ID</th>
+
+    <th *ngFor="let column of document.columns"
+        [ngClass]="{ selected: document.getSelectedColumnId() === column.id }"
+        (click)="document.selectColumn(column.id);">
+
+        <input type="text"
+               [(ngModel)]="column.header"
+               style="display: inline"
+               class="form-control"
+               (keydown)="$event.stopPropagation();" />
+    </th>
+
+    <th style="border-bottom: none;">
+        <button class="btn btn-success btn-circle" [command]="commands['add-column']">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </button>
+    </th>
+    </thead>
+
+    <!-- Well IDs and their associated data -->
+    <tbody>
+
+    <tr *ngFor="let well of document.wells"
+        [command]="commands['focus-row']"
+        [commandArguments]="well.id">
+
+        <!-- The first column is always the well IDs -->
+        <td class="well-id" [ngClass]="{'selected-row': well.selected }">
+            {{ well.id }}
+        </td>
+
+        <td *ngFor="let column of document.columns"
+            [ngClass]="{'hovered-well': well.hovered && document.selectedColumn === column, 'selected-well': well.selected && document.selectedColumn === column, 'focused-well': document.getFocusedRowId() === well.id && document.selectedColumn === column }"
+            (mouseover)="document.hoverOverWell(well);"
+            (mouseout)="document.unHoverOverWell(well);"
+            [command]="commands['select-column']"
+            [commandArguments]="column.id">
+
+            {{ well.data[column.id].value }}
+        </td>
+    </tr>
+
+    </tbody>
+
+</table>

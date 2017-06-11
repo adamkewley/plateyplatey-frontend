@@ -1,4 +1,4 @@
-import PlateyLexer from "scripting/platey-lexer";
+import { PlateyLexer } from "../src/core/scripting/PlateyLexer";
 
 describe("PlateyLexer", function() {
   it("Exists", function() {

@@ -1,8 +1,5 @@
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-// Karma configuration
-// Generated on Fri Aug 05 2016 21:37:05 GMT+0100 (BST)
-
 module.exports = function(config) {
   config.set({
 
@@ -17,10 +14,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/**/*.js',
-      "src/schemas/*.json",
-      "src/documents/*.json",
-      "src/configurations/*.json"
+      'test/**/*.js'
     ],
 
 
@@ -39,16 +33,16 @@ module.exports = function(config) {
     },
 
     webpack: {
-      resolve: {
-        modules: ["src", "."],
-        alias: { "lib": "node_modules" }
-      },
-
       module: {
         loaders: [
           {
             test: /\.scss$/,
-            loader: ExtractTextPlugin.extract('css-loader!sass-loader')
+            loader: 'style-loader!css-loader!sass-loader'
+          },
+          {
+            test: /\.tsx?$/,
+            loader: "babel-loader!ts-loader",
+            exclude: [/node_modules/]
           },
           {
             test: /\.js$/,
@@ -57,19 +51,28 @@ module.exports = function(config) {
             query: {
               presets: ["es2015"]
             }
+          },
+          {
+            test: /\.css$/,
+            loader: "style-loader!css-loader"
+          },
+          {
+            test: /\.(otf|eot|svg|ttf|woff|woff2)$/,
+            loader: "url-loader"
           }
         ]
       },
 
-      plugins: [
-        new ExtractTextPlugin({ filename: 'css/platey.css', allChunks: true })
-      ]
+      resolve: {
+        modules: ["src", ".", "node_modules"],
+        extensions: [".ts", ".js", ".json"],
+        alias: {"lib": "node_modules"}
+      }
     },
 
     jsonFixturesPreprocessor: {
       variableName: '__json__'
     },
-
 
     // test results reporter to use
     // possible values: 'dots', 'progress'

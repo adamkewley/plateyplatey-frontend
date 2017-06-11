@@ -1,5 +1,5 @@
-import PlateyLexer from "scripting/platey-lexer";
-import PlateyParser from "scripting/platey-parser";
+import { PlateyLexer } from "../src/core/scripting/PlateyLexer";
+import { PlateyParser } from "../src/core/scripting/PlateyParser";
 
 describe("PlateyParser", function() {
 

@@ -7,12 +7,6 @@ import {Column} from "./Column";
 import {Well} from "./Well";
 import {InternalSelector} from "./InternalSelector";
 import {ValueAssignment} from "./ValueAssignment";
-import {DocumentSchemaDetails} from "../apitypes/DocumentSchemaDetails";
-import {DocumentProperties} from "../apitypes/DocumentProperties";
-import {ColumnSchema} from "../apitypes/ColumnSchema";
-import {TableSchema} from "../apitypes/TableSchema";
-import {DocumentWorkbook} from "../apitypes/DocumentWorkbook";
-import {DocumentSheet} from "../apitypes/DocumentSheet";
 import {ColumnValue} from "../apitypes/ColumnValue";
 
 export class PlateyDocument {
@@ -501,7 +495,7 @@ export class PlateyDocument {
   }
 
   toPlateyDocumentFile(): PlateySavedDocument {
-    // TODO: This is a bit of a bodge because the server-side model for the
+    // BODGE: This is a bit of a bodge because the server-side model for the
     // platey documents is designed to be super forward compatible and supports
     // multiple sheets, schemas, etc. whereas the actual in-UI model is
     // much simpler.
