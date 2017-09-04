@@ -77,16 +77,19 @@ export class Helpers {
       window.navigator.msSaveOrOpenBlob(blob, fileName);
     } else {
       const blobUrl = URL.createObjectURL(blob);
-
-      const downloadLink = document.createElement("a");
-      downloadLink.href = blobUrl;
-      downloadLink.download = fileName;
-      downloadLink.style.visibility = "hidden";
-
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      Helpers.clickTemporaryLink(blobUrl, fileName);
     }
+  }
+
+  public static clickTemporaryLink(url: string, fileName: string|null = null) {
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    if (fileName !== null) downloadLink.download = fileName;
+    downloadLink.style.visibility = "hidden";
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   }
 
   public static copyTextToClipboard(text: string): void {

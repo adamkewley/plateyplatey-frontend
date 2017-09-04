@@ -13,6 +13,7 @@
     "@angular/platform-browser-dynamic": "~4.1.0",
     "@angular/router": "~4.1.0",
     "bootstrap": "~3.3.7",
+    "dom-to-image": "^2.5.2",
     "es6-shim": "~0.35.3",
     "normalize-css": "~2.3.1",
     "papaparse": "~4.1.4",

@@ -93,7 +93,7 @@ module.exports = {
 
     new webpack.optimize.CommonsChunkPlugin({ name: "polyfills", path: './src/polyfills.js' }),
 
-    new UglifyJSPlugin()
+    new UglifyJSPlugin({ sourceMap: true })
   ],
 
   devtool: "source-map",
